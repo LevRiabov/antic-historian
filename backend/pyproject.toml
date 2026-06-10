@@ -24,6 +24,15 @@ dev = [
     "pytest-asyncio>=0.25",
     "pytest-cov>=6.0",
 ]
+# D1 framework spike only — removed (along with spikes/) once the gate is decided.
+spike = [
+    "llama-index-core>=0.12",
+    "llama-index-llms-openai-like>=0.3",
+    "llama-index-embeddings-openai-like>=0.3",
+    "langgraph>=0.3",
+    "langchain-openai>=0.3",
+    "langchain-text-splitters>=0.3",
+]
 
 [project.scripts]
 ahx = "ahx.cli:app"

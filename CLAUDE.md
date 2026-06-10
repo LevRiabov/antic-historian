@@ -24,8 +24,11 @@ idiom, a one-line TS analogy helps (pydantic ≈ zod, uv ≈ pnpm, pytest fixtur
 | [module-10-build-plan.md](module-10-build-plan.md) | Buyer-facing feature thinking (UX North Star) |
 | docs/adr/ | One ADR per gate decision when taken |
 
-Gate status: D1 (framework: spike LlamaIndex vs LangChain+LangGraph vs Haystack) — **open, next up**.
-D2 (embeddings), D3 (vector store), D4 (frontend), D5 (LLM lineup) — open, defaults documented.
+Gate status: **D1 decided** ([ADR-001](docs/adr/001-d1-framework.md)): LlamaIndex = RAG layer,
+LangGraph = agent orchestration, thin project-owned interface between frameworks and our code
+(no framework types in eval harness / API / ablation modules; models passed explicitly — never
+LlamaIndex global `Settings`). D2 (embeddings), D3 (vector store), D4 (frontend), D5 (LLM
+lineup) — open, defaults documented.
 
 ## Repo layout
 
