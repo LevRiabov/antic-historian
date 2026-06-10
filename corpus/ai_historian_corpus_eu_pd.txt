@@ -1,0 +1,64 @@
+# AI HISTORIAN — STARTER CORPUS (EU PUBLIC DOMAIN)
+# ------------------------------------------------------------------------------
+# Scope:    Antiquity (Greece & Rome) — primary sources + foundational scholarship.
+# Safety:   Every entry below clears the EU rule (life of author/translator + 70 yrs).
+#           As of 2026 that means the author AND translator both died in 1955 or earlier.
+#           This is NOT legal advice; for a public site, spot-check the borderline cases.
+# Source:   Project Gutenberg (US-hosted; these are also EU-clear by the death dates given).
+#           NB: gutenberg.org is geoblocked in Germany — use a mirror or PG's bulk data
+#           dumps there. Legality for you still turns on death+70, not on PG access.
+#
+# FORMAT:   pipe-delimited. Lines starting with # are comments — skip them in your parser.
+# COLUMNS:  id | category | author | title | translator | pd_basis | txt_url | landing_url
+#
+# TXT URL PATTERN (derive any PG plain-text file from its id):
+#           https://www.gutenberg.org/cache/epub/<ID>/pg<ID>.txt
+# ==============================================================================
+
+# --- PRIMARY SOURCES (ancient authors) ---
+2707|primary|Herodotus|The History of Herodotus, Vol. I (of 2)|G. C. Macaulay|Macaulay d.1915 (+70=1985)|https://www.gutenberg.org/cache/epub/2707/pg2707.txt|https://www.gutenberg.org/ebooks/2707
+7142|primary|Thucydides|The History of the Peloponnesian War|Richard Crawley|Crawley d.1893 (+70=1963)|https://www.gutenberg.org/cache/epub/7142/pg7142.txt|https://www.gutenberg.org/ebooks/7142
+1170|primary|Xenophon|Anabasis (The Persian Expedition)|H. G. Dakyns|Dakyns d.1911 (+70=1981)|https://www.gutenberg.org/cache/epub/1170/pg1170.txt|https://www.gutenberg.org/ebooks/1170
+1174|primary|Xenophon|Hellenica|H. G. Dakyns|Dakyns d.1911 (+70=1981)|https://www.gutenberg.org/cache/epub/1174/pg1174.txt|https://www.gutenberg.org/ebooks/1174
+674|primary|Plutarch|Plutarch's Lives (complete, Dryden ed.)|J. Dryden / A. H. Clough|Clough d.1861 (+70=1931)|https://www.gutenberg.org/cache/epub/674/pg674.txt|https://www.gutenberg.org/ebooks/674
+6400|primary|Suetonius|The Lives of the Twelve Caesars (complete)|Alexander Thomson|Thomson fl.~1796 (PD by age)|https://www.gutenberg.org/cache/epub/6400/pg6400.txt|https://www.gutenberg.org/ebooks/6400
+44125|primary|Polybius|The Histories of Polybius, Vol. I|Evelyn S. Shuckburgh|Shuckburgh d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/44125/pg44125.txt|https://www.gutenberg.org/ebooks/44125
+44126|primary|Polybius|The Histories of Polybius, Vol. II|Evelyn S. Shuckburgh|Shuckburgh d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/44126/pg44126.txt|https://www.gutenberg.org/ebooks/44126
+10828|primary|Livy|Roman History, Books I-III|D. Osborne (ed.)|Osborne d.1917 (+70=1987)|https://www.gutenberg.org/cache/epub/10828/pg10828.txt|https://www.gutenberg.org/ebooks/10828
+
+# --- FOUNDATIONAL SCHOLARSHIP (modern, EU-PD) ---
+25717|scholarship|Edward Gibbon|The History of the Decline and Fall of the Roman Empire (complete)|— (Milman/Bury notes)|Gibbon d.1794; Bury d.1927 (+70=1997)|https://www.gutenberg.org/cache/epub/25717/pg25717.txt|https://www.gutenberg.org/ebooks/25717
+10706|scholarship|Theodor Mommsen|The History of Rome, Vols. 1-5|William P. Dickson|Mommsen d.1903; Dickson d.1901|https://www.gutenberg.org/cache/epub/10706/pg10706.txt|https://www.gutenberg.org/ebooks/10706
+19694|scholarship|William Smith|A Smaller History of Rome|— (orig. English)|Smith d.1893 (+70=1963)|https://www.gutenberg.org/cache/epub/19694/pg19694.txt|https://www.gutenberg.org/ebooks/19694
+57143|scholarship|George Grote|History of Greece, Vol. 02 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/57143/pg57143.txt|https://www.gutenberg.org/ebooks/57143
+58565|scholarship|George Grote|History of Greece, Vol. 03 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/58565/pg58565.txt|https://www.gutenberg.org/ebooks/58565
+61469|scholarship|George Grote|History of Greece, Vol. 11 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/61469/pg61469.txt|https://www.gutenberg.org/ebooks/61469
+60786|scholarship|George Grote|History of Greece, Vol. 12 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/60786/pg60786.txt|https://www.gutenberg.org/ebooks/60786
+
+# ==============================================================================
+# APPENDIX — EU-PD-clear but enumerate the exact ids yourself (multi-volume sets,
+# or works where I won't guess an unverified id). All listed translators clear life+70.
+# ------------------------------------------------------------------------------
+# Herodotus  : Vol. II + other translations -> author page  https://www.gutenberg.org/ebooks/author/828
+# Thucydides : author page                                  https://www.gutenberg.org/ebooks/author/2352
+# Xenophon   : Cyropaedia, Memorabilia, etc.                https://www.gutenberg.org/ebooks/author/543
+# Suetonius  : per-emperor volumes                          https://www.gutenberg.org/ebooks/author/2024
+# Grote      : Vols 1, 4-10 (scattered ids)                 search "Grote History of Greece" on PG
+#
+# TACITUS    : Use the CHURCH & BRODRIBB translation (A. J. Church d.1912; W. J. Brodribb
+#              d.1905) for Annals/Histories/Germania/Agricola — EU-PD.
+#              DO NOT use PG #16927 (Histories, trans. W. Hamilton Fyfe): Fyfe d.1965,
+#              so that translation stays in EU copyright until 2036.
+# CAESAR     : English Gallic/Civil Wars = McDevitte & Bohn (1869) — EU-PD by age.
+#              On Gutenberg (Caesar author page) or Perseus (CC-BY-SA, see below).
+#              PG #218 is the LATIN text only.
+# JOSEPHUS   : Whiston translation (d.1752) — fully EU-PD. Wars / Antiquities / Life /
+#              Against Apion. Enumerate from Josephus author page (index = PG #29434).
+# ARRIAN     : Anabasis of Alexander = E. J. Chinnock translation (d.1915) — EU-PD.
+# ==============================================================================
+# BULK / STRUCTURED ALTERNATIVE (not Gutenberg) — better for citation-addressable RAG:
+#   PerseusDL/canonical-greekLit   git clone https://github.com/PerseusDL/canonical-greekLit
+#   PerseusDL/canonical-latinLit   git clone https://github.com/PerseusDL/canonical-latinLit
+#   License: CC-BY-SA-4.0 (attribution + share-alike) — fine to serve, with credit.
+#   Also: William Smith's Dictionaries (Antiquities / Biography / Geography), PD, on Perseus.
+# ==============================================================================
