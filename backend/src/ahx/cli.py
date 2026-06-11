@@ -250,11 +250,125 @@ def search(query: str, top_k: int = 5) -> None:
         console.print(f"        {preview}...\n")
 
 
-@app.command(name="eval")
-def run_eval() -> None:
-    """Run the golden-set evaluation suite (Phase 2)."""
-    typer.echo("Not implemented yet — Phase 2 (see project-plan.md).")
-    raise typer.Exit(code=1)
+eval_app = typer.Typer(help="Golden set + evaluation harness.")
+app.add_typer(eval_app, name="eval")
+
+
+@eval_app.command()
+def validate() -> None:
+    """Validate the golden set: schema, unique ids, quote resolution, counts."""
+    from ahx.config import get_settings
+    from ahx.evals.golden import (
+        CATEGORIES,
+        TARGET_V20_PER_CATEGORY,
+        ResolutionError,
+        load_golden_set,
+        resolve_span,
+    )
+
+    settings = get_settings()
+    golden_dir = Path(__file__).resolve().parents[2] / "evals" / "golden"
+    questions = load_golden_set(golden_dir)
+
+    errors: list[ResolutionError] = []
+    resolved_count = 0
+    for question in questions:
+        for span in question.gold_spans:
+            result = resolve_span(span, settings.corpus_normalized_dir, question.id)
+            if isinstance(result, ResolutionError):
+                errors.append(result)
+            else:
+                resolved_count += 1
+
+    table = Table(title=f"Golden set: {len(questions)} questions")
+    for column in ("category", "total", "reviewed", "v2.0 target"):
+        table.add_column(column)
+    for category in CATEGORIES:
+        in_category = [q for q in questions if q.category == category]
+        reviewed = sum(1 for q in in_category if q.status == "reviewed")
+        met = "[green]met[/green]" if len(in_category) >= TARGET_V20_PER_CATEGORY else ""
+        table.add_row(
+            category,
+            str(len(in_category)),
+            str(reviewed),
+            f"{len(in_category)}/{TARGET_V20_PER_CATEGORY} {met}",
+        )
+    console.print(table)
+    console.print(f"Gold spans resolved: {resolved_count}, failed: {len(errors)}")
+
+    for error in errors:
+        detail = f" ({error.occurrences} matches)" if error.problem == "ambiguous" else ""
+        console.print(
+            f"[red]  {error.question_id} pg{error.pg_id} {error.problem}{detail}: "
+            f"{error.quote_preview!r}[/red]"
+        )
+    if errors:
+        console.print(
+            "\n[yellow]Fix: make quotes exact substrings of the canonical text "
+            "(use the MCP find_quote tool), or lengthen ambiguous ones.[/yellow]"
+        )
+        raise typer.Exit(code=1)
+
+
+@eval_app.command(name="run")
+def eval_run(
+    retriever: str = typer.Option("dense-v1", help="Retriever variant label for the run record."),
+    top_k: int = typer.Option(20, help="Retrieval depth."),
+) -> None:
+    """Run retrieval-tier eval (recall@k, MRR) and save a versioned run record."""
+    from ahx.config import get_settings
+    from ahx.evals.golden import CATEGORIES, load_golden_set
+    from ahx.evals.retrieval import K_VALUES, run_retrieval_eval, save_run
+
+    settings = get_settings()
+    golden_dir = Path(__file__).resolve().parents[2] / "evals" / "golden"
+    questions = load_golden_set(golden_dir)
+
+    run = run_retrieval_eval(settings, questions, retriever_name=retriever, top_k=top_k)
+
+    table = Table(
+        title=f"Retrieval eval — {run.retriever} · {run.embed_model} · {run.chunking_version}"
+    )
+    table.add_column("category")
+    table.add_column("n")
+    for k in K_VALUES:
+        table.add_column(f"recall@{k}")
+    table.add_column("MRR")
+    for category in CATEGORIES:
+        summary = run.summarize(category)
+        if summary is None:
+            continue
+        table.add_row(
+            category,
+            str(summary.questions),
+            *(f"{summary.recall[k]:.1%}" for k in K_VALUES),
+            f"{summary.mrr:.3f}",
+        )
+    overall = run.summarize(None)
+    assert overall is not None
+    table.add_row(
+        "[bold]overall[/bold]",
+        str(overall.questions),
+        *(f"[bold]{overall.recall[k]:.1%}[/bold]" for k in K_VALUES),
+        f"[bold]{overall.mrr:.3f}[/bold]",
+    )
+    console.print(table)
+
+    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
+    path = save_run(run, runs_dir)
+    console.print(f"Run record: {path}")
+
+
+mcp_app = typer.Typer(help="MCP server over the corpus (golden-set authoring).")
+app.add_typer(mcp_app, name="mcp")
+
+
+@mcp_app.command(name="serve")
+def mcp_serve() -> None:
+    """Run the corpus MCP server on stdio (wired via repo-root .mcp.json)."""
+    from ahx.mcp_server import run
+
+    run()
 
 
 @app.command()

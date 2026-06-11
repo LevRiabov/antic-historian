@@ -1,0 +1,244 @@
+# Golden set — LITERAL: the answer sits verbatim in one passage of one work.
+# Tests basic vector retrieval. Format spec + workflow: docs/golden-set.md
+# Validate with: uv run ahx eval validate
+#
+# lit-001 is a WORKED EXAMPLE (verified to resolve) — keep, copy, extend.
+
+- id: lit-001
+  category: literal
+  question: How many wounds did Julius Caesar receive when he was assassinated?
+  ideal_answer: >-
+    According to Suetonius, Caesar was stabbed with twenty-three wounds. He
+    uttered a groan at the first wound but no cry, though some report that he
+    said "And you too, my son?" to Marcus Brutus.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        He was stabbed with three and twenty wounds, uttering a groan only,
+        but no cry, at the first wound
+      note: Suetonius, Julius LXXXII
+  notes: Worked example for the authoring format.
+  status: reviewed
+
+- id: lit-002
+  category: literal
+  question: According to Herodotus, what did Egyptian households do when a cat died a natural death?
+  ideal_answer: >-
+    According to Herodotus, everyone living in a house where a cat died a
+    natural death shaved their eyebrows — only their eyebrows, whereas when a
+    dog died they shaved their whole body and head.
+  gold_spans:
+    - pg_id: 2131
+      quote: >-
+        in whatever houses a cat has died by a natural death, all those who
+        dwell in this house shave their eyebrows only, but those in which a
+        dog has died shave their whole body and also their head
+      note: Herodotus II.66 (An Account of Egypt)
+  status: reviewed
+
+- id: lit-003
+  category: literal
+  question: What period of history did Gibbon declare the happiest and most prosperous for the human race?
+  ideal_answer: >-
+    Gibbon wrote that if asked to fix the period during which the condition of
+    the human race was most happy and prosperous, one would without hesitation
+    name the span from the death of Domitian to the accession of Commodus —
+    the era of Nerva, Trajan, Hadrian, and the Antonines.
+  gold_spans:
+    - pg_id: 25717
+      quote: >-
+        If a man were called to fix the period in the history of the world,
+        during which the condition of the human race was most happy and
+        prosperous, he would, without hesitation, name that which elapsed from
+        the death of Domitian to the accession of Commodus.
+      note: Gibbon, Decline and Fall, ch. III
+  status: reviewed
+
+- id: lit-004
+  category: literal
+  question: According to Tacitus, what did the Germans consider the greatest disgrace in battle?
+  ideal_answer: >-
+    Tacitus says the greatest disgrace that could befall a German warrior was
+    to have abandoned his shield. He adds that for a chief's companions it was
+    lifelong reproach and infamy to retreat from the field surviving their
+    chief.
+  gold_spans:
+    - pg_id: 7524
+      quote: >-
+        The greatest disgrace that can befall them is to have abandoned their
+        shields.
+      note: Tacitus, Germania 6
+    - pg_id: 7524
+      quote: >-
+        In the field of battle, it is disgraceful for the chief to be
+        surpassed in valor; it is disgraceful for the companions not to equal
+        their chief; but it is reproach and infamy during a whole succeeding
+        life to retreat from the field surviving him.
+      note: Tacitus, Germania 14
+  notes: >-
+    Two famous disgrace passages — a good answer may cite either or both, so
+    both are gold.
+  status: reviewed
+
+- id: lit-005
+  category: literal
+  question: Whom did the Athenians send as a runner to Sparta before the battle of Marathon, and what happened to him on the way?
+  ideal_answer: >-
+    The Athenian generals sent Pheidippides, a professional long-distance
+    runner, as herald to Sparta. On the way, by Mount Parthenion above Tegea,
+    the god Pan met him, called him by name, and bade him ask the Athenians
+    why they paid him no honor although he was well disposed to them and had
+    often been — and would again be — serviceable.
+  gold_spans:
+    - pg_id: 2456
+      quote: >-
+        the generals sent off to Sparta a herald, namely Pheidippides 94 an
+        Athenian and for the rest a runner of long day-courses and one who
+        practised this as his profession. With this man, as Pheidippides
+        himself said and as he made report to the Athenians, Pan chanced to
+        meet by mount Parthenion, which is above Tegea; and calling aloud the
+        name of Pheidippides, Pan bade him report to the Athenians and ask for
+        what reason they had no care of him, though he was well disposed to
+        the Athenians and had been serviceable to them on many occasions
+        before that time, and would be so also yet again.
+      note: Herodotus VI.105 ("94" is a footnote marker in the canonical text)
+    - pg_id: 60426
+      quote: >-
+        The god Pan had met the courier Pheidippidês on his hasty route from
+        Athens to Sparta, and had told him that he was much hurt that the
+        Athenians had as yet neglected to worship him
+      note: Grote vol. IV — retells the full episode; equally valid retrieval target
+  notes: >-
+    Grote vol. IV also retells the journey itself (150 miles in 48 hours) in a
+    separate passage without the Pan encounter — not gold (answers only half
+    the question).
+  status: reviewed
+
+- id: lit-006
+  category: literal
+  question: What epitaph was inscribed for the Spartans who fell at Thermopylae?
+  ideal_answer: >-
+    The inscription for the Spartans read (in Macaulay's translation):
+    "Stranger, report this word, we pray, to the Spartans, that lying here in
+    this spot we remain, faithfully keeping their laws."
+  gold_spans:
+    - pg_id: 2456
+      quote: >-
+        "Stranger, report this word, we pray, to the Spartans, that lying
+        Here in this spot we remain, faithfully keeping their laws."
+      note: Herodotus VII.228
+  status: reviewed
+
+- id: lit-007
+  category: literal
+  question: What was Augustus' boast about the city of Rome and what he did for it?
+  ideal_answer: >-
+    Augustus so improved the city — which had not been built in a manner
+    suited to the grandeur of the empire — that he boasted, in Suetonius'
+    words, that he "found it of brick, but left it of marble."
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        was so much improved under his administration, that he boasted, not
+        without reason, that he “found it of brick, but left it of marble.”
+      note: Suetonius, Augustus XXVIII
+    - pg_id: 6400
+      quote: >-
+        The well-known saying of Augustus, recorded by Suetonius, that he
+        found a city of bricks, but left it of marble
+      note: Same work, translator's footnote 150 — separate chunk region
+    - pg_id: 19694
+      quote: >-
+        Augustus was accustomed to say that he found Rome a city of brick, and
+        left it a city of marble.
+      note: Smith, Smaller History of Rome — independent retelling
+  notes: >-
+    The saying lives in three places; any of them fully answers the question.
+  status: reviewed
+
+- id: lit-008
+  category: literal
+  question: What honor did Caligula plan to give his horse Incitatus?
+  ideal_answer: >-
+    Suetonius reports it was said Caligula intended to make his horse
+    Incitatus consul. He had already given the horse a marble stable, an ivory
+    manger, purple housings, a jewelled frontlet, and a house with slaves and
+    furniture for entertaining guests invited in the horse's name.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        For this favourite animal, besides a marble stable, an ivory manger,
+        purple housings, and a jewelled frontlet, he appointed a house, with a
+        retinue of slaves, and fine furniture, for the reception of such as
+        were invited in the horse’s name to sup with him. It is even said that
+        he intended to make him consul.
+      note: Suetonius, Caligula LV
+    - pg_id: 10883
+      quote: >-
+        One of the horses, that he named Incitatus, he invited to dinner,
+        offered him golden barley, and drank his health in wine from gold
+        goblets. He took oaths by the same beast's Guardian Spirit and
+        Presiding Fortune and promised besides that he would appoint him
+        consul.
+      note: Cassius Dio LIX.14 — independent account, same fact
+  status: reviewed
+
+- id: lit-009
+  category: literal
+  question: How does Caesar describe the division of Gaul at the start of his commentaries?
+  ideal_answer: >-
+    Caesar opens by stating that all Gaul is divided into three parts, one
+    inhabited by the Belgae, another by the Aquitani, and the third by the
+    people called Celts in their own language and Gauls in Latin — all
+    differing from each other in language, customs, and laws.
+  gold_spans:
+    - pg_id: 10657
+      quote: >-
+        All Gaul is divided into three parts, one of which the Belgae inhabit,
+        the Aquitani another, those who in their own language are called
+        Celts, in ours Gauls, the third. All these differ from each other in
+        language, customs and laws.
+      note: Caesar, De Bello Gallico I.1
+  status: reviewed
+
+- id: lit-010
+  category: literal
+  question: What answer did the Delphic oracle give Croesus when he asked whether to attack Persia?
+  ideal_answer: >-
+    The oracles answered that if Croesus marched against the Persians he would
+    destroy a great empire, and counselled him to find the most powerful of
+    the Hellenes and make them his friends. The prophecy was ambiguous — the
+    great empire he destroyed turned out to be his own.
+  gold_spans:
+    - pg_id: 2707
+      quote: >-
+        the answers of both the Oracles agreed in one, declaring to Croesus
+        that if he should march against the Persians he should destroy a great
+        empire: and they counselled him to find out the most powerful of the
+        Hellenes and join these with himself as friends.
+      note: Herodotus I.53
+    - pg_id: 2707
+      quote: >-
+        Loxias told him beforehand that if he should march upon the Persians
+        he should destroy a great empire
+      note: Herodotus I.91 — the Pythia's own recap of the same prophecy
+  status: reviewed
+
+- id: lit-011
+  category: literal
+  question: What were Nero's last words about himself as he prepared to die?
+  ideal_answer: >-
+    As his grave was prepared before his eyes, Nero wept and repeatedly said,
+    "What an artist is now about to perish!"
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        weeping at every thing that was done, and frequently saying, “What an
+        artist is now about to perish!”
+      note: Suetonius, Nero XLIX
+    - pg_id: 10890
+      quote: >-
+        so he killed himself, uttering that far-famed sentence: "Jupiter, what
+        an artist perishes in me!"
+      note: Cassius Dio LXIII.29 — independent account of the same last words
+  status: reviewed

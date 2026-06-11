@@ -21,6 +21,8 @@ idiom, a one-line TS analogy helps (pydantic ≈ zod, uv ≈ pnpm, pytest fixtur
 | [docs/vector-stores.md](docs/vector-stores.md) | DB landscape; D3 default: Postgres+pgvector, Neon in prod |
 | [docs/chunking.md](docs/chunking.md) | Parse-then-chunk architecture, canonical locators |
 | [docs/rag-techniques.md](docs/rag-techniques.md) | Full technique menu, interactions, Phase 4 build order |
+| [docs/golden-set.md](docs/golden-set.md) | Golden set format + authoring workflow (MCP tools) |
+| [docs/eval-log.md](docs/eval-log.md) | **Append-only measured-results log** — every significant eval run gets an entry |
 | [module-10-build-plan.md](module-10-build-plan.md) | Buyer-facing feature thinking (UX North Star) |
 | docs/adr/ | One ADR per gate decision when taken |
 

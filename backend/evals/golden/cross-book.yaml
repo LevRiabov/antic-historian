@@ -1,0 +1,395 @@
+# Golden set — CROSS-BOOK (new in v2): synthesis across DIFFERENT works.
+# "How do Plutarch's and Suetonius' accounts of Caesar's funeral differ?"
+# "What do Thucydides and Grote say about Pericles' strategy?"
+# Gold spans MUST come from >= 2 different pg_ids. This category powers the
+# multi-source demo story; it needs works with overlapping coverage.
+
+- id: cb-001
+  category: cross-book
+  question: How do the sources judge Alcibiades?
+  ideal_answer: >-
+    Thucydides judges that his lawless personal extravagance — horses and
+    expenditure beyond his means — made the people fear him as an aspiring
+    tyrant, "and this later on had not a little to do with the ruin of the
+    Athenian state," though his public war conduct was excellent. Plutarch
+    fixes on his chameleon-like versatility, adapting to Spartan austerity or
+    Persian pomp at will. Grote, the modern voice, grants him boldness,
+    resource, and vigor "not surpassed by any contemporary Greek" while
+    damning his want of public principle.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        For the position he held among the citizens led him to indulge his
+        tastes beyond what his real means would bear, both in keeping horses
+        and in the rest of his expenditure; and this later on had not a little
+        to do with the ruin of the Athenian state. Alarmed at the greatness of
+        his licence in his own life and habits, and of the ambition which he
+        showed in all things soever that he undertook, the mass of the people
+        set him down as a pretender to the tyranny, and became his enemies
+      note: Thucydides VI.15
+    - pg_id: 674
+      quote: >-
+        he had, as it was observed, this peculiar talent and artifice for
+        gaining men's affections, that he could at once comply with and really
+        embrace and enter into their habits and ways of life, and change
+        faster than the chameleon.
+      note: Plutarch, Alcibiades — the chameleon
+    - pg_id: 51181
+      quote: >-
+        From the beginning to the end of his eventful political life, he
+        showed a combination of boldness in design, resource in contrivance,
+        and vigor in execution, not surpassed by any one of his contemporary
+        Greeks: and what distinguished him from all was his extraordinary
+        flexibility of character[60] and consummate power of adapting himself
+        to new habits, new necessities, and new persons, whenever
+        circumstances required.
+      note: Grote vol. VII ("[60]" is a footnote marker)
+  status: reviewed
+
+- id: cb-002
+  category: cross-book
+  question: How do the sources judge Themistocles?
+  ideal_answer: >-
+    Herodotus reports he was esteemed throughout Hellas as "the ablest by far
+    of the Hellenes" and uniquely honored at Sparta. Thucydides' obituary
+    calls his untaught native genius for instant judgment and prediction
+    "quite extraordinary and unparalleled." Grote balances the picture: his
+    rapacity made him hated and feared among the allies, and the suspicions
+    of treasonable medism at Athens grew from his own corrupt and
+    double-faced conduct.
+  gold_spans:
+    - pg_id: 2456
+      quote: >-
+        Themistocles was loudly reported of and was esteemed throughout Hellas
+        to be the man who was the ablest 89 by far of the Hellenes
+      note: Herodotus VIII.124 ("89" is a footnote marker)
+    - pg_id: 7142
+      quote: >-
+        For Themistocles was a man who exhibited the most indubitable signs of
+        genius; indeed, in this particular he has a claim on our admiration
+        quite extraordinary and unparalleled. By his own native capacity,
+        alike unformed and unsupplemented by study, he was at once the best
+        judge in those sudden crises which admit of little or of no
+        deliberation, and the best prophet of the future, even to its most
+        distant possibilities.
+      note: Thucydides I.138 — the character sketch
+    - pg_id: 62098
+      quote: >-
+        must have caused Themistoklês to be both hated and feared among the
+        insular allies, whose opinion was now of considerable importance to
+        the Athenians. A similar sentiment grew up partially against him in
+        Athens itself, and appears to have been connected with suspicions of
+        treasonable inclinations towards the Persians.
+      note: Grote vol. V — the dark side
+  status: reviewed
+
+- id: cb-003
+  category: cross-book
+  question: How is the disaster at Cannae described?
+  ideal_answer: >-
+    Polybius gives the soldier's accounting: of six thousand Roman horse only
+    seventy escaped with Varro, the infantry "died nobly" to the number of
+    seventy thousand, both sides fighting with conspicuous gallantry. Dio's
+    fragment calls it the most fearful disaster Rome ever suffered, preceded
+    by portents and Sibylline prophecy. Mommsen, the modern judge, treats the
+    "unexampled success" as the moment Hannibal's grand political combination
+    against Rome seemed to mature.
+  gold_spans:
+    - pg_id: 44125
+      quote: >-
+        Such was the end of the battle of Cannae, in which both sides fought
+        with the most conspicuous gallantry, the conquered no less than the
+        conquerors. This is proved by the fact that, out of six thousand
+        horse, only seventy escaped with Gaius Terentius to Venusia, and about
+        three hundred of the allied cavalry to various towns in the
+        neighbourhood.
+      note: Polybius III.117
+    - pg_id: 18047
+      quote: >-
+        they encountered elsewhere a fearful disaster, than which they never
+        suffered one more terrible either earlier or subsequently. It was
+        preceded by certain portents and the solemn verses of the Sibyl which
+        had prophesied the disaster to them so many years before.
+      note: Cassius Dio (Zonaras fragment), Book XV
+    - pg_id: 10706
+      quote: >-
+        This unexampled success appeared at length to mature the great
+        political combination, for the sake of which Hannibal had come to
+        Italy.
+      note: Mommsen, Book III ch. V
+  status: reviewed
+
+- id: cb-004
+  category: cross-book
+  question: How do historians ancient and modern assess Pericles?
+  ideal_answer: >-
+    Thucydides' famous verdict: by rank, ability, and known integrity he led
+    the multitude instead of being led, so that "what was nominally a
+    democracy became in his hands government by the first citizen." Plutarch
+    gives the deathbed self-assessment — his proudest claim was that "no
+    Athenian, through my means, ever wore mourning." Grote notes that his
+    immense ascendancy and unparalleled eloquence are attested even more
+    forcibly by his enemies than his friends.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        Pericles indeed, by his rank, ability, and known integrity, was
+        enabled to exercise an independent control over the multitude—in
+        short, to lead them instead of being led by them; for as he never
+        sought power by improper means, he was never compelled to flatter
+        them, but, on the contrary, enjoyed so high an estimation that he
+        could afford to anger them by contradiction.
+      note: Thucydides II.65
+    - pg_id: 674
+      quote: >-
+        He had listened, however, all the while, and attended to all, and
+        speaking out among them, said, that he wondered they should commend
+        and take notice of things which were as much owing to fortune as to
+        anything else, and had happened to many other commanders, and, at the
+        same time, should not speak or make mention of that which was the most
+        excellent and greatest thing of all. "For," said he, "no Athenian,
+        through my means, ever wore mourning."
+      note: Plutarch, Pericles — the deathbed verdict
+    - pg_id: 54936
+      quote: >-
+        But his immense and long-continued ascendency, as well as his
+        unparalleled eloquence, are facts attested not less by his enemies
+        than by his friends,—nay, even more forcibly by the former than by the
+        latter.
+      note: Grote vol. VI
+  status: reviewed
+
+- id: cb-005
+  category: cross-book
+  question: What did ancient writers know and say about Britain and its people?
+  ideal_answer: >-
+    Caesar, the first eyewitness, reports inland Britons who sow no corn,
+    live on milk and flesh, dress in skins, dye themselves blue with woad,
+    and hold wives in common. Tacitus weighs their origins from physical
+    type — the ruddy-haired Caledonians suggesting German stock, the swarthy
+    Silures Iberian. Strabo maps the island as a triangle parallel to the
+    Gallic coast, roughly 4,300–4,400 stadia along its longest side.
+  gold_spans:
+    - pg_id: 10657
+      quote: >-
+        Most of the inland inhabitants do not sow corn, but live on milk and
+        flesh, and are clad with skins. All the Britons, indeed, dye
+        themselves with wood, which occasions a bluish colour, and thereby
+        have a more terrible appearance in fight.
+      note: Caesar, BG V.14 ("wood" = woad in this translation)
+    - pg_id: 7524
+      quote: >-
+        Who were the first inhabitants of Britain, whether indigenous [44] or
+        immigrants, is a question involved in the obscurity usual among
+        barbarians. Their temperament of body is various, whence deductions
+        are formed of their different origin. Thus, the ruddy hair and large
+        limbs of the Caledonians [45] point out a German derivation.
+      note: Tacitus, Agricola 11 (bracketed numbers are footnote markers)
+    - pg_id: 44884
+      quote: >-
+        Britain is triangular in form; its longest side lies parallel to
+        Keltica, in length neither exceeding nor falling short of it; for each
+        of them extends as much as 4300 or 4400 stadia
+      note: Strabo IV.5
+  status: reviewed
+
+- id: cb-006
+  category: cross-book
+  question: How is Cleopatra's death reported across the sources?
+  ideal_answer: >-
+    All three sources report the famous asp while admitting uncertainty.
+    Plutarch describes her found dead in royal ornaments on a golden bed,
+    Iras dying at her feet and Charmion adjusting her diadem — but says "what
+    really took place is known to no one," weighing the asp in the figs
+    against poison in a hollow bodkin. Dio likewise: "no one knows clearly in
+    what manner she perished," only slight indentations on her arm.
+    Suetonius adds that Augustus, wanting her alive for his triumph, sent the
+    Psylli snake-charmers to suck out the poison.
+  gold_spans:
+    - pg_id: 674
+      quote: >-
+        on opening the doors, they saw her stone-dead, lying upon a bed of
+        gold, set out in all her royal ornaments. Iras, one of her women, lay
+        dying at her feet, and Charmion, just ready to fall, scarce able to
+        hold up her head, was adjusting her mistress's diadem.
+      note: Plutarch, Antony — the death scene
+    - pg_id: 674
+      quote: >-
+        But what really took place is known to no one. Since it was also said
+        that she carried poison in a hollow bodkin, about which she wound her
+        hair; yet there was not so much as a spot found, or any symptom of
+        poison upon her body, nor was the asp seen within the monument
+      note: Plutarch's uncertainty
+    - pg_id: 10162
+      quote: >-
+        No one knows clearly in what manner she perished, for there were found
+        merely slight indentations on her arm. Some say that she applied an
+        asp which had been brought in to her in a water-jar or among some
+        flowers.
+      note: Cassius Dio LI.14 — independent uncertainty
+    - pg_id: 6400
+      quote: >-
+        Cleopatra he anxiously wished to save for his triumph; and when she
+        was supposed to have been bit to death by an asp, he sent for the
+        Psylli [127] to (82) endeavour to suck out the poison.
+      note: >-
+        Suetonius, Augustus XVII — the Psylli detail ("[127]" and "(82)" are
+        footnote/page markers in the canonical text)
+  status: reviewed
+
+- id: cb-007
+  category: cross-book
+  question: What do the sources say about Alexander's final illness and death?
+  ideal_answer: >-
+    Both Plutarch and Arrian follow the Royal Diary: a fever after drinking
+    with Medius, worsening day by day as he continued bathing and
+    sacrificing, until he lay speechless — Arrian preserving the scene of the
+    soldiers filing past while he could only greet them with his eyes — and
+    died. Both record the later poisoning story; Plutarch calls it "a mere
+    made-up story," noting the body stayed uncorrupted for days, and Arrian
+    notes Aristobulus and Ptolemy agree with the diary, adding only the
+    alleged last word that the kingdom would go "to the best."
+  gold_spans:
+    - pg_id: 674
+      quote: >-
+        But the journals give the following record. On the eighteenth of the
+        month, he slept in the bathing-room on account of his fever. The next
+        day he bathed and removed into his chamber, and spent his time in
+        playing dice with Medius.
+      note: Plutarch, Alexander — the diary record
+    - pg_id: 674
+      quote: >-
+        However, most are of opinion that all this is a mere made-up story, no
+        slight evidence of which is, that during the dissensions among the
+        commanders, which lasted several days, the body continued clear and
+        fresh, without any sign of such taint or corruption, though it lay
+        neglected in a close, sultry place.
+      note: Plutarch dismisses the poison tale
+    - pg_id: 46976
+      quote: >-
+        It is said that when his soldiers passed by him he was unable to
+        speak; yet he greeted each of them with his right hand, raising his
+        head with difficulty and making a sign with his eyes.
+      note: Arrian VII.26 — the soldiers file past
+    - pg_id: 46976
+      quote: >-
+        Neither Aristobulus nor Ptolemy has given an account differing much
+        from the preceding. Some authors, however, have related that his
+        Companions asked him to whom he left his kingdom; and that he replied:
+        “To the best.”
+      note: Arrian VII.26 — sources weighed, "to the best"
+  status: reviewed
+
+- id: cb-008
+  category: cross-book
+  question: How do Roman writers describe the Germans' way of fighting?
+  ideal_answer: >-
+    Caesar, from battlefield experience, describes them rapidly forming a
+    phalanx so dense his soldiers leapt onto it to tear away shields from
+    above. Tacitus, the ethnographer, details the framea — the short, sharp,
+    all-purpose spear used at close quarters or thrown — the wedge-shaped
+    battle line, the doctrine that giving ground to rally again is prudence
+    rather than cowardice, and the carrying off of their dead mid-battle.
+  gold_spans:
+    - pg_id: 10657
+      quote: >-
+        But the Germans, according to their custom, rapidly forming a phalanx,
+        sustained the attack of our swords. There were found very many of our
+        soldiers who leaped upon the phalanx, and with their hands tore away
+        the shields, and wounded the enemy from above.
+      note: Caesar, BG I.52 — against Ariovistus
+    - pg_id: 7524
+      quote: >-
+        they generally carry a spear, (called in their language _framea_,
+        [39]) which has an iron blade, short and narrow, but so sharp and
+        manageable, that, as occasion requires, they employ it either in close
+        or distant fighting.
+      note: Tacitus, Germania 6 — the framea ("[39]" is a footnote marker)
+    - pg_id: 7524
+      quote: >-
+        Their line of battle is disposed in wedges. [48] To give ground,
+        provided they rally again, is considered rather as a prudent
+        strategem, than cowardice. They carry off their slain even while the
+        battle remains undecided.
+      note: Tacitus, Germania 6 — tactics
+  status: reviewed
+
+- id: cb-009
+  category: cross-book
+  question: How was Caesar's funeral described, and what did it unleash?
+  ideal_answer: >-
+    Suetonius describes the planned pyre in the Campus Martius overtaken by
+    the crowd: two armed men fired the bier before the Rostra and the throng
+    heaped on benches and court furniture; afterwards the populace ran with
+    torches to the houses of Brutus and Cassius and lynched the wrong Cinna.
+    Plutarch adds the cause: Antony's funeral oration, climaxing in the
+    unfolding of Caesar's bloody, pierced garment, after which the mob burned
+    the body on an improvised pyre and ran with the half-burnt brands to fire
+    the murderers' houses.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        While some proposed that the body should be burnt in the sanctuary of
+        the temple of Jupiter Capitolinus, and others in Pompey’s
+        senate-house; on a sudden, two men, with swords by their sides, and
+        spears in their hands, set fire to the bier with lighted torches.
+      note: Suetonius, Julius LXXXIV
+    - pg_id: 6400
+      quote: >-
+        The populace ran from the funeral, with torches in their hands, to the
+        houses of Brutus and Cassius, and were repelled with difficulty.
+      note: Suetonius, Julius LXXXV — the aftermath
+    - pg_id: 674
+      quote: >-
+        when the body was brought forth into the forum, Antony, as the custom
+        was, making a funeral oration in the praise of Caesar, and finding the
+        multitude moved with his speech, passing into the pathetic tone,
+        unfolded the bloody garment of Caesar, showed them in how many places
+        it was pierced, and the number of his wounds.
+      note: Plutarch, Antony — the oration and the bloody garment
+    - pg_id: 674
+      quote: >-
+        As soon as the fire flamed out, the multitude, flocking in some from
+        one part and some from another, snatched the brands that were half
+        burnt out of the pile, and ran about the city to fire the houses of
+        the murderers of Caesar.
+      note: Plutarch, Antony — the brands
+  status: reviewed
+
+- id: cb-010
+  category: cross-book
+  question: What did ancient writers believe about the sources and flooding of the Nile?
+  ideal_answer: >-
+    Herodotus reviews three Greek theories of the summer flood — the Etesian
+    winds, the world-encircling Ocean, and melting snow — refutes them all
+    (offering his own sun-driven explanation), and reports that no Egyptian,
+    Libyan, or Greek professed to know the river's sources except a Sais
+    scribe he didn't believe. Strabo, writing centuries later, says what the
+    ancients only conjectured had become eyewitness knowledge: the Nile owes
+    its rise to summer rains falling in the mountains of Upper Ethiopia.
+  gold_spans:
+    - pg_id: 2131
+      quote: >-
+        However some of the Hellenes who desired to gain distinction for
+        cleverness have given an account of this water in three different
+        ways: two of these I do not think it worth while even to speak of
+        except only to indicate their nature; of which the one says that the
+        Etesian Winds are the cause that makes the river rise, by preventing
+        the Nile from flowing out into the sea.
+      note: Herodotus II.20 — the three theories
+    - pg_id: 2131
+      quote: >-
+        as to the sources of the Nile, not one either of the Egyptians or of
+        the Libyans or of the Hellenes, who came to speech with me, professed
+        to know anything, except the scribe of the sacred treasury of Athene
+        at the city of Sais in Egypt.
+      note: Herodotus II.28 — the unknown sources
+    - pg_id: 44886
+      quote: >-
+        The ancients understood more by conjecture than otherwise, but persons
+        in later times learnt by experience as eye-witnesses, that the Nile
+        owes its rise to summer rains, which fall in great abundance in Upper
+        Ethiopia, particularly in the most distant mountains. On the rains
+        ceasing, the fulness of the river gradually subsides.
+      note: Strabo XVII.1 — the later, correct answer
+  status: reviewed

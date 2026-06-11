@@ -1,0 +1,322 @@
+# Golden set — CONTRADICTION: sources DISAGREE and a good answer says so,
+# attributing each version ("Suetonius reports X, but Plutarch says Y").
+# Gold spans: the disagreeing passages, >= 2 different pg_ids (or clearly
+# separated passages within one work). The headline demo category.
+
+- id: con-001
+  category: contradiction
+  question: How did Romulus die?
+  ideal_answer: >-
+    The sources disagree. The official version, in both Livy and Plutarch, is
+    that while Romulus was reviewing the army at the Goat's Marsh a sudden
+    storm enveloped him and he was carried up to heaven, thereafter worshipped
+    as the god Quirinus. But both historians also preserve a darker rumor:
+    that the senators (fathers), resentful of his rule, fell upon him and tore
+    his body to pieces, each carrying away a part — Plutarch placing the deed
+    in the temple of Vulcan.
+  gold_spans:
+    - pg_id: 10828
+      quote: >-
+        the Roman youth seeing the royal seat empty--though they readily
+        believed the words of the fathers who had stood nearest him, that he
+        had been carried up to heaven by the storm--yet, struck as it were
+        with the fear of being fatherless, for a considerable time preserved a
+        sorrowful silence.
+      note: Livy I.16 — the apotheosis version
+    - pg_id: 10828
+      quote: >-
+        I believe that even then there were some, who in secret were convinced
+        that the king had been torn in pieces by the hands of the fathers--for
+        this rumour also spread
+      note: Livy I.16 — the murder rumor
+    - pg_id: 674
+      quote: >-
+        So that some fancied, the senators, having fallen upon him ill the
+        temple of Vulcan, cut his body into pieces, and took each a part away
+        in his bosom
+      note: Plutarch, Romulus — the murder version, independently ("ill" is a typo in the canonical text)
+  status: reviewed
+
+- id: con-002
+  category: contradiction
+  question: How did Themistocles die?
+  ideal_answer: >-
+    Thucydides states plainly that disease was the real cause of his death,
+    noting only as a rumor the story that he poisoned himself on finding he
+    could not deliver Greece to the Persian king. Plutarch gives the dramatic
+    suicide as "the usual story" — that Themistocles sacrificed, feasted with
+    his friends, and drank bull's blood — while acknowledging the alternative
+    that it was a fast-acting poison.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        Disease was the real cause of his death; though there is a story of
+        his having ended his life by poison, on finding himself unable to
+        fulfil his promises to the king.
+      note: Thucydides I.138 — disease, poison as rumor
+    - pg_id: 674
+      quote: >-
+        He sacrificed to the gods, and invited his friends; and, having
+        entertained them and shaken hands with them, drank bull's blood, as is
+        the usual story; as others state, a poison producing instant death;
+        and ended his days in the city of Magnesia, having lived sixty-five
+        years
+      note: Plutarch, Themistocles — bull's blood suicide as the usual story
+  status: reviewed
+
+- id: con-003
+  category: contradiction
+  question: Did Caligula actually intend to make his horse consul?
+  ideal_answer: >-
+    The two sources differ in confidence. Suetonius reports it only as
+    hearsay — "it is even said that he intended to make him consul." Cassius
+    Dio states it more strongly: that Caligula promised the consulship to the
+    horse Incitatus and "would certainly have done" it had he lived longer.
+    So the claim is a guarded rumor in Suetonius and a near-assertion in Dio.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        It is even said that he intended to make him consul.
+      note: Suetonius, Caligula LV — hedged as rumor
+    - pg_id: 10883
+      quote: >-
+        promised besides that he would appoint him consul. This he would
+        certainly have done, too, if he had lived longer.
+      note: Cassius Dio LIX.14 — stated as near-certain
+  status: reviewed
+
+- id: con-004
+  category: contradiction
+  question: How did Bucephalus die?
+  ideal_answer: >-
+    The sources disagree on whether the horse died of battle wounds or of old
+    age. Arrian insists explicitly that Bucephalas died "not from having been
+    wounded by any one, but from the effects of toil and old age." Plutarch
+    reports both: that most authorities say he died under treatment for his
+    wounds after the battle with Porus, though Onesicritus says it was fatigue
+    and age. Both agree he was about thirty and that Alexander founded a city
+    (Bucephala) in his memory.
+  gold_spans:
+    - pg_id: 46976
+      quote: >-
+        Bucephala in memory of his horse Bucephalas, which died there, not
+        from having been wounded by any one, but from the effects of toil and
+        old age
+      note: Arrian V.19 — age, explicitly not wounds
+    - pg_id: 674
+      quote: >-
+        Some little time after the battle with Porus, Bucephalas died, as most
+        of the authorities state, under cure of his wounds, or as Onesicritus
+        says, of fatigue and age, being thirty years old.
+      note: Plutarch, Alexander — wounds (most) vs. age (Onesicritus)
+  status: reviewed
+
+- id: con-005
+  category: contradiction
+  question: How did Xerxes get back to Asia after Salamis?
+  ideal_answer: >-
+    Herodotus himself records two conflicting accounts. In his main
+    narrative, Xerxes marched his army by land to the Hellespont and crossed
+    to Abydos by ship, the bridges having been broken by a storm. But he then
+    reports "another story": that Xerxes sailed from Eion on the Strymon in a
+    Phoenician ship caught in a storm, and that the Persian nobles on deck
+    leapt into the sea to lighten it and save the king — a tale Herodotus
+    relates but disbelieves.
+  gold_spans:
+    - pg_id: 2456
+      quote: >-
+        when passing on from Thrace they came to the passage, they crossed
+        over the Hellespont in haste to Abydos by means of the ships, for they
+        did not find the floating-bridges still stretched across but broken up
+        by a storm.
+      note: Herodotus VIII.117 — the land-march version
+    - pg_id: 2456
+      quote: >-
+        There is also another story reported as follows, namely that when
+        Xerxes on his march away from Athens came to Eïon on the Strymon, from
+        that point he did not continue further to make marches by road, but
+        delivered his army to Hydarnes to lead back to the Hellespont, while
+        he himself embarked in a Phenician ship and set forth for Asia
+      note: Herodotus VIII.118 — the sea-storm version (which he goes on to reject)
+  notes: >-
+    Both spans are within one work, but Herodotus explicitly attributes them
+    as rival accounts — the doc allows clearly-separated passages in one work.
+  status: reviewed
+
+- id: con-006
+  category: contradiction
+  question: How did Remus die?
+  ideal_answer: >-
+    Livy gives two versions side by side: that Remus fell in the brawl that
+    broke out when the brothers' rival bird-omens were disputed, or — the
+    "more common account" — that he leaped over Romulus's newly-built walls in
+    derision and Romulus killed him in a rage, crying "So perish every one
+    hereafter, who shall leap over my walls." Smith's history follows the
+    leaping-the-wall version as the standard one.
+  gold_spans:
+    - pg_id: 10828
+      quote: >-
+        there Remus fell from a blow received in the crowd. A more common
+        account is that Remus, in derision of his brother, leaped over the
+        newly-erected walls, and was thereupon slain by Romulus in a fit of
+        passion, who, mocking him, added words to this effect:" So perish
+        every one hereafter, who shall leap over my walls."
+      note: Livy I.7 — both versions in one sentence
+    - pg_id: 19694
+      quote: >-
+        One day Remus leapt over it in scorn; whereupon Romulus slew him,
+        exclaiming, "So die whosoever hereafter shall leap over my walls."
+      note: Smith, Smaller History — the leaping version as standard
+  status: reviewed
+
+- id: con-007
+  category: contradiction
+  question: How did Alexander deal with the Gordian knot?
+  ideal_answer: >-
+    The sources split on whether he cut it or untied it by a trick. Arrian
+    reports that some say Alexander, unable to loosen the cord, struck it with
+    his sword and cut it through — but that Aristobulus says he pulled out the
+    pin of the wagon-pole and so drew out the yoke. Plutarch gives the same
+    two versions: most authors say he cut it with his sword, but Aristobulus
+    says he undid it easily by pulling out the pin.
+  gold_spans:
+    - pg_id: 46976
+      quote: >-
+        It is said by some that when Alexander could find out no way to loosen
+        the cord and yet was unwilling to allow it to remain unloosened, lest
+        it should exercise some disturbing influence upon the multitude, he
+        struck the cord with his sword and cut it through, saying that it had
+        been untied by him. But Aristobulus says that he pulled out the pin of
+        the wagon-pole, which was a wooden peg driven right through it, holding
+        the cord together.
+      note: Arrian II.3 — sword vs. pin
+    - pg_id: 674
+      quote: >-
+        Most authors tell the story that Alexander, finding himself unable to
+        untie the knot, the ends of which were secretly twisted round and
+        folded up within it, cut it asunder with his sword. But Aristobulus
+        tells us it was easy for him to undo it, by only pulling the pin out
+        of the pole, to which the yoke was tied, and afterwards drawing off
+        the yoke itself from below.
+      note: Plutarch, Alexander — same two versions, same attribution to Aristobulus
+  status: reviewed
+
+- id: con-008
+  category: contradiction
+  question: What did Nero say about an artist dying, and when?
+  ideal_answer: >-
+    The wording and timing differ between sources. Suetonius reports that as
+    his grave was dug before his eyes Nero wept and kept repeating "What an
+    artist is now about to perish!" Cassius Dio gives a different form and
+    moment: that Nero spoke the "far-famed sentence" — "Jupiter, what an
+    artist perishes in me!" — at the very instant he killed himself.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        weeping at every thing that was done, and frequently saying, “What an
+        artist is now about to perish!”
+      note: Suetonius, Nero XLIX — while the grave was prepared
+    - pg_id: 10890
+      quote: >-
+        so he killed himself, uttering that far-famed sentence: "Jupiter, what
+        an artist perishes in me!"
+      note: Cassius Dio LXIII.29 — at the moment of the death-blow, different wording
+  status: reviewed
+
+- id: con-009
+  category: contradiction
+  question: Why did Tarpeia betray the citadel, and how did she die?
+  ideal_answer: >-
+    All sources agree she was bribed by the gold the Sabines wore on their
+    left arms and was crushed to death under their shields, but they differ on
+    her intent. Livy gives the standard treacherous version (she was bribed to
+    admit the soldiers and crushed under their arms) but also reports an
+    alternative: that she demanded their shields in good faith, meaning to
+    disarm them, and was killed as if a traitor by the very reward she chose.
+    Plutarch agrees she coveted the golden bracelets and asked for "the things
+    they wore on their left arms."
+  gold_spans:
+    - pg_id: 10828
+      quote: >-
+        his maiden daughter, who at the time had gone by chance outside the
+        walls to fetch water for sacrifice, was bribed by Tatius, to admit
+        some armed soldiers into the citadel. After they were admitted, they
+        crushed her to death by heaping their arms upon her
+      note: Livy I.11 — the treacherous version
+    - pg_id: 10828
+      quote: >-
+        Some say that, in accordance with the agreement that they should
+        deliver up what was on their left hands, she expressly demanded their
+        shields, and that, as she seemed to be acting treacherously, she
+        herself was slain by the reward she had chosen for herself.
+      note: Livy I.11 — the exculpatory alternative
+    - pg_id: 674
+      quote: >-
+        But Tarpeia, daughter to the captain, coveting the golden bracelets
+        she saw them wear, betrayed the fort into the Sabines' hands, and
+        asked, in reward of her treachery, the things they wore on their left
+        arms.
+      note: Plutarch, Romulus — covetous-treachery version
+  status: reviewed
+
+- id: con-010
+  category: contradiction
+  question: What was Lycurgus' date and life story?
+  ideal_answer: >-
+    The sources cannot agree on almost anything about him. Plutarch opens his
+    Life by warning that scarcely anything asserted by one historian is not
+    contradicted by another — as to his family, his travels, the manner of his
+    death, and above all the very age in which he lived. Grote sharpens the
+    specific disagreement: Herodotus makes Lycurgus uncle and guardian of king
+    Labotas of the Agid line (placing him about 996 BC), whereas all other
+    accounts make him a younger brother of the rival Proclid line.
+  gold_spans:
+    - pg_id: 674
+      quote: >-
+        There is so much uncertainty in the accounts which historians have
+        left us of Lycurgus, the lawgiver of Sparta, that scarcely anything is
+        asserted by one of them which is not called into question or
+        contradicted by the rest. Their sentiments are quite different as to
+        the family he came of, the voyages he undertook, the place and manner
+        of his death, but most of all when they speak of the laws he made and
+        the commonwealth which he founded. They cannot, by any means, be
+        brought to an agreement as to the very age in which he lived
+      note: Plutarch, Lycurgus — the meta-contradiction itself
+    - pg_id: 57143
+      quote: >-
+        Lykurgus is described by Herodotus as uncle and guardian to king
+        Labôtas, of the Eurystheneid or Agid line of Spartan kings; and this
+        would place him, according to the received chronology, about 220 years
+        before the first recorded Olympiad (about B. C. 996).[568] All the
+        other accounts, on the contrary, seem to represent him as a younger
+        brother, belonging to the other or Prokleid line of Spartan kings,
+        though they do not perfectly agree respecting his parentage.
+      note: Grote vol. II — the specific Herodotus-vs-rest disagreement ("[568]" is a footnote marker)
+  status: reviewed
+
+- id: con-011
+  category: contradiction
+  question: Who was to blame for losing the battle of Cannae?
+  ideal_answer: >-
+    Both sources fault the consul Varro (Gaius Terentius), but with different
+    emphasis. Polybius lays the disaster squarely on him personally — his
+    flight to Venusia was "as disgraceful to himself as his conduct in office
+    had been disastrous to his country." Mommsen, while equally scornful of
+    "the hero of the pavement," frames the deeper fault as systemic: the old
+    custom of alternating supreme command between the two consuls day by day,
+    which forced the cautious Paullus to yield to Varro's will.
+  gold_spans:
+    - pg_id: 44125
+      quote: >-
+        some few escaped into Venusia, among whom was Gaius Terentius, the
+        Consul, who thus sought a flight, as disgraceful to himself, as his
+        conduct in office had been disastrous to his country.
+      note: Polybius III.116 — blame on Varro personally
+    - pg_id: 10706
+      quote: >-
+        According to the old custom foolishly retained, the decisive voice in
+        the council of war alternated between the commanders-in-chief day by
+        day; it was necessary therefore on the following day to submit, and to
+        let the hero of the pavement have his way.
+      note: Mommsen, Book III ch. V — blame on the alternating-command system
+  status: reviewed

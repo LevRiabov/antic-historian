@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ahx-corpus": {
+      "command": "uv",
+      "args": ["run", "--project", "backend", "ahx", "mcp", "serve"]
+    }
+  }
+}

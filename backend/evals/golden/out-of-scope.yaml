@@ -1,0 +1,83 @@
+# Golden set — OUT-OF-SCOPE: questions the corpus CANNOT answer. The correct
+# behavior is an explicit refusal. No ideal_answer, no gold_spans.
+# Good OOS questions are adjacent-but-absent: medieval/modern history, or
+# antiquity details genuinely not covered by these 38 works.
+
+- id: oos-001
+  category: out-of-scope
+  question: What did Napoleon do at the Battle of Austerlitz?
+  notes: Worked example. Deliberately far from the corpus.
+  status: reviewed
+
+- id: oos-002
+  category: out-of-scope
+  question: What does the Bayeux Tapestry depict about the Norman conquest?
+  notes: Medieval — adjacent discipline, absent from corpus.
+  status: reviewed
+
+- id: oos-003
+  category: out-of-scope
+  question: What does the Code of Hammurabi say about punishments for theft?
+  notes: >-
+    Verified absent (2026-06-11). Adversarial: retrieval surfaces Solon's
+    theft laws (Grote III) and the Twelve Tables (Gibbon) — system must not
+    substitute them.
+  status: reviewed
+
+- id: oos-004
+  category: out-of-scope
+  question: What does the Epic of Gilgamesh say about the great flood?
+  notes: >-
+    Verified absent. Babylon's customs are richly covered (Herodotus I), but
+    cuneiform literature was undeciphered until the 19th century.
+  status: reviewed
+
+- id: oos-005
+  category: out-of-scope
+  question: What is written on the Rosetta Stone?
+  notes: >-
+    Verified absent. Egypt-adjacent — Herodotus' Egypt is in corpus, the
+    stone (found 1799) is not.
+  status: reviewed
+
+- id: oos-006
+  category: out-of-scope
+  question: What was the Antikythera mechanism used for?
+  notes: >-
+    Verified absent. Adversarial: retrieval surfaces Archimedes' machines
+    (Plutarch, Marcellus) and Eratosthenes' instruments (Strabo).
+  status: reviewed
+
+- id: oos-007
+  category: out-of-scope
+  question: What do the Linear B tablets reveal about Mycenaean Greece?
+  notes: >-
+    Verified absent. Adversarial: Grote vols. I-II discuss Mycenaean legend
+    and early inscriptions at length; the tablets (deciphered 1952) are not
+    there.
+  status: reviewed
+
+- id: oos-008
+  category: out-of-scope
+  question: Who built Stonehenge, and for what purpose?
+  notes: >-
+    Verified absent. Britain is covered (Caesar, Tacitus Agricola, Dio on
+    Boudicca) — Stonehenge never appears.
+  status: reviewed
+
+- id: oos-009
+  category: out-of-scope
+  question: What do the Dead Sea Scrolls contain?
+  notes: >-
+    Verified absent. Judea appears in Gibbon/Dio/Suetonius (incl. Gibbon's
+    notes on Temple excavations) — the scrolls (found 1947) do not.
+  status: reviewed
+
+- id: oos-010
+  category: out-of-scope
+  question: Why is Roman concrete so durable compared to modern concrete?
+  notes: >-
+    Verified absent. No Vitruvius in corpus; Roman building is described
+    politically, never materially (closest: Gibbon on marble burnt to lime —
+    different fact).
+  status: reviewed

@@ -10,7 +10,9 @@ dependencies = [
     "pydantic>=2.10",
     "pydantic-settings>=2.7",
     "httpx>=0.28",
+    "mcp>=1.2",
     "pgvector>=0.3",
+    "pyyaml>=6.0",
     "psycopg[binary]>=3.2",
     "sqlalchemy>=2.0",
     "tiktoken>=0.8",
@@ -27,6 +29,7 @@ dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.25",
     "pytest-cov>=6.0",
+    "types-pyyaml>=6.0",
 ]
 # D1 framework spike only — removed (along with spikes/) once the gate is decided.
 spike = [

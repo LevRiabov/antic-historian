@@ -1,0 +1,282 @@
+# Golden set — SYNONYM: the question uses different vocabulary than the text
+# (modern phrasing vs Victorian translation; "epilepsy" vs "falling sickness").
+# Tests vocabulary-mismatch robustness. Spec: docs/golden-set.md
+#
+# Template:
+# - id: syn-001
+#   category: synonym
+#   question: ...modern-vocabulary question...
+#   ideal_answer: >-
+#     ...
+#   gold_spans:
+#     - pg_id: 0
+#       quote: >-
+#         ...exact archaic-vocabulary passage...
+#   status: draft
+
+- id: syn-001
+  category: synonym
+  question: What were the symptoms of the epidemic that devastated Athens?
+  ideal_answer: >-
+    Thucydides (who had the disease himself) describes the "distemper" thus:
+    people in good health were suddenly attacked by violent heats in the head,
+    redness and inflammation of the eyes, a bloody throat and tongue with
+    fetid breath, then sneezing, hoarseness, chest pain and a hard cough,
+    stomach upset and retching with violent spasms. Most died around the
+    seventh to ninth day; in survivors the disease could descend into the
+    bowels (fatal diarrhoea), or cost them fingers, toes, eyes, or memory.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        people in good health were all of a sudden attacked by violent heats
+        in the head, and redness and inflammation in the eyes, the inward
+        parts, such as the throat or tongue, becoming bloody and emitting an
+        unnatural and fetid breath. These symptoms were followed by sneezing
+        and hoarseness, after which the pain soon reached the chest, and
+        produced a hard cough.
+      note: Thucydides II.49 — text calls it "the distemper" / "pestilence"
+    - pg_id: 54936
+      quote: >-
+        The seizures were perfectly sudden, and a large proportion of the
+        sufferers perished, after deplorable agonies, on the seventh or on the
+        ninth day: others, whose strength of constitution carried them over
+        this period, found themselves the victims of exhausting and incurable
+        diarrhœa afterwards
+      note: Grote vol. VI retells the symptoms — equally valid retrieval target
+  notes: Vocabulary gap — "epidemic" never appears; the texts say distemper/pestilence/malady.
+  status: reviewed
+
+- id: syn-002
+  category: synonym
+  question: What role did mass kidnapping play in early Rome's search for wives?
+  ideal_answer: >-
+    Rome under Romulus was short of women and neighboring peoples refused
+    intermarriage, so Romulus staged games (the Consualia) and invited the
+    neighbors; at a signal the Roman youths rushed in and carried off the
+    unmarried women — the "rape of the Sabine women." The ensuing war with the
+    Sabines ended with the women themselves brokering peace and the two
+    peoples merging.
+  gold_spans:
+    - pg_id: 10828
+      quote: >-
+        according to preconcerted arrangement, a disturbance was made, and, at
+        a given signal, the Roman youths rushed in different directions to
+        carry off the unmarried women. A great number were carried off at
+        hap-hazard, by those into whose hands they severally fell
+      note: Livy I.9 — "carry off", not "kidnap"
+    - pg_id: 674
+      quote: >-
+        drawing their swords and falling on with a great shout, they ravished
+        away the daughters of the Sabines, they themselves flying without any
+        let or hindrance
+      note: Plutarch, Romulus — independent retelling
+    - pg_id: 19694
+      quote: >-
+        He proclaimed that games were to be celebrated in honor of the god
+        Consus, and invited his neighbors, the Latins and Sabines, to the
+        festival. Suspecting no treachery, they came in numbers with their
+        wives and children, but the Roman youths rushed upon their guests and
+        carried off the virgins.
+      note: Smith, Smaller History of Rome — scholarship retelling
+  status: reviewed
+
+- id: syn-003
+  category: synonym
+  question: How did the Sabine commander Mettius Curtius end up in a swamp during the battle for Rome?
+  ideal_answer: >-
+    During the battle between Romans and Sabines on the future site of the
+    Forum, Mettius Curtius' horse took fright at the noise of his pursuers
+    and carried him headlong into a morass; he barely escaped (Plutarch says
+    he abandoned the mired horse and saved himself). The spot was afterwards
+    called the Curtian Lake.
+  gold_spans:
+    - pg_id: 10828
+      quote: >-
+        Mettius, his horse taking fright at the noise of his pursuers, rode
+        headlong into a morass: this circumstance drew off the attention of
+        the Sabines also at the danger of so high a personage.
+      note: Livy I.12 — "morass", not "swamp"
+    - pg_id: 674
+      quote: >-
+        Curtius, a gallant man, eager of honor, and of aspiring thoughts,
+        being mounted on horseback, was galloping on before the rest, and
+        mired his horse here, and, endeavoring for awhile by whip and spur and
+        voice to disentangle him, but finding it impossible, quitted him and
+        saved himself; the place from him to this very time is called the
+        Curtian Lake.
+      note: Plutarch, Romulus — "deep blind mud and slime"
+  status: reviewed
+
+- id: syn-004
+  category: synonym
+  question: What omens were believed to have foretold Claudius' death?
+  ideal_answer: >-
+    Suetonius lists as the chief presages a comet, lightning striking his
+    father Drusus' monument, and the deaths of magistrates of all ranks that
+    year. Cassius Dio adds a shower of blood, a thunderbolt on the Praetorian
+    standards, the temple of Jupiter Victor opening of its own accord, and
+    bees swarming in the camp.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        The chief presages of his death were, the appearance of a comet, his
+        father Drusus’s monument being struck by lightning, and the death of
+        most of the magistrates of all ranks that year.
+      note: Suetonius, Claudius XLVI — "presages", not "omens"
+    - pg_id: 10883
+      quote: >-
+        It seemed that indications of this event were given in advance by the
+        comet star, which was seen over a wide expanse of territory, by the
+        shower of blood, by the bolt that descended upon the standards of the
+        Pretorians, by the opening of its own accord of the temple of Jupiter
+        Victor, by the swarming of bees in the camp, and by the fact that one
+        representative of each political office died.
+      note: Cassius Dio LX.35 — independent list
+  status: reviewed
+
+- id: syn-005
+  category: synonym
+  question: Does Thucydides describe anything like a tsunami?
+  ideal_answer: >-
+    Yes. He reports that during the earthquakes of 426 BC the sea at Orobiae
+    in Euboea retired from the coast and returned in a huge wave, flooding
+    part of the town and leaving some of it permanently under water, killing
+    those who could not reach high ground (with a similar inundation at
+    Atalanta). He even gives the correct causal explanation: the earthquake
+    drives the sea back, and it recoils with redoubled force.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        the sea at Orobiae, in Euboea, retiring from the then line of coast,
+        returned in a huge wave and invaded a great part of the town, and
+        retreated leaving some of it still under water; so that what was once
+        land is now sea; such of the inhabitants perishing as could not run up
+        to the higher ground in time.
+      note: Thucydides III.89 — the word "tsunami" obviously never appears
+    - pg_id: 7142
+      quote: >-
+        The cause, in my opinion, of this phenomenon must be sought in the
+        earthquake. At the point where its shock has been the most violent,
+        the sea is driven back and, suddenly recoiling with redoubled force,
+        causes the inundation.
+      note: Same chapter — his causal explanation; an ideal answer cites both
+  status: reviewed
+
+- id: syn-006
+  category: synonym
+  question: Which Persian king was said to suffer from epilepsy from birth?
+  ideal_answer: >-
+    Cambyses. Herodotus reports that he was said to have suffered from birth
+    from a grievous malady "called by some the sacred disease" (the ancient
+    name for epilepsy), and remarks it was no surprise that with so diseased
+    a body his mind was not sound either.
+  gold_spans:
+    - pg_id: 2707
+      quote: >-
+        it is said moreover that Cambyses had from his birth a certain
+        grievous malady, that which is called by some the "sacred" disease
+      note: Herodotus III.33 — "sacred disease", never "epilepsy"
+  notes: >-
+    Swept Grote vol. IV — he describes Cambyses' madness but not the
+    congenital disease, so not a gold span.
+  status: reviewed
+
+- id: syn-007
+  category: synonym
+  question: How were the pontoon bridges across the Hellespont built?
+  ideal_answer: >-
+    After a storm destroyed the first pair (built by Phoenicians with flax
+    cables and Egyptians with papyrus cables), the rebuilt bridges rested on
+    rows of anchored fifty-oared galleys and triremes — 360 under one bridge
+    and 314 under the other — over which cables of white flax and papyrus
+    were stretched tight with wooden windlasses; planks, brushwood, and
+    stamped earth were laid on top, with barriers so the animals would not
+    see the sea.
+  gold_spans:
+    - pg_id: 2456
+      quote: >-
+        They put together fifty-oared galleys and triremes, three hundred and
+        sixty to be under the bridge towards the Euxine Sea, and three hundred
+        and fourteen to be under the other, the vessels lying in the direction
+        of the stream of the Hellespont (though crosswise in respect to the
+        Pontus), to support the tension of the ropes.
+      note: Herodotus VII.36 — "bridges" of galleys; "pontoon" never appears
+    - pg_id: 62098
+      quote: >-
+        The execution of the work was at first intrusted, not to Greeks, but
+        to Phenicians and Egyptians, who had received orders long beforehand
+        to prepare cables of extraordinary strength and size expressly for the
+        purpose; the material used by the Phenicians was flax, that employed
+        by the Egyptians was the fibre of the papyrus.
+      note: Grote vol. V — "bridge of boats"; detailed retelling
+  status: reviewed
+
+- id: syn-008
+  category: synonym
+  question: What solar eclipse marked the departure of Xerxes' army, and how was it interpreted?
+  ideal_answer: >-
+    As the army set out from Sardis in spring, the sun left its place in a
+    perfectly clear sky and day became night. Xerxes, concerned, asked the
+    Magians, who declared the god was foreshowing to the Greeks the
+    abandonment of their cities — since the sun was the foreshower of events
+    for the Greeks, the moon for the Persians. Xerxes marched on greatly
+    pleased.
+  gold_spans:
+    - pg_id: 2456
+      quote: >-
+        the Sun left his place in the heaven and was invisible, though there
+        was no gathering of clouds and the sky was perfectly clear; and
+        instead of day it became night. When Xerxes saw and perceived this, it
+        became a matter of concern to him; and he asked the Magians what the
+        appearance meant to portend. These declared that the god was
+        foreshowing to the Hellenes a leaving 40 of their cities
+      note: >-
+        Herodotus VII.37 — "eclipse" never appears; "40" is a footnote marker
+        in the canonical text. Grote alludes to this only as a "portent"
+        without describing it, so no second span.
+  status: reviewed
+
+- id: syn-009
+  category: synonym
+  question: How did the Persian royal postal relay system work?
+  ideal_answer: >-
+    According to Herodotus, men and horses were stationed along the route,
+    one for each day's journey; the message was carried by the first rider to
+    the second, the second to the third, and so on, like the Greek
+    torch-race. Neither snow, rain, heat, nor darkness of night stopped them
+    — nothing mortal travelled faster. The Persians called it the angareion.
+  gold_spans:
+    - pg_id: 2456
+      quote: >-
+        there is nothing mortal which accomplishes a journey with more speed
+        than these messengers, so skilfully has this been invented by the
+        Persians: for they say that according to the number of days of which
+        the entire journey consists, so many horses and men are set at
+        intervals, each man and horse appointed for a day's journey. These
+        neither snow nor rain nor heat nor darkness of night prevents from
+        accomplishing each one the task proposed to him, with the very utmost
+        speed.
+      note: Herodotus VIII.98 — "messengers"/"angareion", never "postal" or "relay"
+  status: reviewed
+
+- id: syn-010
+  category: synonym
+  question: Which people beyond Scythia practiced cannibalism?
+  ideal_answer: >-
+    The Androphagoi ("man-eaters"). Herodotus describes them as nomads
+    dwelling north of Scythia with their own language and the most savage
+    manners of all human beings, acknowledging no law — and alone of all
+    these nations they are man-eaters.
+  gold_spans:
+    - pg_id: 2707
+      quote: >-
+        The Androphagoi have the most savage manners of all human beings, and
+        they neither acknowledge any rule of right nor observe any customary
+        law. They are nomads and wear clothing like that of the Scythians, but
+        have a language of their own; and alone of all these nations they are
+        man-eaters.
+      note: >-
+        Herodotus IV.106 — "man-eaters", never "cannibalism". Grote vol. III
+        mentions the Androphagi only in an untranslated-Greek footnote — not a
+        gold span.
+  status: reviewed

@@ -1,0 +1,442 @@
+# Golden set — SYNTHESIS: the answer is DISTRIBUTED — no single passage
+# contains it; a good answer summarizes/characterizes across many passages
+# within one work ("How does Caesar portray the Gauls?"). Gold spans list the
+# 3-6 most load-bearing passages an ideal answer would draw on.
+# Historically the hardest category for retrieval (rag-historian: 18.7% recall@5).
+
+- id: synth-001
+  category: synthesis
+  question: How does Plutarch portray Antony's ruin through Cleopatra?
+  ideal_answer: >-
+    Plutarch frames Cleopatra as "the last and crowning mischief" that befell
+    Antony — a love that awakened his dormant passions and corrupted what
+    goodness and judgment remained. She kept him captive through ceaseless
+    charm (dicing, drinking, hunting with him, never letting him escape by day
+    or night); the passion rekindled "like Plato's restive horse" when he
+    returned east and showered her with provinces; and after Actium it left
+    him a misanthrope playing Timon of Athens in a sea-hut, before the final
+    catastrophe in Alexandria.
+  gold_spans:
+    - pg_id: 674
+      quote: >-
+        Such being his temper, the last and crowning mischief that could
+        befall him came in the love of Cleopatra, to awaken and kindle to fury
+        passions that as yet lay still and dormant in his nature, and to
+        stifle and finally corrupt any elements that yet made resistance in
+        him, of goodness and a sound judgment.
+      note: The thesis statement
+    - pg_id: 674
+      quote: >-
+        Were Antony serious or disposed to mirth, she had at any moment some
+        new delight or charm to meet his wishes; at every turn she was upon
+        him, and let him escape her neither by day nor by night. She played at
+        dice with him, drank with him, hunted with him; and when he exercised
+        in arms, she was there to see.
+      note: The captivity by charm
+    - pg_id: 674
+      quote: >-
+        the passion for Cleopatra, which better thoughts had seemed to have
+        lulled and charmed into oblivion, upon his approach to Syria, gathered
+        strength again, and broke out into a flame.
+      note: The relapse
+    - pg_id: 674
+      quote: >-
+        Antony, leaving the city and the conversation of his friends, built
+        him a dwelling-place in the water, near Pharos, upon a little mole
+        which he cast up in the sea, and there, secluding himself from the
+        company of mankind, said he desired nothing but to live the life of
+        Timon
+      note: The wreckage after Actium
+  status: reviewed
+
+- id: synth-002
+  category: synthesis
+  question: How does Arrian portray Alexander's bond with his soldiers?
+  ideal_answer: >-
+    As intense mutual devotion that survived even open conflict. At the
+    Hyphasis the army's silent, grieved resistance forced the invincible king
+    to turn back; when he nearly died among the Malli, the troops wept,
+    cheered, and crowded to touch his hands, knees, and clothes as he showed
+    himself alive; and at Opis the mutiny dissolved when he called every
+    Macedonian his kinsman, sealing the reconciliation with kisses and a vast
+    common banquet.
+  gold_spans:
+    - pg_id: 46976
+      quote: >-
+        But on the contrary, when there was a profound silence throughout the
+        camp, and the soldiers were evidently annoyed at his wrath, without
+        being at all changed by it, Ptolemy, son of Lagus, says that he none
+        the less offered sacrifice there for the passage of the river, but the
+        victims were unfavourable to him when he sacrificed. Then indeed he
+        collected the oldest of the Companions and especially those who were
+        friendly to him, and as all things indicated the advisability of
+        returning, he made known to the army that he had resolved to march
+        back again.
+      note: The Hyphasis — the army's will prevails (V.28)
+    - pg_id: 46976
+      quote: >-
+        Then the men came near, some on one side, others on the other, some
+        touching his hands, others his knees, others only his clothes. Some
+        only came close to get a sight of him, and went away having chanted
+        his praise, while others threw garlands upon him, or the flowers which
+        the country of India supplied at that season of the year.
+      note: Joy at his recovery from the Mallian wound (VI.13)
+    - pg_id: 46976
+      quote: >-
+        Then Alexander interrupting him, said:—“But all of you without
+        exception I consider my kinsmen, and so from this time I shall call
+        you.” When he had said this, Callines advanced and saluted him with a
+        kiss, and so did all those who wished to salute him. Then they took up
+        their weapons and returned to the camp, shouting and singing a song of
+        thanksgiving to Apollo.
+      note: The Opis reconciliation (VII.11)
+  status: reviewed
+
+- id: synth-003
+  category: synthesis
+  question: How does Livy portray the struggle between patricians and plebeians?
+  ideal_answer: >-
+    As the defining, recurring affliction of the early Republic — "the
+    discord among the several orders... the curse of this city." Driven by
+    debt and oppression, the commons twice seceded (the first ended by
+    Menenius Agrippa's fable of the belly and the members, the second on the
+    Sacred Mount against the decemvirs); each crisis extracted new
+    concessions — tribunes, appeal, laws — while Livy moralizes on how hard
+    moderation is when each side's pursuit of power or liberty makes it an
+    object of dread to the other.
+  gold_spans:
+    - pg_id: 10828
+      quote: >-
+        it was resolved that Agrippa Menenius, an eloquent man, and a
+        favourite with the people, because he was sprung from them, should be
+        sent to negotiate with them. Being admitted into the camp, he is said
+        to have simply related to them the following story in an old-fashioned
+        and unpolished style: "At the time when the parts of the human body
+        did not, as now, all agree together, but the several members had each
+        their own counsel, and their own language, the other parts were
+        indignant that, while everything was provided for the gratification of
+        the belly by their labour and service, the belly, resting calmly in
+        their midst, did nothing but enjoy the pleasures afforded it.
+      note: First secession and the fable of the belly (II.32)
+    - pg_id: 10828
+      quote: >-
+        they pitched their camp on the Sacred Mount, imitating the moderation
+        of their fathers by committing no violence. The commons followed the
+        army, no one whose age would permit him declining to go. Their wives
+        and children attended them, piteously asking to whom they were leaving
+        them, in a city where neither chastity nor liberty were respected.
+      note: Second secession, against the decemvirs (III.52)
+    - pg_id: 10828
+      quote: >-
+        It is the discord among the several orders that is the curse of this
+        city, the contests between the patricians and commons. While we have
+        neither bounds in the pursuit of power, nor you in that of liberty,
+        while you are wearied of patrician, we of plebeian magistrates, they
+        have taken courage.
+      note: Quinctius' speech — the thesis in a character's mouth (III.67)
+    - pg_id: 10828
+      quote: >-
+        So difficult a thing is moderation in maintaining liberty, while every
+        one, by pretending to desire equality, exalts himself in such a manner
+        as to put down another, and men, by their very precautions against
+        fear, cause themselves to become objects of dread
+      note: Livy's own moral (III.65)
+  status: reviewed
+
+- id: synth-004
+  category: synthesis
+  question: How did the Romans become a naval power during the First Punic War, according to Polybius?
+  ideal_answer: >-
+    Through what Polybius calls extraordinary audacity. Having never thought
+    of naval war and lacking even the knowledge to build quinqueremes, they
+    used a wrecked Carthaginian ship as their model, trained rowers on
+    benches set up on dry land, and invented the "crow" boarding-bridge that
+    turned sea battles into land fights (first proven at Mylae); after
+    catastrophic storm losses they persisted, rebuilt with lighter ships and
+    trained crews, and won the decisive battle of Aegusa.
+  gold_spans:
+    - pg_id: 44125
+      quote: >-
+        Not only had they no resources for it of reasonable sufficiency; but
+        without any resources for it at all, and without having ever
+        entertained an idea of naval war,—for it was the first time they had
+        thought of it,—they nevertheless handled the enterprise with such
+        extraordinary audacity, that, without so much as a preliminary trial,
+        they took upon themselves there and then to meet the Carthaginians at
+        sea, on which they had for generations held undisputed supremacy.
+      note: The audacity thesis (I.20)
+    - pg_id: 44125
+      quote: >-
+        a decked vessel of theirs charged so furiously that it ran aground,
+        and falling into the hands of the Romans served them as a model on
+        which they constructed their whole fleet.
+      note: The captured model ship (I.20)
+    - pg_id: 44125
+      quote: >-
+        They made the men sit on rower’s benches on dry land, in the same
+        order as they would sit on the benches in actual vessels: in the midst
+        of them they stationed the Celeustes, and trained them to get back and
+        draw in their hands all together in time, and then to swing forward
+        and throw them out again, and to begin and cease these movements at
+        the word of the Celeustes.
+      note: Rowing practice ashore (I.21)
+    - pg_id: 44125
+      quote: >-
+        as soon as they came to close quarters their ships were invariably
+        tightly grappled by these machines; the enemy boarded by means of the
+        “crows,” and engaged them on their decks; and in the end some of the
+        Carthaginians were cut down, while others surrendered in bewildered
+        terror at the battle in which they found themselves engaged, which
+        eventually became exactly like a land fight.
+      note: The corvus at Mylae (I.23)
+  status: reviewed
+
+- id: synth-005
+  category: synthesis
+  question: How does Thucydides describe the moral collapse caused by civil war?
+  ideal_answer: >-
+    In his analysis of the Corcyra revolution, Thucydides argues that war is
+    "a rough master" that levels men's characters to their fortunes. Words
+    lost their ordinary meanings (recklessness became courage, moderation
+    cowardice); religion was honored by neither side while fair phrases
+    served guilty ends; the moderates perished between the factions; the
+    "ancient simplicity" of honor was laughed out of existence and no man
+    trusted his fellow. The concrete horror at Corcyra — fathers killing
+    sons, suppliants slain at altars — set the pattern the whole Hellenic
+    world then exceeded.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        In peace and prosperity, states and individuals have better
+        sentiments, because they do not find themselves suddenly confronted
+        with imperious necessities; but war takes away the easy supply of
+        daily wants, and so proves a rough master, that brings most men’s
+        characters to a level with their fortunes.
+      note: War the rough master (III.82)
+    - pg_id: 7142
+      quote: >-
+        Words had to change their ordinary meaning and to take that which was
+        now given them.
+      note: The corruption of language (III.82)
+    - pg_id: 7142
+      quote: >-
+        Thus religion was in honour with neither party; but the use of fair
+        phrases to arrive at guilty ends was in high reputation. Meanwhile the
+        moderate part of the citizens perished between the two, either for not
+        joining in the quarrel, or because envy would not suffer them to
+        escape.
+      note: Fate of religion and the moderates (III.82)
+    - pg_id: 7142
+      quote: >-
+        The ancient simplicity into which honour so largely entered was
+        laughed down and disappeared; and society became divided into camps in
+        which no man trusted his fellow.
+      note: Death of trust (III.83)
+    - pg_id: 7142
+      quote: >-
+        Death thus raged in every shape; and, as usually happens at such
+        times, there was no length to which violence did not go; sons were
+        killed by their fathers, and suppliants dragged from the altar or
+        slain upon it; while some were even walled up in the temple of
+        Dionysus and died there.
+      note: The concrete horror at Corcyra (III.81)
+  status: reviewed
+
+- id: synth-006
+  category: synthesis
+  question: How does Thucydides contrast the Athenian and Spartan national characters?
+  ideal_answer: >-
+    Largely through speeches. The Corinthians tell Sparta that the Athenians
+    are addicted to innovation, swift in conception and execution,
+    adventurous beyond their power, never at home — "born into the world to
+    take no rest themselves and to give none to others" — while the Spartans
+    keep what they have, invent nothing, and never go far enough. Archidamus
+    answers by defending Spartan slowness as disciplined wisdom: warlike from
+    self-control and honor, wise because educated too little to despise the
+    laws.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        The Athenians are addicted to innovation, and their designs are
+        characterized by swiftness alike in conception and execution; you have
+        a genius for keeping what you have got, accompanied by a total want of
+        invention, and when forced to act you never go far enough.
+      note: Corinthians' speech (I.70)
+    - pg_id: 7142
+      quote: >-
+        To describe their character in a word, one might truly say that they
+        were born into the world to take no rest themselves and to give none
+        to others.
+      note: The famous summary line (I.70)
+    - pg_id: 7142
+      quote: >-
+        We are both warlike and wise, and it is our sense of order that makes
+        us so. We are warlike, because self-control contains honour as a chief
+        constituent, and honour bravery. And we are wise, because we are
+        educated with too little learning to despise the laws, and with too
+        severe a self-control to disobey them
+      note: Archidamus' defense of the Spartan character (I.84)
+  status: reviewed
+
+- id: synth-007
+  category: synthesis
+  question: What does Herodotus find most remarkable about Babylon?
+  ideal_answer: >-
+    Its unmatched magnificence and its customs. He marvels at the city's
+    scale — the deep moat and walls fifty royal cubits thick and two hundred
+    high, and the temple of Zeus Belos with its eight stacked towers — and
+    singles out two customs: the annual bride auction, where money from the
+    beautiful maidens dowered the plain ones (in his opinion their wisest),
+    and the carrying of the sick into the marketplace, since they use no
+    physicians and every passer-by must offer advice.
+  gold_spans:
+    - pg_id: 2707
+      quote: >-
+        Such is the size of the city of Babylon, and it had a magnificence
+        greater than all other cities of which we have knowledge. First there
+        runs round it a trench deep and broad and full of water; then a wall
+        fifty royal cubits in thickness and two hundred cubits in height
+      note: The walls (I.178)
+    - pg_id: 2707
+      quote: >-
+        the temple of Zeus Belos with bronze gates, and this exists still up
+        to my time and measures two furlongs each way, 184 being of a square
+        shape: and in the midst of the temple 185 is built a solid tower
+        measuring a furlong both in length and in breadth, and on this tower
+        another tower has been erected, and another again upon this, and so on
+        up to the number of eight towers.
+      note: Temple of Bel ziggurat (I.181; "184"/"185" are footnote markers)
+    - pg_id: 2707
+      quote: >-
+        the crier caused each one severally to stand up, and proceeded to sell
+        them, first the most comely of all, and afterwards, when she had been
+        sold and had fetched a large sum of money, he would put up another who
+        was the most comely after her: and they were sold for marriage.
+      note: The bride auction — "the wisest custom" (I.196)
+    - pg_id: 2707
+      quote: >-
+        they bear out the sick into the market-place; for of physicians they
+        make no use. So people come up to the sick man and give advice about
+        his disease, if any one himself has ever suffered anything like that
+        which the sick man has
+      note: The sick in the marketplace (I.197)
+  status: reviewed
+
+- id: synth-008
+  category: synthesis
+  question: How does Suetonius chart Caligula's descent from popular prince to monster?
+  ideal_answer: >-
+    Suetonius structures the Life around an explicit pivot: "Thus far we have
+    spoken of him as a prince. What remains to be said of him, bespeaks him
+    rather a monster than a man." His accession brought genuine joy — the
+    soldiers' beloved camp-child, heir to Germanicus' virtues — though
+    Tiberius had already predicted he was "rearing a hydra for the people of
+    Rome." After the pivot comes the monster: claiming divine majesty,
+    beheading the gods' statues to mount his own head, the temple to his own
+    divinity, and cruelties without limit.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        such was the destiny of Rome, that his accession afforded joy to the
+        soldiers, who had known him in his childhood, and to the populace in
+        the capital, as well as the people in the provinces, who were
+        flattered with the delusive expectation of receiving a prince who
+        should adorn the throne with the amiable virtues of Germanicus.
+      note: The hopeful accession (disquisition)
+    - pg_id: 6400
+      quote: >-
+        he often said, “That Caius was destined to be the ruin of himself and
+        all mankind; and that he was rearing a hydra [392] for the people of
+        Rome, and a Phaeton for all the world.”
+      note: Tiberius' prophecy (XI; "[392]" is a footnote marker)
+    - pg_id: 6400
+      quote: >-
+        Thus far we have spoken of him as a prince. What remains to be said of
+        him, bespeaks him rather a monster than a man.
+      note: The structural pivot (XXII)
+    - pg_id: 6400
+      quote: >-
+        being told that he far exceeded the grandeur of kings and princes, he
+        began to arrogate to himself a divine majesty. He ordered all the
+        images of the gods, which were famous either for their beauty, or the
+        veneration paid them, among which was that of Jupiter Olympius, to be
+        brought from Greece, that he might take the heads off, and put on his
+        own.
+      note: The monster — divine pretensions (XXII)
+  status: reviewed
+
+- id: synth-009
+  category: synthesis
+  question: How does Tacitus characterize German marriage and the position of women?
+  ideal_answer: >-
+    With pointed admiration. The marriage gifts — oxen, a bridled horse,
+    shield, spear, and sword — admonish the wife that she comes as a partner
+    in toils and dangers, "to suffer and to dare equally with him, in peace
+    and in war... thus she is to live; thus to die." The Germans live "fenced
+    around with chastity": adultery is extremely rare and instantly punished,
+    no one calls seduction the way of the world, and in the strictest tribes
+    a woman takes one husband "as one body and one life."
+  gold_spans:
+    - pg_id: 7524
+      quote: >-
+        she is admonished by the very ceremonial of her marriage, that she
+        comes to her husband as a partner in toils and dangers; to suffer and
+        to dare equally with him, in peace and in war: this is indicated by
+        the yoked oxen, the harnessed steed, the offered arms. Thus she is to
+        live; thus to die.
+      note: The marriage ceremony's meaning (Germania 18)
+    - pg_id: 7524
+      quote: >-
+        They live, therefore, fenced around with chastity; [110] corrupted by
+        no seductive spectacles, [111] no convivial incitements. Men and women
+        are alike unacquainted with clandestine correspondence. Adultery is
+        extremely rare among so numerous a people.
+      note: Chastity (Germania 19; bracketed numbers are footnote markers)
+    - pg_id: 7524
+      quote: >-
+        Thus, they take one husband as one body and one life; that no thought,
+        no desire, may extend beyond him; and he may be loved not only as
+        their husband, but as their marriage.
+      note: One husband for life (Germania 19)
+  status: reviewed
+
+- id: synth-010
+  category: synthesis
+  question: How does Suetonius portray the character of Tiberius?
+  ideal_answer: >-
+    As a dissimulating tyrant whose vices, long imperfectly concealed,
+    flowered once he withdrew to Capri. Even Augustus reportedly pitied the
+    Roman people for being "ground by the jaws of such a slow devourer." The
+    soldiers' nickname Biberius marked his drunkenness from youth; at Capri,
+    "remote from the observation of the people of Rome, he abandoned himself
+    to all the vicious propensities which he had long but imperfectly
+    concealed"; and the translator's verdict is of an "execrable tyrant"
+    whose indiscriminate cruelty spared neither age nor sex.
+  gold_spans:
+    - pg_id: 6400
+      quote: >-
+        upon Tiberius’s quitting the room, after their private conference,
+        those who were in waiting overheard Augustus say, “Ah! unhappy Roman
+        people, to be ground by the jaws of such a slow devourer!”
+      note: Augustus' verdict (XXI)
+    - pg_id: 6400
+      quote: >-
+        While a young soldier in the camp, he was so remarkable for his
+        excessive inclination to wine, that, for Tiberius, they called him
+        Biberius; for Claudius, Caldius; and for Nero, Mero.
+      note: The Biberius nickname (XLII)
+    - pg_id: 6400
+      quote: >-
+        But having now the advantage of privacy, and being remote from the
+        observation of the people of Rome, he abandoned himself to all the
+        vicious propensities which he had long but imperfectly concealed
+      note: The Capri unmasking (XLII)
+    - pg_id: 6400
+      quote: >-
+        Human nature recoils with horror at the cruelties of this execrable
+        tyrant, who, having first imbrued his hands in the blood of his own
+        relations, proceeded to exercise them upon the public with
+        indiscriminate fury. Neither age nor sex afforded any exemption from
+        his insatiable thirst for blood.
+      note: The cruelty summation (translator's disquisition)
+  status: reviewed
