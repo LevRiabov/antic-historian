@@ -7,7 +7,8 @@ services:
       POSTGRES_PASSWORD: ahx
       POSTGRES_DB: ahx
     ports:
-      - "5432:5432"
+      # Host 5433: rag-historian's ParadeDB already owns 5432 on this machine.
+      - "5433:5432"
     volumes:
       - ahx-pgdata:/var/lib/postgresql
     healthcheck:

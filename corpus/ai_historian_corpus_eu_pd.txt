@@ -17,6 +17,8 @@
 
 # --- PRIMARY SOURCES (ancient authors) ---
 2707|primary|Herodotus|The History of Herodotus, Vol. I (of 2)|G. C. Macaulay|Macaulay d.1915 (+70=1985)|https://www.gutenberg.org/cache/epub/2707/pg2707.txt|https://www.gutenberg.org/ebooks/2707
+2456|primary|Herodotus|The History of Herodotus, Vol. II (of 2)|G. C. Macaulay|Macaulay d.1915 (+70=1985)|https://www.gutenberg.org/cache/epub/2456/pg2456.txt|https://www.gutenberg.org/ebooks/2456
+2131|primary|Herodotus|An Account of Egypt|G. C. Macaulay|Macaulay d.1915 (+70=1985)|https://www.gutenberg.org/cache/epub/2131/pg2131.txt|https://www.gutenberg.org/ebooks/2131
 7142|primary|Thucydides|The History of the Peloponnesian War|Richard Crawley|Crawley d.1893 (+70=1963)|https://www.gutenberg.org/cache/epub/7142/pg7142.txt|https://www.gutenberg.org/ebooks/7142
 1170|primary|Xenophon|Anabasis (The Persian Expedition)|H. G. Dakyns|Dakyns d.1911 (+70=1981)|https://www.gutenberg.org/cache/epub/1170/pg1170.txt|https://www.gutenberg.org/ebooks/1170
 1174|primary|Xenophon|Hellenica|H. G. Dakyns|Dakyns d.1911 (+70=1981)|https://www.gutenberg.org/cache/epub/1174/pg1174.txt|https://www.gutenberg.org/ebooks/1174
@@ -25,36 +27,70 @@
 44125|primary|Polybius|The Histories of Polybius, Vol. I|Evelyn S. Shuckburgh|Shuckburgh d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/44125/pg44125.txt|https://www.gutenberg.org/ebooks/44125
 44126|primary|Polybius|The Histories of Polybius, Vol. II|Evelyn S. Shuckburgh|Shuckburgh d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/44126/pg44126.txt|https://www.gutenberg.org/ebooks/44126
 10828|primary|Livy|Roman History, Books I-III|D. Osborne (ed.)|Osborne d.1917 (+70=1987)|https://www.gutenberg.org/cache/epub/10828/pg10828.txt|https://www.gutenberg.org/ebooks/10828
+7524|primary|Tacitus|The Germany and the Agricola of Tacitus|Oxford Translation (rev.), ed. Edward Brooks|Brooks (ed.) d.1912 (+70=1982); orig. Oxford transl. anon./PD by age|https://www.gutenberg.org/cache/epub/7524/pg7524.txt|https://www.gutenberg.org/ebooks/7524
+10657|primary|Julius Caesar|"De Bello Gallico" and Other Commentaries|W. A. McDevitte|McDevitte d. by age; Bohn ed. 1869 (PD by age); verified English on PG 2026-06-10|https://www.gutenberg.org/cache/epub/10657/pg10657.txt|https://www.gutenberg.org/ebooks/10657
+46976|primary|Arrian|The Anabasis of Alexander|E. J. Chinnock|Chinnock d.1911 (+70=1981)|https://www.gutenberg.org/cache/epub/46976/pg46976.txt|https://www.gutenberg.org/ebooks/46976
+44884|primary|Strabo|The Geography of Strabo, Vol. 1 (of 3)|H. C. Hamilton & W. Falconer|Hamilton d.1895 (+70=1965)|https://www.gutenberg.org/cache/epub/44884/pg44884.txt|https://www.gutenberg.org/ebooks/44884
+44885|primary|Strabo|The Geography of Strabo, Vol. 2 (of 3)|H. C. Hamilton & W. Falconer|Hamilton d.1895 (+70=1965)|https://www.gutenberg.org/cache/epub/44885/pg44885.txt|https://www.gutenberg.org/ebooks/44885
+44886|primary|Strabo|The Geography of Strabo, Vol. 3 (of 3)|H. C. Hamilton & W. Falconer|Hamilton d.1895 (+70=1965)|https://www.gutenberg.org/cache/epub/44886/pg44886.txt|https://www.gutenberg.org/ebooks/44886
+18047|primary|Cassius Dio|Dio's Rome, Vol. 1|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/18047/pg18047.txt|https://www.gutenberg.org/ebooks/18047
+11607|primary|Cassius Dio|Dio's Rome, Vol. 2|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/11607/pg11607.txt|https://www.gutenberg.org/ebooks/11607
+10162|primary|Cassius Dio|Dio's Rome, Vol. 3|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/10162/pg10162.txt|https://www.gutenberg.org/ebooks/10162
+10883|primary|Cassius Dio|Dio's Rome, Vol. 4|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/10883/pg10883.txt|https://www.gutenberg.org/ebooks/10883
+10890|primary|Cassius Dio|Dio's Rome, Vol. 5|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/10890/pg10890.txt|https://www.gutenberg.org/ebooks/10890
+12061|primary|Cassius Dio|Dio's Rome, Vol. 6|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/12061/pg12061.txt|https://www.gutenberg.org/ebooks/12061
 
 # --- FOUNDATIONAL SCHOLARSHIP (modern, EU-PD) ---
 25717|scholarship|Edward Gibbon|The History of the Decline and Fall of the Roman Empire (complete)|— (Milman/Bury notes)|Gibbon d.1794; Bury d.1927 (+70=1997)|https://www.gutenberg.org/cache/epub/25717/pg25717.txt|https://www.gutenberg.org/ebooks/25717
 10706|scholarship|Theodor Mommsen|The History of Rome, Vols. 1-5|William P. Dickson|Mommsen d.1903; Dickson d.1901|https://www.gutenberg.org/cache/epub/10706/pg10706.txt|https://www.gutenberg.org/ebooks/10706
 19694|scholarship|William Smith|A Smaller History of Rome|— (orig. English)|Smith d.1893 (+70=1963)|https://www.gutenberg.org/cache/epub/19694/pg19694.txt|https://www.gutenberg.org/ebooks/19694
+# George Grote, History of Greece — COMPLETE 12-volume set (orig. English; Grote d.1871, +70=1941)
+56342|scholarship|George Grote|History of Greece, Vol. 01 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/56342/pg56342.txt|https://www.gutenberg.org/ebooks/56342
 57143|scholarship|George Grote|History of Greece, Vol. 02 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/57143/pg57143.txt|https://www.gutenberg.org/ebooks/57143
 58565|scholarship|George Grote|History of Greece, Vol. 03 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/58565/pg58565.txt|https://www.gutenberg.org/ebooks/58565
+60426|scholarship|George Grote|History of Greece, Vol. 04 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/60426/pg60426.txt|https://www.gutenberg.org/ebooks/60426
+62098|scholarship|George Grote|History of Greece, Vol. 05 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/62098/pg62098.txt|https://www.gutenberg.org/ebooks/62098
+54936|scholarship|George Grote|History of Greece, Vol. 06 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/54936/pg54936.txt|https://www.gutenberg.org/ebooks/54936
+51181|scholarship|George Grote|History of Greece, Vol. 07 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/51181/pg51181.txt|https://www.gutenberg.org/ebooks/51181
+52119|scholarship|George Grote|History of Greece, Vol. 08 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/52119/pg52119.txt|https://www.gutenberg.org/ebooks/52119
+51182|scholarship|George Grote|History of Greece, Vol. 09 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/51182/pg51182.txt|https://www.gutenberg.org/ebooks/51182
+51183|scholarship|George Grote|History of Greece, Vol. 10 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/51183/pg51183.txt|https://www.gutenberg.org/ebooks/51183
 61469|scholarship|George Grote|History of Greece, Vol. 11 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/61469/pg61469.txt|https://www.gutenberg.org/ebooks/61469
 60786|scholarship|George Grote|History of Greece, Vol. 12 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/60786/pg60786.txt|https://www.gutenberg.org/ebooks/60786
 
 # ==============================================================================
+# EXCLUDED ON PURPOSE (requested ids that fail the corpus rules) — kept here as receipts:
+# ------------------------------------------------------------------------------
+#  16927  Tacitus, The Histories (trans. W. Hamilton Fyfe). Fyfe d.1965 -> EU copyright
+#         until 2036. US-PD only; FAILS the EU-PD rule. Use Church & Brodribb instead (below).
+#  4886   Requested but was a typo: it is J. L. Motley, Life and Death of John of Barneveld
+#         (Thirty-Years'-War history, off-corpus). Intended id was 44886 = Strabo Geography
+#         Vol. 3 — now added above, completing the 44884/44885/44886 set.
+#  218    Caesar, De Bello Gallico — LATIN original, no translation. Was briefly listed as a
+#         primary source by mistake; replaced 2026-06-10 by #10657 (McDevitte English, above).
+#         Latin text adds no value to an English retrieval pipeline.
+# ==============================================================================
 # APPENDIX — EU-PD-clear but enumerate the exact ids yourself (multi-volume sets,
 # or works where I won't guess an unverified id). All listed translators clear life+70.
 # ------------------------------------------------------------------------------
-# Herodotus  : Vol. II + other translations -> author page  https://www.gutenberg.org/ebooks/author/828
+# Herodotus  : Macaulay set now complete (Vols I+II) + Account of Egypt above. Other
+#              translations -> author page  https://www.gutenberg.org/ebooks/author/828
 # Thucydides : author page                                  https://www.gutenberg.org/ebooks/author/2352
 # Xenophon   : Cyropaedia, Memorabilia, etc.                https://www.gutenberg.org/ebooks/author/543
 # Suetonius  : per-emperor volumes                          https://www.gutenberg.org/ebooks/author/2024
-# Grote      : Vols 1, 4-10 (scattered ids)                 search "Grote History of Greece" on PG
+# Strabo     : COMPLETE above (Vols 1-3, Hamilton & Falconer).
+# Grote      : COMPLETE above (all 12 vols).
 #
 # TACITUS    : Use the CHURCH & BRODRIBB translation (A. J. Church d.1912; W. J. Brodribb
 #              d.1905) for Annals/Histories/Germania/Agricola — EU-PD.
 #              DO NOT use PG #16927 (Histories, trans. W. Hamilton Fyfe): Fyfe d.1965,
-#              so that translation stays in EU copyright until 2036.
+#              so that translation stays in EU copyright until 2036. (See EXCLUDED above.)
 # CAESAR     : English Gallic/Civil Wars = McDevitte & Bohn (1869) — EU-PD by age.
-#              On Gutenberg (Caesar author page) or Perseus (CC-BY-SA, see below).
-#              PG #218 is the LATIN text only.
+#              ADDED above as #10657 ("De Bello Gallico" and Other Commentaries).
+#              PG #218 is the LATIN text only — see EXCLUDED.
 # JOSEPHUS   : Whiston translation (d.1752) — fully EU-PD. Wars / Antiquities / Life /
 #              Against Apion. Enumerate from Josephus author page (index = PG #29434).
-# ARRIAN     : Anabasis of Alexander = E. J. Chinnock translation (d.1915) — EU-PD.
+# ARRIAN     : Anabasis of Alexander = E. J. Chinnock translation (d.1911) — added above (#46976).
 # ==============================================================================
 # BULK / STRUCTURED ALTERNATIVE (not Gutenberg) — better for citation-addressable RAG:
 #   PerseusDL/canonical-greekLit   git clone https://github.com/PerseusDL/canonical-greekLit
