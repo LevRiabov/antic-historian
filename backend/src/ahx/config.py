@@ -11,12 +11,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # backend/src/ahx/config.py -> repo root is 3 levels above the package dir.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
+_BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AHX_",
-        env_file=".env",
+        # Absolute, not ".": a relative env_file resolves against the CWD,
+        # so the CLI would silently skip .env when run outside backend/.
+        env_file=_BACKEND_DIR / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -29,6 +32,18 @@ class Settings(BaseSettings):
     embed_model: str = "qwen3-embedding-0.6b"
     embed_dim: int = 1024
     embed_batch_size: int = 16
+
+    # Chat LLM (gate D5 open — any OpenAI-compatible endpoint; provisional
+    # default is local gemma via llama-swap, same server as embeddings).
+    chat_base_url: str = "http://127.0.0.1:8080/v1"
+    chat_model: str = "gemma-12b-16k"
+    chat_api_key: str | None = None
+
+    # Judge LLM (eval generation tier, phase boundaries). Unset = judge
+    # layer unavailable; use a strong model — weak judges miscalibrate.
+    judge_base_url: str | None = None
+    judge_model: str | None = None
+    judge_api_key: str | None = None
 
     # Corpus locations (downloaded texts are gitignored; manifest is committed).
     corpus_dir: Path = _REPO_ROOT / "corpus"

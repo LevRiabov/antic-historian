@@ -2,6 +2,9 @@ services:
   db:
     image: pgvector/pgvector:pg18
     container_name: ahx-db
+    # Survive Docker Desktop / host restarts (outage observed 2026-06-12:
+    # daemon restart left this container down, only one without a policy).
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ahx
       POSTGRES_PASSWORD: ahx

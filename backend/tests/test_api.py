@@ -1,7 +1,72 @@
+"""API tests: full SSE event sequence with fakes injected via Depends —
+no server, no DB, no LLM (httpx ASGITransport calls the app in-process)."""
+
+import json
+from collections.abc import AsyncIterator, Sequence
+from typing import Any
+
 import httpx
+import pytest
 
 import ahx
-from ahx.api.app import app
+from ahx.api.app import app, get_chat, get_retriever
+from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent, TextDelta, Usage
+from ahx.retrieval.dense import RetrievedChunk
+
+
+def chunk(rank: int) -> RetrievedChunk:
+    return RetrievedChunk(
+        chunk_id=100 + rank,
+        pg_id=1,
+        author="Suetonius",
+        work_title="Lives of the Twelve Caesars",
+        locator=["1", str(rank)],
+        text="Some passage text.",
+        score=0.8,
+        char_start=rank * 1000,
+        char_end=rank * 1000 + 500,
+        rank=rank,
+    )
+
+
+class FakeChat:
+    model_name = "fake-model"
+
+    def __init__(self, deltas: list[str]) -> None:
+        self._deltas = deltas
+
+    async def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]:
+        for delta in self._deltas:
+            yield TextDelta(text=delta)
+        yield StreamEnd(usage=Usage(prompt_tokens=40, completion_tokens=7))
+
+    async def complete(self, messages: Sequence[ChatMessage]) -> ChatResult:
+        return ChatResult(text="".join(self._deltas), usage=None)
+
+
+async def fake_retriever(query: str, top_k: int) -> list[RetrievedChunk]:
+    return [chunk(rank) for rank in range(1, top_k + 1)][:2]
+
+
+@pytest.fixture
+async def ask_client() -> AsyncIterator[httpx.AsyncClient]:
+    app.dependency_overrides[get_retriever] = lambda: fake_retriever
+    app.dependency_overrides[get_chat] = lambda: FakeChat(["Stabbed ", "23 times [1]."])
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+    app.dependency_overrides.clear()
+
+
+def parse_sse(body: str) -> list[tuple[str, dict[str, Any]]]:
+    events: list[tuple[str, dict[str, Any]]] = []
+    name: str | None = None
+    for line in body.splitlines():
+        if line.startswith("event: "):
+            name = line.removeprefix("event: ")
+        elif line.startswith("data: ") and name is not None:
+            events.append((name, json.loads(line.removeprefix("data: "))))
+    return events
 
 
 async def test_health() -> None:
@@ -10,3 +75,31 @@ async def test_health() -> None:
         response = await client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "version": ahx.__version__}
+
+
+async def test_ask_streams_sources_deltas_done(ask_client: httpx.AsyncClient) -> None:
+    response = await ask_client.post("/ask", json={"question": "How did Caesar die?"})
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+
+    events = parse_sse(response.text)
+    assert [name for name, _ in events] == ["sources", "delta", "delta", "done"]
+
+    _, sources = events[0]
+    assert sources["prompt_version"] == "baseline-v1"
+    assert [c["marker"] for c in sources["citations"]] == [1, 2]
+    assert sources["citations"][0]["author"] == "Suetonius"
+
+    _, done = events[-1]
+    assert done["answer"] == "Stabbed 23 times [1]."
+    assert done["refused"] is False
+    assert done["markers"] == {"used": [1], "dangling": []}
+    assert done["usage"] == {"prompt_tokens": 40, "completion_tokens": 7}
+
+
+async def test_ask_validates_request(ask_client: httpx.AsyncClient) -> None:
+    too_short = await ask_client.post("/ask", json={"question": "hi"})
+    assert too_short.status_code == 422
+
+    bad_top_k = await ask_client.post("/ask", json={"question": "How did Caesar die?", "top_k": 50})
+    assert bad_top_k.status_code == 422

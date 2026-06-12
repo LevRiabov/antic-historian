@@ -11,56 +11,71 @@ category and overall numbers are means over questions. MRR uses the rank of
 the first chunk covering ANY of the question's spans.
 
 Every run is persisted as a typed, versioned record (rule #5) under
-backend/evals/runs/ for forensics and case-study receipts.
+backend/evals/runs/. Record layout mirrors rag-historian's results format
+(the proven, familiar shape): aggregates first (overall + by-category),
+then per-question results with gold_chunk_ids vs retrieved_chunk_ids as
+compact, directly comparable id arrays. gold_chunk_ids is informational
+(chunks overlap, so a span midpoint may live in 1-2 chunks); scoring is
+always span-midpoint based, never id based.
 """
 
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session
 
 from ahx.config import Settings
+from ahx.db import ChunkRow
 from ahx.evals.golden import (
+    CATEGORIES,
     Category,
     GoldenQuestion,
     ResolutionError,
     ResolvedSpan,
     resolve_span,
 )
+from ahx.retrieval.dense import RetrievedChunk, dense_retrieve
 from ahx.retrieval.embedding import EmbeddingClient
 
 K_VALUES = (1, 5, 10, 20)
 
 
-class RetrievedRef(BaseModel):
-    """Minimal slice of a retrieved chunk needed for span coverage."""
-
+class GoldSpanRef(BaseModel):
     pg_id: int
     char_start: int
     char_end: int
-    rank: int  # 1-based
 
 
 class QuestionResult(BaseModel):
     question_id: str
     category: Category
-    spans_total: int
-    covered_at: dict[int, int]  # k -> spans covered within top-k
-    first_hit_rank: int | None  # for MRR
+    question: str
+    ideal_answer: str
+    notes: str = ""
+    gold_spans: list[GoldSpanRef]
+    gold_chunk_ids: list[int]  # chunks covering any gold span (1-2 per span: overlap)
+    retrieved_chunk_ids: list[int]
+    similarities: list[float]
+    latency_ms: int
+    recall: dict[int, float]  # k -> recall@k for this question
+    first_hit_rank: int | None
+    mrr: float  # reciprocal rank of the first hit
 
-    def recall_at(self, k: int) -> float:
-        return self.covered_at.get(k, 0) / self.spans_total if self.spans_total else 0.0
 
-    @property
-    def reciprocal_rank(self) -> float:
-        return 1.0 / self.first_hit_rank if self.first_hit_rank else 0.0
-
-
-class CategorySummary(BaseModel):
-    category: Category
-    questions: int
-    recall: dict[int, float]  # k -> mean recall
+class CategoryAggregate(BaseModel):
+    count: int
+    recall: dict[int, float]
     mrr: float
+
+
+class Aggregates(BaseModel):
+    recall: dict[int, float]  # mean over all questions
+    mrr: float
+    by_category: dict[str, CategoryAggregate]
 
 
 class RetrievalRun(BaseModel):
@@ -69,73 +84,84 @@ class RetrievalRun(BaseModel):
     embed_model: str
     chunking_version: str
     top_k: int
-    questions: list[QuestionResult]
-
-    def summarize(self, category: Category | None = None) -> CategorySummary | None:
-        subset = [q for q in self.questions if category is None or q.category == category]
-        if not subset:
-            return None
-        return CategorySummary(
-            category=category or "literal",  # overall rows pass category=None; field unused
-            questions=len(subset),
-            recall={k: sum(q.recall_at(k) for q in subset) / len(subset) for k in K_VALUES},
-            mrr=sum(q.reciprocal_rank for q in subset) / len(subset),
-        )
+    aggregates: Aggregates  # declared before results -> serialized on top
+    results: list[QuestionResult]
 
 
-def _covers(ref: RetrievedRef, span: ResolvedSpan) -> bool:
-    if ref.pg_id != span.pg_id:
+def _covers(chunk: RetrievedChunk, span: ResolvedSpan) -> bool:
+    if chunk.pg_id != span.pg_id:
         return False
     midpoint = (span.char_start + span.char_end) // 2
-    return ref.char_start <= midpoint < ref.char_end
+    return chunk.char_start <= midpoint < chunk.char_end
 
 
 def score_question(
-    question_id: str,
-    category: Category,
+    question: GoldenQuestion,
     spans: list[ResolvedSpan],
-    retrieved: list[RetrievedRef],
+    retrieved: list[RetrievedChunk],
+    gold_chunk_ids: list[int],
+    latency_ms: int = 0,
 ) -> QuestionResult:
-    first_hit: int | None = None
-    span_first_hit: list[int | None] = []
-    for span in spans:
-        hit_rank = next((r.rank for r in retrieved if _covers(r, span)), None)
-        span_first_hit.append(hit_rank)
-        if hit_rank is not None and (first_hit is None or hit_rank < first_hit):
-            first_hit = hit_rank
-    covered_at = {
-        k: sum(1 for rank in span_first_hit if rank is not None and rank <= k) for k in K_VALUES
+    span_hits = [next((c.rank for c in retrieved if _covers(c, span)), None) for span in spans]
+    hit_ranks = [rank for rank in span_hits if rank is not None]
+    first_hit = min(hit_ranks) if hit_ranks else None
+    total = len(spans)
+    recall = {
+        k: (sum(1 for rank in hit_ranks if rank <= k) / total) if total else 0.0 for k in K_VALUES
     }
     return QuestionResult(
-        question_id=question_id,
-        category=category,
-        spans_total=len(spans),
-        covered_at=covered_at,
+        question_id=question.id,
+        category=question.category,
+        question=question.question,
+        ideal_answer=question.ideal_answer,
+        notes=question.notes,
+        gold_spans=[
+            GoldSpanRef(pg_id=s.pg_id, char_start=s.char_start, char_end=s.char_end) for s in spans
+        ],
+        gold_chunk_ids=gold_chunk_ids,
+        retrieved_chunk_ids=[c.chunk_id for c in retrieved],
+        similarities=[round(c.score, 4) for c in retrieved],
+        latency_ms=latency_ms,
+        recall=recall,
         first_hit_rank=first_hit,
+        mrr=1.0 / first_hit if first_hit else 0.0,
     )
 
 
-def dense_retrieve(
-    settings: Settings, embedder: EmbeddingClient, query: str, top_k: int
-) -> list[RetrievedRef]:
-    from sqlalchemy import select
-    from sqlalchemy.orm import Session
+def compute_aggregates(results: list[QuestionResult]) -> Aggregates:
+    def mean_block(subset: list[QuestionResult]) -> tuple[dict[int, float], float]:
+        recall = {k: sum(q.recall[k] for q in subset) / len(subset) for k in K_VALUES}
+        mrr = sum(q.mrr for q in subset) / len(subset)
+        return recall, mrr
 
-    from ahx.db import ChunkRow, create_sync_engine
+    by_category: dict[str, CategoryAggregate] = {}
+    for category in CATEGORIES:
+        subset = [q for q in results if q.category == category]
+        if not subset:
+            continue
+        recall, mrr = mean_block(subset)
+        by_category[category] = CategoryAggregate(count=len(subset), recall=recall, mrr=mrr)
 
-    vector = embedder.embed_query_sync(query)
-    engine = create_sync_engine(settings.database_url)
+    empty_recall: dict[int, float] = dict.fromkeys(K_VALUES, 0.0)
+    overall_recall, overall_mrr = mean_block(results) if results else (empty_recall, 0.0)
+    return Aggregates(recall=overall_recall, mrr=overall_mrr, by_category=by_category)
+
+
+def _gold_chunk_ids(engine: Engine, spans: list[ResolvedSpan], chunking_version: str) -> list[int]:
+    ids: set[int] = set()
     with Session(engine) as session:
-        distance = ChunkRow.embedding.cosine_distance(vector)  # pyright: ignore[reportAttributeAccessIssue]
-        rows = session.execute(
-            select(ChunkRow.pg_id, ChunkRow.char_start, ChunkRow.char_end)
-            .order_by(distance)
-            .limit(top_k)
-        ).all()
-    return [
-        RetrievedRef(pg_id=pg_id, char_start=start, char_end=end, rank=rank)
-        for rank, (pg_id, start, end) in enumerate(rows, start=1)
-    ]
+        for span in spans:
+            midpoint = (span.char_start + span.char_end) // 2
+            rows = session.scalars(
+                select(ChunkRow.id).where(
+                    ChunkRow.pg_id == span.pg_id,
+                    ChunkRow.chunking_version == chunking_version,
+                    ChunkRow.char_start <= midpoint,
+                    ChunkRow.char_end > midpoint,
+                )
+            ).all()
+            ids.update(rows)
+    return sorted(ids)
 
 
 def run_retrieval_eval(
@@ -144,8 +170,10 @@ def run_retrieval_eval(
     retriever_name: str = "dense-v1",
     top_k: int = 20,
 ) -> RetrievalRun:
+    from ahx.db import create_sync_engine
     from ahx.ingest.chunker import CHUNKING_VERSION
 
+    engine = create_sync_engine(settings.database_url)
     embedder = EmbeddingClient(settings)
     results: list[QuestionResult] = []
     for question in questions:
@@ -160,8 +188,11 @@ def run_retrieval_eval(
                     "run `ahx eval validate` first"
                 )
             spans.append(resolved)
-        retrieved = dense_retrieve(settings, embedder, question.question, top_k)
-        results.append(score_question(question.id, question.category, spans, retrieved))
+        started = time.perf_counter()
+        retrieved = dense_retrieve(engine, embedder, question.question, top_k)
+        latency_ms = round((time.perf_counter() - started) * 1000)
+        gold_ids = _gold_chunk_ids(engine, spans, CHUNKING_VERSION)
+        results.append(score_question(question, spans, retrieved, gold_ids, latency_ms))
 
     return RetrievalRun(
         created_at=datetime.now(UTC).isoformat(timespec="seconds"),
@@ -169,7 +200,8 @@ def run_retrieval_eval(
         embed_model=settings.embed_model,
         chunking_version=CHUNKING_VERSION,
         top_k=top_k,
-        questions=results,
+        aggregates=compute_aggregates(results),
+        results=results,
     )
 
 

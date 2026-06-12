@@ -7,6 +7,7 @@ boundaries (see docs/python-stack.md §2).
 
 import asyncio
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -223,29 +224,20 @@ def parity(
 @app.command()
 def search(query: str, top_k: int = 5) -> None:
     """Debug tool: dense similarity search against the loaded corpus."""
-    from sqlalchemy import select
-    from sqlalchemy.orm import Session
-
     from ahx.config import get_settings
-    from ahx.db import ChunkRow, SourceRow, create_sync_engine
+    from ahx.db import create_sync_engine
+    from ahx.retrieval.dense import dense_retrieve
     from ahx.retrieval.embedding import EmbeddingClient
 
     settings = get_settings()
-    vector = EmbeddingClient(settings).embed_query_sync(query)
     engine = create_sync_engine(settings.database_url)
-    with Session(engine) as session:
-        distance = ChunkRow.embedding.cosine_distance(vector)  # pyright: ignore[reportAttributeAccessIssue]
-        rows = session.execute(
-            select(ChunkRow, SourceRow.author, SourceRow.title, distance.label("distance"))
-            .join(SourceRow, SourceRow.pg_id == ChunkRow.pg_id)
-            .order_by(distance)
-            .limit(top_k)
-        ).all()
-    for chunk_row, author, title, dist in rows:
-        locator = ".".join(chunk_row.locator)
-        preview = chunk_row.text[:160].replace("\n", " ")
+    hits = dense_retrieve(engine, EmbeddingClient(settings), query, top_k)
+    for hit in hits:
+        locator = ".".join(hit.locator)
+        preview = hit.text[:160].replace("\n", " ")
         console.print(
-            f"[bold]{1 - dist:.3f}[/bold]  {author}, {title[:40]}  [cyan]{locator}[/cyan]"
+            f"[bold]{hit.score:.3f}[/bold]  {hit.author}, {hit.work_title[:40]}  "
+            f"[cyan]{locator}[/cyan]"
         )
         console.print(f"        {preview}...\n")
 
@@ -335,27 +327,179 @@ def eval_run(
         table.add_column(f"recall@{k}")
     table.add_column("MRR")
     for category in CATEGORIES:
-        summary = run.summarize(category)
-        if summary is None:
+        agg = run.aggregates.by_category.get(category)
+        if agg is None:
             continue
         table.add_row(
             category,
-            str(summary.questions),
-            *(f"{summary.recall[k]:.1%}" for k in K_VALUES),
-            f"{summary.mrr:.3f}",
+            str(agg.count),
+            *(f"{agg.recall[k]:.1%}" for k in K_VALUES),
+            f"{agg.mrr:.3f}",
         )
-    overall = run.summarize(None)
-    assert overall is not None
     table.add_row(
         "[bold]overall[/bold]",
-        str(overall.questions),
-        *(f"[bold]{overall.recall[k]:.1%}[/bold]" for k in K_VALUES),
-        f"[bold]{overall.mrr:.3f}[/bold]",
+        str(len(run.results)),
+        *(f"[bold]{run.aggregates.recall[k]:.1%}[/bold]" for k in K_VALUES),
+        f"[bold]{run.aggregates.mrr:.3f}[/bold]",
     )
     console.print(table)
 
     runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
     path = save_run(run, runs_dir)
+    console.print(f"Run record: {path}")
+
+
+@eval_app.command()
+def generate(
+    label: str = typer.Option("gen-baseline-v1", help="Run label for the record filename."),
+    top_k: int = typer.Option(5, help="Chunks stuffed into the prompt."),
+    judge: bool = typer.Option(False, help="Run the LLM-judge layer (needs AHX_JUDGE_* set)."),
+) -> None:
+    """Run the generation-tier eval (full ask pipeline over the golden set)."""
+    import sys
+
+    from ahx.config import get_settings
+    from ahx.evals.generation import (
+        GenQuestionResult,
+        run_generation_eval,
+        save_generation_run,
+    )
+    from ahx.evals.golden import CATEGORIES, load_golden_set
+    from ahx.llm import judge_model_from_settings
+
+    settings = get_settings()
+    golden_dir = Path(__file__).resolve().parents[2] / "evals" / "golden"
+    questions = load_golden_set(golden_dir)
+
+    judge_model = None
+    if judge:
+        judge_model = judge_model_from_settings(settings)
+        if judge_model is None:
+            console.print("[red]--judge needs AHX_JUDGE_BASE_URL and AHX_JUDGE_MODEL set.[/red]")
+            raise typer.Exit(code=1)
+
+    def progress(result: GenQuestionResult) -> None:
+        mark = "refused" if result.refused else f"markers={result.markers_used}"
+        recall = (
+            f"cit-recall={result.citation_span_recall:.0%}"
+            if result.citation_span_recall is not None
+            else "oos"
+        )
+        console.print(
+            f"  {result.question_id:<10} ok={result.refusal_correct!s:<5} {mark:<16} "
+            f"{recall:<15} {result.latency_ms:>6}ms"
+        )
+
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    run = asyncio.run(
+        run_generation_eval(
+            settings, questions, label=label, top_k=top_k, judge=judge_model, on_result=progress
+        ),
+        loop_factory=loop_factory,
+    )
+
+    def pct(value: float | None) -> str:
+        return f"{value:.1%}" if value is not None else "—"
+
+    def score(value: float | None) -> str:
+        return f"{value:.2f}" if value is not None else "—"
+
+    table = Table(
+        title=f"Generation eval — {run.label} · {run.chat_model} · {run.prompt_version}"
+        + (f" · judge={run.judge_model}" if run.judge_model else " · no judge")
+    )
+    for column in (
+        "category",
+        "n",
+        "refused",
+        "refusal ok",
+        "cit recall",
+        "cit precision",
+        "faith",
+        "compl",
+        "latency",
+    ):
+        table.add_column(column)
+    aggregates = run.aggregates
+    for category in CATEGORIES:
+        agg = aggregates.by_category.get(category)
+        if agg is None:
+            continue
+        table.add_row(
+            category,
+            str(agg.count),
+            str(agg.refused),
+            pct(agg.refusal_correct),
+            pct(agg.citation_span_recall),
+            pct(agg.citation_precision),
+            score(agg.faithfulness),
+            score(agg.completeness),
+            f"{agg.mean_latency_ms}ms",
+        )
+    table.add_row(
+        "[bold]overall[/bold]",
+        str(aggregates.questions),
+        "",
+        pct(aggregates.refusal_accuracy_oos),
+        f"[bold]{pct(aggregates.citation_span_recall)}[/bold]",
+        f"[bold]{pct(aggregates.citation_precision)}[/bold]",
+        score(aggregates.faithfulness),
+        score(aggregates.completeness),
+        f"{aggregates.mean_latency_ms}ms",
+    )
+    console.print(table)
+    console.print(
+        f"false refusal rate (in-scope): {aggregates.false_refusal_rate:.1%} · "
+        f"mean completion tokens: {aggregates.mean_completion_tokens or 0:.0f}"
+    )
+
+    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
+    path = save_generation_run(run, runs_dir)
+    console.print(f"Run record: {path}")
+
+
+@eval_app.command()
+def rejudge(
+    record: Annotated[Path, typer.Argument(help="Path to a saved generation run record (JSON).")],
+    label: str = typer.Option("rejudged", help="Label for the new record."),
+) -> None:
+    """Re-judge a saved run's frozen answers with the current rubric —
+    isolates judge changes from generation nondeterminism."""
+    import sys
+
+    from ahx.config import get_settings
+    from ahx.evals.generation import GenQuestionResult, rejudge_run, save_generation_run
+    from ahx.llm import judge_model_from_settings
+
+    settings = get_settings()
+    judge_model = judge_model_from_settings(settings)
+    if judge_model is None:
+        console.print("[red]Needs AHX_JUDGE_BASE_URL and AHX_JUDGE_MODEL set.[/red]")
+        raise typer.Exit(code=1)
+
+    def progress(result: GenQuestionResult) -> None:
+        if result.faithfulness is not None:
+            console.print(
+                f"  {result.question_id:<10} faith={result.faithfulness} "
+                f"compl={result.completeness}"
+            )
+
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    run = asyncio.run(
+        rejudge_run(settings, record, judge_model, label, on_result=progress),
+        loop_factory=loop_factory,
+    )
+
+    def score(value: float | None) -> str:
+        return f"{value:.2f}" if value is not None else "—"
+
+    console.print(
+        f"\nfaith={score(run.aggregates.faithfulness)} "
+        f"compl={score(run.aggregates.completeness)} "
+        f"(judge {run.judge_model}, rubric {run.judge_rubric})"
+    )
+    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
+    path = save_generation_run(run, runs_dir)
     console.print(f"Run record: {path}")
 
 
@@ -374,6 +518,16 @@ def mcp_serve() -> None:
 @app.command()
 def serve(host: str = "127.0.0.1", port: int = 8000, reload: bool = True) -> None:
     """Run the API server (dev mode)."""
+    import sys
+
     import uvicorn
 
+    if sys.platform == "win32" and not reload:
+        # psycopg async cannot run on Windows' proactor loop (db.py), and
+        # uvicorn 0.36+ picks its loop via an explicit factory (policy is
+        # ignored): proactor for plain serving, selector for reload workers.
+        # So reload mode is already fine; no-reload needs the factory forced.
+        server = uvicorn.Server(uvicorn.Config("ahx.api.app:app", host=host, port=port))
+        asyncio.run(server.serve(), loop_factory=asyncio.SelectorEventLoop)
+        return
     uvicorn.run("ahx.api.app:app", host=host, port=port, reload=reload)

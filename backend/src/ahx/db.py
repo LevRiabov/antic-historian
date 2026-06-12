@@ -14,6 +14,7 @@ from pgvector.sqlalchemy import Vector  # pyright: ignore[reportMissingTypeStubs
 from sqlalchemy import ForeignKey, Index, Text, UniqueConstraint, create_engine, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import Engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 EMBED_DIM = 1024  # provisional, gate D2; must match Settings.embed_dim
@@ -63,6 +64,18 @@ class ChunkRow(Base):
 
 def create_sync_engine(database_url: str) -> Engine:
     return create_engine(database_url)
+
+
+def create_async_db_engine(database_url: str) -> AsyncEngine:
+    """For API routes (rule #7). Same psycopg driver/URL as the sync engine.
+
+    Windows footgun: psycopg async needs a selector event loop, but the
+    default (and uvicorn's no-reload loop factory) is the proactor loop.
+    Every entrypoint that awaits this engine must force one, e.g.
+    `asyncio.run(main(), loop_factory=asyncio.SelectorEventLoop)` — see
+    cli.serve for the uvicorn wiring.
+    """
+    return create_async_engine(database_url)
 
 
 def init_db(engine: Engine) -> None:
