@@ -195,3 +195,113 @@ while retrieved [4] contained it). The low-faithfulness set now isolates genuine
 faithfulness 4.72 (judge-v2) · completeness 3.07 · refusal accuracy 100% ·
 false refusals 25.8%. Judge-score deltas under ~0.2 are noise; records carry
 `judge_rubric` so v1/v2 scores can't be silently compared.
+
+---
+
+## 2026-06-12 — D2 ablation arm 1: qwen3-embedding-8b hosted (dense-8b-1024-v1)
+
+**Config:** qwen/qwen3-embedding-8b via OpenRouter ($0.01/M, verified 2026-06-12),
+MRL-truncated 4096→1024 dims + L2-renorm · same chunks (structural-v1), same golden set,
+bare-chunk embedding — directly comparable to the dense-v1 baseline. Corpus re-embed:
+~$0.11, 83 min (hosted, batch 32).
+**Run record:** `backend/evals/runs/2026-06-12T12-11-37Z-dense-8b-1024-v1.json`
+
+| category | n | recall@5 (vs 0.6b) | recall@20 (vs 0.6b) | MRR (vs 0.6b) |
+|---|---|---|---|---|
+| literal | 11 | **83.3%** (69.7) | 87.9% (69.7) | 0.818 (0.447) |
+| synonym | 10 | **71.7%** (30.0) | 85.0% (51.7) | 0.667 (0.431) |
+| multi-hop | 10 | 23.3% (6.7) | 55.0% (21.7) | 0.287 (0.055) |
+| synthesis | 10 | 19.2% (15.8) | 54.2% (29.8) | 0.338 (0.362) |
+| cross-book | 10 | 44.2% (29.2) | 73.3% (52.5) | 0.480 (0.495) |
+| contradiction | 11 | **72.7%** (54.5) | 90.9% (59.1) | 0.498 (0.427) |
+| **overall** | **62** | **53.2% (35.2)** | **74.9% (48.0)** | **0.519 (0.372)** |
+
+**Findings:**
+
+1. **+18.0 recall@5 from the embedder alone** — bigger than the expected headline lever
+   (contextual retrieval was +16 at small scale). Embedder quality was the binding
+   constraint, not chunking or enrichment.
+2. **Synonym +41.7 points (30.0→71.7)** — the 8B bridges modern-English questions to
+   Victorian translations; this was the "synonym tax" and a big model largely pays it.
+3. **recall@20 = 74.9%** transforms the Phase 4 plan: the rerank arm (4.2) now has a
+   rich pool — contradiction @20 is 90.9% with @5 at 72.7%, classic rerank-bait.
+4. **Caveats for the gate:** hosted (API dependency at query time — latency via
+   OpenRouter to be compared against local CPU candidates), and this measures the 8B
+   *truncated to 1024* — a 2048-dim arm is one env-var away if the gate gets close.
+   Synthesis stayed flat at @5 (15.8→19.2) — distributed answers remain a
+   retrieval-architecture problem, not an embedder problem.
+5. **Open:** local CPU-class candidates (voyage-4-nano, gte-modernbert-base) still
+   unmeasured — the gate question is now "does any local model get close enough to
+   53.2% to justify zero API dependency?"
+
+---
+
+## 2026-06-12 — D2 arm 2: dims + provider pinning (dense-8b-2000-nebius-v1)
+
+**Why:** (a) quantify MRL truncation loss (4096-native model; pgvector HNSW caps at
+2000 dims, so 2000 is the max indexable size); (b) pin one provider — the unpinned arm-1
+corpus was embedded by OpenRouter's provider mix (incl. an fp8 endpoint at 70% uptime,
+the source of 5–8s latency spikes; probes: Nebius ~0.9s consistent, DeepInfra 4–7s).
+**Config delta vs arm 1:** dims 1024→2000, provider pinned to Nebius. (Two changes at
+once — attribution confounded by design; the gate ships a config, not an attribution.)
+**Run record:** `backend/evals/runs/2026-06-12T14-11-20Z-dense-8b-2000-nebius-v1.json`
+
+| | recall@5 | recall@10 | recall@20 | MRR |
+|---|---|---|---|---|
+| arm 1 (1024, unpinned) | 53.2% | 61.8% | 74.9% | 0.519 |
+| arm 2 (2000, Nebius) | **54.3%** | 63.0% | 75.8% | 0.529 |
+
+**Findings:** +1.1 recall@5 — at/below the ±1-question noise floor. **MRL truncation
+4096→1024 is effectively free on this corpus**; the provider mix didn't measurably hurt
+arm 1 either. Contradiction recall@20 reached 100% (every contradiction question now has
+its evidence inside a top-50 rerank pool). Per the pre-stated rule (within noise → ship
+the smaller vectors), the gate-final config re-embeds at **1024 dims, Nebius-pinned** —
+half the storage (~120MB vectors, comfortable in a 500MB free-tier budget).
+
+---
+
+## 2026-06-12 — Gate D2 CLOSED: dense-8b-1024-nebius-v1 is the new retrieval floor
+
+**Run record:** `backend/evals/runs/2026-06-12T15-21-10Z-dense-8b-1024-nebius-v1.json`
+Gate-final config (qwen3-8b · Nebius-pinned · 1024d) reproduced arm 1 category-for-
+category: **53.2% recall@5 · 74.9% recall@20 · MRR 0.522**, query embed ~0.9s consistent.
+Decision + full rationale: [ADR-002](adr/002-d2-embeddings.md). Total gate spend ≈ $0.36.
+
+**This row replaces dense-v1 (35.2%) as the Phase 4 comparison floor.** Generation-tier
+re-baseline on the new corpus is pending (the old gen baseline was measured on 0.6b
+retrieval) — run before the 4.1 contextual arm so generation deltas stay attributable.
+
+---
+
+## 2026-06-12 — Generation re-baseline on D2 corpus (gen-dense-8b-judged)
+
+**Config:** identical generation pipeline (gemma-12b-16k, prompt baseline-v1, top-5,
+judge-v2 deepseek-v4-flash) — only retrieval changed (dense-v1 0.6b → dense-8b-1024-nebius).
+**Run record:** `backend/evals/runs/2026-06-12T16-56-58Z-gen-dense-8b-judged.json`
+
+| metric | on 0.6b retrieval | on 8b retrieval | Δ |
+|---|---|---|---|
+| citation recall | 32.0% | **49.1%** | +17.1 |
+| citation precision | 54.1% | 52.7% | ~flat |
+| faithfulness (judge-v2) | 4.72 | 4.79 | noise |
+| completeness | 3.07 | **3.61** | **+0.54** |
+| false refusal rate | 25.8% | **8.1%** | −17.7 (15→5 questions) |
+| OOS refusal accuracy | 100% | **100%** | held |
+| mean latency | 2.8s | 5.4s | +2.6s (hosted embed + longer answers) |
+
+**Findings:**
+
+1. **Retrieval gains converted ~1:1 into cited-answer gains** (+18.0 retrieval recall@5 →
+   +17.1 citation recall) — the Phase 4 premise, now measured twice from opposite sides.
+2. **The honest-refusal hypothesis confirmed:** false refusals collapsed 25.8%→8.1% with
+   ZERO prompt/model changes — those refusals were retrieval failures wearing a polite
+   mask, exactly as the Phase 3 baseline entry predicted. Literal/synthesis/cross-book/
+   contradiction now answer 100% of in-scope questions.
+3. **Completeness +0.54 (3.07→3.61)** — well above the ±0.2 judge noise floor. Better
+   sources = fuller answers, same model. Remaining gap is concentrated where retrieval
+   still misses: multi-hop (3.33, still 4 refusals, retrieval@5 23.3%) and
+   synthesis/cross-book (compl 3.00) — the 4.1/4.2/RAPTOR targets.
+4. **Abstention contract intact:** 10/10 OOS refusals with richer (more tempting)
+   wrong-context sources — the trust property survived the retrieval upgrade.
+5. **Latency cost is real:** mean 5.4s/answer (hosted query embed ~1s + longer, fuller
+   answers at 138 mean completion tokens). The Phase 6 router/caching arms own this.

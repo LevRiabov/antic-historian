@@ -27,11 +27,25 @@ class Settings(BaseSettings):
     env: str = "dev"
     database_url: str = "postgresql+psycopg://ahx:ahx@localhost:5433/ahx"
 
-    # Embedding (provisional model pending gate D2; served by local llama-swap).
-    embed_base_url: str = "http://127.0.0.1:8080/v1"
-    embed_model: str = "qwen3-embedding-0.6b"
+    # Embedding — gate D2 DECIDED 2026-06-12 (ADR-002): qwen3-embedding-8b
+    # hosted via OpenRouter pinned to Nebius, MRL-truncated to 1024 dims.
+    # Defaults match the decision so a missing API key fails LOUDLY — never
+    # silently embed queries with a different model than the corpus (0.6b at
+    # 1024d would produce garbage similarities with no error). Local fallback
+    # (qwen3-embedding-0.6b on llama-swap, -18 recall@5): override via env.
+    # Changing model/dim/provider requires `ahx db reset-chunks` +
+    # `ahx ingest load` + `ahx ingest parity --update`.
+    embed_base_url: str = "https://openrouter.ai/api/v1"
+    embed_model: str = "qwen/qwen3-embedding-8b"
     embed_dim: int = 1024
-    embed_batch_size: int = 16
+    embed_batch_size: int = 32
+    embed_api_key: str | None = None  # required for the hosted default
+    # OpenRouter provider pinning: reproducible vectors (one runtime, one
+    # quantization) + no slow-provider roulette. None = provider's default.
+    embed_provider: str | None = "nebius"
+    # MRL truncation (docs/embeddings.md footgun #4): vectors longer than
+    # embed_dim are truncated + L2-renormalized. Only for MRL-trained models.
+    embed_mrl_truncate: bool = True
 
     # Chat LLM (gate D5 open — any OpenAI-compatible endpoint; provisional
     # default is local gemma via llama-swap, same server as embeddings).

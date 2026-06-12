@@ -17,7 +17,12 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-EMBED_DIM = 1024  # provisional, gate D2; must match Settings.embed_dim
+from ahx.config import get_settings
+
+# Config-driven for the D2 ablation (candidate dims: 768/1024/2048). Read at
+# import time — the column type is fixed per process, so every process in a
+# given ablation arm must run with the same AHX_EMBED_DIM.
+EMBED_DIM = get_settings().embed_dim
 
 
 class Base(DeclarativeBase):
@@ -83,3 +88,16 @@ def init_db(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(engine)
+
+
+def reset_chunks(engine: Engine) -> None:
+    """Drop + recreate the chunks table (D2 ablation: new embed model/dim).
+
+    Sources stay; chunks reload from corpus/chunks/*.jsonl via `ahx ingest
+    load`. Needed because the loader's idempotency key (pg_id +
+    chunking_version) doesn't know about the embedding model, and a dim
+    change alters the column type anyway.
+    """
+    chunks = Base.metadata.tables["chunks"]
+    chunks.drop(engine, checkfirst=True)
+    chunks.create(engine)

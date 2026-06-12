@@ -33,6 +33,31 @@ def db_init() -> None:
     console.print("[green]Database initialized (extension + tables + indexes).[/green]")
 
 
+@db_app.command(name="reset-chunks")
+def db_reset_chunks(
+    yes: bool = typer.Option(False, "--yes", help="Skip confirmation."),
+) -> None:
+    """Drop + recreate the chunks table (D2 ablation: re-embed with a new
+    model/dim). Follow with `ahx ingest load` and `ahx ingest parity --update`."""
+    from ahx.config import get_settings
+    from ahx.db import create_sync_engine, reset_chunks
+
+    settings = get_settings()
+    if not yes:
+        console.print(
+            "[red]This drops ALL embedded chunks (reload costs GPU/API time).[/red]\n"
+            f"Target: {settings.database_url}\n"
+            f"New embed config: {settings.embed_model} @ {settings.embed_dim}d\n"
+            "Re-run with --yes to proceed."
+        )
+        raise typer.Exit(code=1)
+    reset_chunks(create_sync_engine(settings.database_url))
+    console.print(
+        f"[green]Chunks table recreated for {settings.embed_model} @ "
+        f"{settings.embed_dim}d. Now run `ahx ingest load`.[/green]"
+    )
+
+
 @ingest_app.command()
 def download(force: bool = typer.Option(False, help="Re-download even if cached.")) -> None:
     """Fetch every manifest entry into corpus/raw/ (idempotent)."""

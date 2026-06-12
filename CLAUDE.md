@@ -29,8 +29,10 @@ idiom, a one-line TS analogy helps (pydantic ≈ zod, uv ≈ pnpm, pytest fixtur
 Gate status: **D1 decided** ([ADR-001](docs/adr/001-d1-framework.md)): LlamaIndex = RAG layer,
 LangGraph = agent orchestration, thin project-owned interface between frameworks and our code
 (no framework types in eval harness / API / ablation modules; models passed explicitly — never
-LlamaIndex global `Settings`). D2 (embeddings), D3 (vector store), D4 (frontend), D5 (LLM
-lineup) — open, defaults documented.
+LlamaIndex global `Settings`). **D2 decided** ([ADR-002](docs/adr/002-d2-embeddings.md)):
+qwen3-embedding-8b hosted (OpenRouter pinned to Nebius, 1024d MRL); local qwen3-0.6b =
+documented fallback. D3 (vector store), D4 (frontend), D5 (LLM lineup) — open, defaults
+documented.
 
 ## Repo layout
 

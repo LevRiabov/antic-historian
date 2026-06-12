@@ -1,0 +1,2506 @@
+{
+  "created_at": "2026-06-12T16:56:58+00:00",
+  "label": "gen-dense-8b-judged",
+  "chat_model": "gemma-12b-16k",
+  "embed_model": "qwen/qwen3-embedding-8b",
+  "chunking_version": "structural-v1",
+  "prompt_version": "baseline-v1",
+  "top_k": 5,
+  "judge_model": "deepseek/deepseek-v4-flash",
+  "judge_rubric": "judge-v2",
+  "aggregates": {
+    "questions": 72,
+    "refusal_accuracy_oos": 1.0,
+    "false_refusal_rate": 0.08064516129032258,
+    "citation_span_recall": 0.4905913978494624,
+    "citation_precision": 0.5270833333333333,
+    "faithfulness": 4.7894736842105265,
+    "completeness": 3.6140350877192984,
+    "mean_latency_ms": 5354,
+    "mean_completion_tokens": 137.72222222222223,
+    "by_category": {
+      "literal": {
+        "count": 11,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.7878787878787878,
+        "citation_precision": 0.8,
+        "faithfulness": 5.0,
+        "completeness": 4.454545454545454,
+        "mean_latency_ms": 4046
+      },
+      "synonym": {
+        "count": 10,
+        "refused": 1,
+        "refusal_correct": 0.9,
+        "citation_span_recall": 0.6666666666666667,
+        "citation_precision": 0.7666666666666667,
+        "faithfulness": 4.777777777777778,
+        "completeness": 3.6666666666666665,
+        "mean_latency_ms": 5241
+      },
+      "multi-hop": {
+        "count": 10,
+        "refused": 4,
+        "refusal_correct": 0.6,
+        "citation_span_recall": 0.18333333333333332,
+        "citation_precision": 0.2638888888888889,
+        "faithfulness": 5.0,
+        "completeness": 3.3333333333333335,
+        "mean_latency_ms": 4099
+      },
+      "synthesis": {
+        "count": 10,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.19166666666666665,
+        "citation_precision": 0.275,
+        "faithfulness": 4.9,
+        "completeness": 3.0,
+        "mean_latency_ms": 6595
+      },
+      "cross-book": {
+        "count": 10,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.3833333333333333,
+        "citation_precision": 0.36333333333333334,
+        "faithfulness": 4.1,
+        "completeness": 3.0,
+        "mean_latency_ms": 7760
+      },
+      "contradiction": {
+        "count": 11,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.6818181818181818,
+        "citation_precision": 0.6045454545454546,
+        "faithfulness": 5.0,
+        "completeness": 4.0,
+        "mean_latency_ms": 5681
+      },
+      "out-of-scope": {
+        "count": 10,
+        "refused": 10,
+        "refusal_correct": 1.0,
+        "citation_span_recall": null,
+        "citation_precision": null,
+        "faithfulness": null,
+        "completeness": null,
+        "mean_latency_ms": 4151
+      }
+    }
+  },
+  "results": [
+    {
+      "question_id": "con-001",
+      "category": "contradiction",
+      "question": "How did Romulus die?",
+      "ideal_answer": "The sources disagree. The official version, in both Livy and Plutarch, is that while Romulus was reviewing the army at the Goat's Marsh a sudden storm enveloped him and he was carried up to heaven, thereafter worshipped as the god Quirinus. But both historians also preserve a darker rumor: that the senators (fathers), resentful of his rule, fell upon him and tore his body to pieces, each carrying away a part — Plutarch placing the deed in the temple of Vulcan.",
+      "answer": "The circumstances of Romulus's death are uncertain and have been the subject of different accounts. Because he disappeared without leaving any part of his body or any remnants of his clothing, it was impossible to prove or disprove the manner of his death [1].\n\nThere are two primary theories regarding his disappearance:\n*   One account suggests that the senators fell upon him in the temple of Vulcan and cut his body into pieces, taking a portion of it each [1].\n*   Another account states that while he was speaking to the people outside the city near a place called the Goat's Marsh, a sudden and strange atmospheric disturbance occurred. During this time, the sun was darkened, and the day turned into night with heavy thunder and winds [1]. When the weather cleared, the people could not find him, and the senators instructed them to worship him as a god who had been taken up to the heavens [1].\n\nA second source notes that while the youth of Rome believed the account that he was carried to heaven by the storm, some were secretly convinced he had been torn into pieces by the hands of the senators [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        2326,
+        6963,
+        2324,
+        20727,
+        6949
+      ],
+      "cited_chunk_ids": [
+        2326,
+        6963
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passages [1] and [2], with no invented content. | completeness: The answer covers both the official divine account and the darker rumor of assassination, including the specific locations (Goat's Marsh and temple of Vulcan) and the detail of each senator carrying away a piece, matching all key facts from the reference.",
+      "latency_ms": 12298,
+      "prompt_tokens": 2833,
+      "completion_tokens": 230
+    },
+    {
+      "question_id": "con-002",
+      "category": "contradiction",
+      "question": "How did Themistocles die?",
+      "ideal_answer": "Thucydides states plainly that disease was the real cause of his death, noting only as a rumor the story that he poisoned himself on finding he could not deliver Greece to the Persian king. Plutarch gives the dramatic suicide as \"the usual story\" — that Themistocles sacrificed, feasted with his friends, and drank bull's blood — while acknowledging the alternative that it was a fast-acting poison.",
+      "answer": "The circumstances of Themistocles' death are described differently by various sources:\n\n*   **Disease:** Thucydides states that disease was the actual cause of his death [2, 3, 4].\n*   **Poison:** There is a story, mentioned by Plutarch and other authors, that he died by drinking a poison that produced instant death because he was unable to fulfill his promises to the king [1, 2]. This account is also noted as a rumor that may have been circulated by his friends and relatives to honor his memory [4]. Cicero noted that the story of suicide by poison was attributed to Clitarchus and Stratoklês, and he acknowledged that this version was contrary to the account by Thucydides [5].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        3,
+        4,
+        1,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        2503,
+        1087,
+        24585,
+        24586,
+        24588
+      ],
+      "cited_chunk_ids": [
+        1087,
+        24585,
+        24586,
+        2503,
+        24588
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 0.4,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by at least one of the source passages, including the disease account from Thucydides and the poison story from Plutarch and Grote. | completeness: The answer covers the core facts of disease and suicide, but omits the secondary detail from Plutarch about drinking bull's blood and feasting.",
+      "latency_ms": 4662,
+      "prompt_tokens": 2753,
+      "completion_tokens": 159
+    },
+    {
+      "question_id": "con-003",
+      "category": "contradiction",
+      "question": "Did Caligula actually intend to make his horse consul?",
+      "ideal_answer": "The two sources differ in confidence. Suetonius reports it only as hearsay — \"it is even said that he intended to make him consul.\" Cassius Dio states it more strongly: that Caligula promised the consulship to the horse Incitatus and \"would certainly have done\" it had he lived longer. So the claim is a guarded rumor in Suetonius and a near-assertion in Dio.",
+      "answer": "It is even said that Caligula intended to make his horse, Incitatus, consul [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4477,
+        4856,
+        12008,
+        5358,
+        4862
+      ],
+      "cited_chunk_ids": [
+        4856
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: The claim that Caligula intended to make his horse consul is directly supported by passage [2], which states 'It is even said that he intended to make him consul.' | completeness: The answer only covers Suetonius's hearsay account but omits Cassius Dio's stronger assertion, missing a key secondary fact.",
+      "latency_ms": 2968,
+      "prompt_tokens": 2496,
+      "completion_tokens": 23
+    },
+    {
+      "question_id": "con-004",
+      "category": "contradiction",
+      "question": "How did Bucephalus die?",
+      "ideal_answer": "The sources disagree on whether the horse died of battle wounds or of old age. Arrian insists explicitly that Bucephalas died \"not from having been wounded by any one, but from the effects of toil and old age.\" Plutarch reports both: that most authorities say he died under treatment for his wounds after the battle with Porus, though Onesicritus says it was fatigue and age. Both agree he was about thirty and that Alexander founded a city (Bucephala) in his memory.",
+      "answer": "There are different accounts regarding the cause of Bucephalas's death: some authorities state he died while being treated for his wounds [2, 4], while the historian Onesicritus states he died from fatigue and age at the age of thirty [2, 4]. Another source notes he died from the effects of toil and old age, having been worn out by his service [3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        4,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        8019,
+        3648,
+        8382,
+        3647,
+        3580
+      ],
+      "cited_chunk_ids": [
+        3648,
+        3647,
+        8382
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passages, with no invented content. | completeness: The answer covers all key facts from the reference, including the disagreement on cause of death, the specific accounts of wounds and old age, and the age of thirty, without missing any core details.",
+      "latency_ms": 4281,
+      "prompt_tokens": 2377,
+      "completion_tokens": 81
+    },
+    {
+      "question_id": "con-005",
+      "category": "contradiction",
+      "question": "How did Xerxes get back to Asia after Salamis?",
+      "ideal_answer": "Herodotus himself records two conflicting accounts. In his main narrative, Xerxes marched his army by land to the Hellespont and crossed to Abydos by ship, the bridges having been broken by a storm. But he then reports \"another story\": that Xerxes sailed from Eion on the Strymon in a Phoenician ship caught in a storm, and that the Persian nobles on deck leapt into the sea to lighten it and save the king — a tale Herodotus relates but disbelieves.",
+      "answer": "Xerxes returned to Asia by land with the majority of his army [1]. During this retreat to the Hellespont, his troops suffered [1]. Upon reaching the Hellespont, he found the bridge of boats broken and crossed the strait on a ship [1]. One account suggests he may have embarked at Eion, but it is more certain that he reached Abdera on his way back, where he established a guest-friendship and presented them with a gold-spangled tiara and a Persian sword of gold [3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        24140,
+        24363,
+        810,
+        805,
+        30186
+      ],
+      "cited_chunk_ids": [
+        24140,
+        810
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by the cited passages, with no invented content. | completeness: The answer covers the main narrative of Xerxes returning by land and crossing by ship after bridges broke, but it only partially addresses the conflicting second account, omitting key details like the storm and nobles leaping overboard.",
+      "latency_ms": 3940,
+      "prompt_tokens": 2934,
+      "completion_tokens": 111
+    },
+    {
+      "question_id": "con-006",
+      "category": "contradiction",
+      "question": "How did Remus die?",
+      "ideal_answer": "Livy gives two versions side by side: that Remus fell in the brawl that broke out when the brothers' rival bird-omens were disputed, or — the \"more common account\" — that he leaped over Romulus's newly-built walls in derision and Romulus killed him in a rage, crying \"So perish every one hereafter, who shall leap over my walls.\" Smith's history follows the leaping-the-wall version as the standard one.",
+      "answer": "The accounts regarding the death of Remus vary:\n\n*   One account states that Remus was killed during a conflict between the brothers regarding the sovereignty and the city [4].\n*   Another account describes Remus falling from a blow received in a crowd after the brothers exchanged angry words following the conflicting omens of the vultures [4].\n*   A more common account states that Remus leaped over the newly-erected walls in derision of his brother and was subsequently killed by Romulus in a fit of passion [4].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        20726,
+        12548,
+        9002,
+        6949,
+        12546
+      ],
+      "cited_chunk_ids": [
+        6949
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passage [4] (Livy), and no content is invented. | completeness: The answer covers the two main versions of Remus's death (brawl over omens and leaping the walls) as in the reference, but omits the specific quote from Romulus and the mention of Smith's history, which are secondary facts.",
+      "latency_ms": 7441,
+      "prompt_tokens": 2866,
+      "completion_tokens": 110
+    },
+    {
+      "question_id": "con-007",
+      "category": "contradiction",
+      "question": "How did Alexander deal with the Gordian knot?",
+      "ideal_answer": "The sources split on whether he cut it or untied it by a trick. Arrian reports that some say Alexander, unable to loosen the cord, struck it with his sword and cut it through — but that Aristobulus says he pulled out the pin of the wagon-pole and so drew out the yoke. Plutarch gives the same two versions: most authors say he cut it with his sword, but Aristobulus says he undid it easily by pulling out the pin.",
+      "answer": "There are different accounts regarding how Alexander dealt with the Gordian knot:\n\n*   **Cutting the knot:** Most accounts and several sources state that Alexander, finding the knot of singular complexity that no one had been able to untie, became impatient and used his sword to sever the cord in two [1, 2, 3, 5]. This act was accepted as a solution to the problem and fulfilled the prophecy that the empire of Asia would go to the one who untied it [1, 5].\n*   **Removing the pin:** The historian Aristobulus reported that Alexander did not need to cut the cord; instead, he pulled out a wooden pin (a peg) from the wagon-pole that held the cord together, and then drew the yoke off from below [2, 3].\n*   **Uncertainty:** One source notes that it cannot be confirmed with confidence exactly how Alexander performed the feat, but both he and his troops departed as if the prediction had been fulfilled [3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        29352,
+        3594,
+        8182,
+        8181,
+        23198
+      ],
+      "cited_chunk_ids": [
+        29352,
+        3594,
+        8182,
+        23198
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited source passages, with no invented content. | completeness: The answer covers both key versions (cutting and removing the pin) and the uncertainty, matching all key facts from the reference.",
+      "latency_ms": 5387,
+      "prompt_tokens": 2694,
+      "completion_tokens": 209
+    },
+    {
+      "question_id": "con-008",
+      "category": "contradiction",
+      "question": "What did Nero say about an artist dying, and when?",
+      "ideal_answer": "The wording and timing differ between sources. Suetonius reports that as his grave was dug before his eyes Nero wept and kept repeating \"What an artist is now about to perish!\" Cassius Dio gives a different form and moment: that Nero spoke the \"far-famed sentence\" — \"Jupiter, what an artist perishes in me!\" — at the very instant he killed himself.",
+      "answer": "Nero made the statement regarding an artist's death in two different instances:\n\n*   **Before his death:** While he was being pressured by those around him to save himself from impending indignities, he ordered a pit to be prepared and repeatedly said, \"What an artist is now about to perish!\" [2]\n*   **At the moment of his death:** As he was dying, he uttered the \"far-famed sentence,\" \"Jupiter, what an artist perishes in me!\" [4]",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4975,
+        4985,
+        12112,
+        12160,
+        12138
+      ],
+      "cited_chunk_ids": [
+        4985,
+        12160
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passages, with no invented content. | completeness: The answer accurately covers both reported instances from Suetonius and Cassius Dio, including the exact quotes and timing, matching the reference answer fully.",
+      "latency_ms": 4769,
+      "prompt_tokens": 2805,
+      "completion_tokens": 106
+    },
+    {
+      "question_id": "con-009",
+      "category": "contradiction",
+      "question": "Why did Tarpeia betray the citadel, and how did she die?",
+      "ideal_answer": "All sources agree she was bribed by the gold the Sabines wore on their left arms and was crushed to death under their shields, but they differ on her intent. Livy gives the standard treacherous version (she was bribed to admit the soldiers and crushed under their arms) but also reports an alternative: that she demanded their shields in good faith, meaning to disarm them, and was killed as if a traitor by the very reward she chose. Plutarch agrees she coveted the golden bracelets and asked for \"the things they wore on their left arms.\"",
+      "answer": "Tarpeia betrayed the citadel because she was \"dazzled by the golden bracelets\" of the Sabines [2] and \"coveting the golden bracelets she saw them wear\" [2]. She promised to betray the fort to the Sabines in exchange for the items they wore on their left arms [1][2][3].\n\nShe died because, after she opened a gate and allowed the Sabines to enter, she was \"crushed to death\" by the \"multitude of gold and their shields\" [1] or \"heaping their arms upon her\" [4]. Because she had \"bargained with them for what they had on their left hands\" [4], the Sabines threw their shields upon her instead of giving her gold [1][4]. This was done either to make it appear as though the citadel had been taken by storm or to provide a warning that \"faith should never on any occasion be kept with a betrayer\" [4].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        1,
+        3,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        2314,
+        2313,
+        20728,
+        6957,
+        10814
+      ],
+      "cited_chunk_ids": [
+        2313,
+        2314,
+        20728,
+        6957
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the source passages. | completeness: The answer covers the core facts of bribery with gold and death under shields but omits the secondary fact about the differing interpretations of Tarpeia's intent as noted in the reference.",
+      "latency_ms": 5438,
+      "prompt_tokens": 2856,
+      "completion_tokens": 199
+    },
+    {
+      "question_id": "con-010",
+      "category": "contradiction",
+      "question": "What was Lycurgus' date and life story?",
+      "ideal_answer": "The sources cannot agree on almost anything about him. Plutarch opens his Life by warning that scarcely anything asserted by one historian is not contradicted by another — as to his family, his travels, the manner of his death, and above all the very age in which he lived. Grote sharpens the specific disagreement: Herodotus makes Lycurgus uncle and guardian of king Labotas of the Agid line (placing him about 996 BC), whereas all other accounts make him a younger brother of the rival Proclid line.",
+      "answer": "The specific date of Lycurgus' life is not agreed upon by various sources [4]. Some accounts place him as the uncle and guardian of King Labôtas, which would position him approximately 220 years before the first recorded Olympiad (around 996 B.C.) [4]. Other accounts describe him as a younger brother of a Spartan king, though these sources do not agree on his exact parentage [4].\n\nHis life story contains several conflicting accounts regarding his actions and travels:\n*   **Role as Lawgiver:** He is credited with transforming Sparta from a lawless state into one of good order [3]. He established military divisions (Enômoties and Triakads), the Syssitia (public mess), the ephors, and the senate [3]. Some traditions state he introduced these institutions from Crete while serving as the guardian of his nephew, King Labôtas [3].\n*   **Travels and Education:** After a period of temporary absence from Sparta to avoid slanderous accusations, he traveled to Crete to study various cities' customs, and subsequently visited Ionia, Egypt, and potentially Libya, Iberia, and India [5]. While in Ionia, he reportedly obtained copies of the Homeric poems [5].\n*   **Death and Legacy:** There are many conflicting reports regarding his death; some say it was in Cirrha, others in Elis, and others in Crete [1]. One account states that his body was burned and his ashes scattered into the sea at his request to prevent the people of Lacedaemon from claiming he was still alive and making changes to the government [1]. He is honored with a temple in Sparta where he is worshipped as a god [1, 3].\n*   **Family:** He left behind an only son named Antiorus, whose family became extinct upon his death [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        4,
+        3,
+        5,
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        2375,
+        6865,
+        22641,
+        22634,
+        22642
+      ],
+      "cited_chunk_ids": [
+        22634,
+        22641,
+        22642,
+        2375
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.25,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: All claims in the answer are directly supported by the provided source passages, with no invented content. | completeness: The answer covers all key facts from the reference, including the disagreement on dates, the conflicting accounts of his role, travels, death, and family, and adds extra correct detail without lowering the score.",
+      "latency_ms": 7479,
+      "prompt_tokens": 2947,
+      "completion_tokens": 388
+    },
+    {
+      "question_id": "con-011",
+      "category": "contradiction",
+      "question": "Who was to blame for losing the battle of Cannae?",
+      "ideal_answer": "Both sources fault the consul Varro (Gaius Terentius), but with different emphasis. Polybius lays the disaster squarely on him personally — his flight to Venusia was \"as disgraceful to himself as his conduct in office had been disastrous to his country.\" Mommsen, while equally scornful of \"the hero of the pavement,\" frames the deeper fault as systemic: the old custom of alternating supreme command between the two consuls day by day, which forced the cautious Paullus to yield to Varro's will.",
+      "answer": "Hannibal was blamed for not immediately following up his victory with an advance on Rome [2]. Additionally, the Roman leader Gaius Terentius (Varro) was criticized for his lack of experience and for his decision to order an advance despite the protests of his colleague, which led to a dangerous misunderstanding between the leaders [1, 5].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        1,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        10958,
+        20834,
+        5737,
+        18797,
+        5729
+      ],
+      "cited_chunk_ids": [
+        20834,
+        10958,
+        5729
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Both claims are directly supported by source passages [2] and [5]; the incorrect citation of [1] does not affect faithfulness as the content is grounded elsewhere. | completeness: The answer covers the core fact that Varro was blamed, but misses the reference's key distinction between Polybius's personal blame and Mommsen's systemic critique, omitting secondary facts.",
+      "latency_ms": 3825,
+      "prompt_tokens": 2547,
+      "completion_tokens": 72
+    },
+    {
+      "question_id": "cb-001",
+      "category": "cross-book",
+      "question": "How do the sources judge Alcibiades?",
+      "ideal_answer": "Thucydides judges that his lawless personal extravagance — horses and expenditure beyond his means — made the people fear him as an aspiring tyrant, \"and this later on had not a little to do with the ruin of the Athenian state,\" though his public war conduct was excellent. Plutarch fixes on his chameleon-like versatility, adapting to Spartan austerity or Persian pomp at will. Grote, the modern voice, grants him boldness, resource, and vigor \"not surpassed by any contemporary Greek\" while damning his want of public principle.",
+      "answer": "The sources describe Alkibiadês as a man of exceptional ability and action whose great talents were marred by significant moral failings.\n\n**Character and Reputation**\nAlkibiadês is characterized by \"overweening insolence,\" \"overbearing vanity,\" and a \"contempt of restraints\" both legal and social [1, 2]. He was known for his \"impudence\" and \"rashness\" [1, 3]. While he possessed \"extraordinary energy, decision, and capacity of command,\" his actions were often driven by \"ambition and vanity\" [1, 2]. He was considered a man of action whose \"eloquence was in him a secondary quality\" [2].\n\n**Military and Political Career**\nHe was never defeated by land or sea and possessed \"great courage,\" \"ability,\" and \"enterprise\" [1]. He was noted for his \"extraordinary flexibility of character\" and his \"power of adapting himself to new habits, new necessities, and new persons\" [2]. However, despite his success in various roles—whether as an Athenian, Spartan, or Persian supporter—he never inspired \"lasting confidence\" in any of them [1].\n\n**Relationship with Socrates**\nSokratês attempted to provide Alkibiadês with \"salutary lessons\" to counter his \"haughty and spoiled\" nature [2]. While Sokratês tried to correct him when he was misled by \"luxury or pride,\" these efforts had no \"serious effect\" on the youth [2, 5].\n\n**Historical and Contemporary Views**\n*   **Thucydidês:** He praised only Alkibiadês's \"capacity and warlike enterprise,\" while his overall depiction of the man's conduct was the \"reverse of eulogy\" [1].\n*   **Antisthenês:** He admired Alkibiadês's \"extreme personal beauty\" and \"audacious\" nature, but his reports on Alkibiadês's \"lawless\" life were considered exaggerated [4].\n*   **Comic Writers:** Eupolis, Aristophanês, and Pherekratês were \"abundant in their jests and libels\" regarding his excesses [4].\n*   **Other Historians:** Thucydides, Theopompus, and Timæus are noted as having praised him, though the specific details of the praise from Theopompus and Timæus are unknown [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2,
+        3,
+        5,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        26612,
+        25601,
+        25615,
+        25603,
+        2639
+      ],
+      "cited_chunk_ids": [
+        26612,
+        25601,
+        25615,
+        2639,
+        25603
+      ],
+      "citation_span_recall": 0.3333333333333333,
+      "citation_precision": 0.2,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the source passages; no invented content. | completeness: The answer covers the core facts about Alcibiades' exceptional ability and moral failings, including Thucydides' view of his war conduct and versatility like Plutarch's, but misses secondary details such as the specific reference to horses and expenditure, the fear of aspiring tyranny, the quote about ruin of the state, and Grote's explicit judgment on want of public principle.",
+      "latency_ms": 9536,
+      "prompt_tokens": 2687,
+      "completion_tokens": 508
+    },
+    {
+      "question_id": "cb-002",
+      "category": "cross-book",
+      "question": "How do the sources judge Themistocles?",
+      "ideal_answer": "Herodotus reports he was esteemed throughout Hellas as \"the ablest by far of the Hellenes\" and uniquely honored at Sparta. Thucydides' obituary calls his untaught native genius for instant judgment and prediction \"quite extraordinary and unparalleled.\" Grote balances the picture: his rapacity made him hated and feared among the allies, and the suspicions of treasonable medism at Athens grew from his own corrupt and double-faced conduct.",
+      "answer": "The sources provide the following judgments regarding Themistocles:\n\n*   **Military and Leadership Ability:** He was regarded as the most capable of all the Greeks [3]. He was described as a man of \"indubitable signs of genius\" who possessed an extraordinary and unparalleled ability to intuitively meet emergencies [5]. He was considered a skilled judge in sudden crises, a prophet of the future, and an able theoretical expositor [5].\n*   **Diplomacy and Unity:** He is commended for ending the civil wars of Greece, settling their differences, and persuading them to set aside their animosities during the war against the Persians [4].\n*   **Political Actions:** He is noted for his actions against those who sought to corrupt the Greeks, such as the execution of an interpreter who published barbarian orders and the degradation of Arthmius of Zelea [4]. He also successfully bought off a rival, Epicydes, to prevent him from obtaining the command of the Athenian forces [4].\n*   **Reputation and Honors:** He was highly esteemed throughout Hellas [3]. He received great honors and a wreath of olive from the Lacedemonians, who also provided him with a prestigious chariot and a unique escort of three hundred \"horsemen\" [3]. He attained a level of consideration at the Persian court that no other Greek had ever achieved [5].\n*   **Contrast with Rivals:** His wealth at the end of his life (estimated between eighty and one hundred talents) is contrasted with the poverty of his rival, Aristeidês, who began his career with no more than three talents [564].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        3,
+        5,
+        4
+      ],
+      "markers_dangling": [
+        564
+      ],
+      "retrieved_chunk_ids": [
+        24582,
+        30161,
+        807,
+        2475,
+        1087
+      ],
+      "cited_chunk_ids": [
+        807,
+        1087,
+        2475
+      ],
+      "citation_span_recall": 0.6666666666666666,
+      "citation_precision": 0.6666666666666666,
+      "faithfulness": 4,
+      "completeness": 2,
+      "judge_notes": "faithfulness: The answer is grounded in the sources but incorrectly attributes the 'three talents' to Aristeidês' beginning instead of Themistocles' beginning. | completeness: The answer covers the positive judgments from Herodotus and Thucydides but omits the negative aspects from Grote (rapacity, hatred, suspicion of medism), which are key facts in the reference.",
+      "latency_ms": 7523,
+      "prompt_tokens": 2911,
+      "completion_tokens": 337
+    },
+    {
+      "question_id": "cb-003",
+      "category": "cross-book",
+      "question": "How is the disaster at Cannae described?",
+      "ideal_answer": "Polybius gives the soldier's accounting: of six thousand Roman horse only seventy escaped with Varro, the infantry \"died nobly\" to the number of seventy thousand, both sides fighting with conspicuous gallantry. Dio's fragment calls it the most fearful disaster Rome ever suffered, preceded by portents and Sibylline prophecy. Mommsen, the modern judge, treats the \"unexampled success\" as the moment Hannibal's grand political combination against Rome seemed to mature.",
+      "answer": "The disaster at Cannae is described as a complete annihilation of the Roman army on the field of battle with very little loss to the opposing forces [1]. It is noted as a \"fearful disaster\" from which the Romans never suffered a more terrible one either before or after [4]. The event was preceded by portents and the solemn verses of the Sibyl, who had warned the Romans to beware of the location [4].\n\nThe scale of the defeat is highlighted by the following details:\n*   **Casualties:** Of the 76,000 Romans in the line of battle, 70,000 were killed [1].\n*   **Survivors:** Only the consul Gaius Varro escaped due to his quick resolution and a good horse [1]. Other survivors included the proconsul Gnaeus Servilius, two-thirds of the staff-officers, and eighty men of senatorial rank [1].\n*   **Prisoners:** Approximately 10,000 Romans who were not engaged in the actual battle were taken as prisoners of war [1, 3].\n*   **Carthaginian Losses:** Hannibal lost fewer than 6,000 men, of which two-thirds were Celts [1]. Other accounts specify the loss of 4,000 Celts, 1,500 Iberians and Libyans, and about 200 horse [3].\n*   **Historical Significance:** The battle is cited as a notable instance of a large army being destroyed so completely [1]. It also served as a lesson to posterity that it is better to have a superior number of cavalry than an equal number of both infantry and cavalry [3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        4,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        18797,
+        14495,
+        5737,
+        10955,
+        2865
+      ],
+      "cited_chunk_ids": [
+        18797,
+        10955,
+        5737
+      ],
+      "citation_span_recall": 0.6666666666666666,
+      "citation_precision": 0.6666666666666666,
+      "faithfulness": 1,
+      "completeness": 3,
+      "judge_notes": "faithfulness: The answer claims that Gnaeus Servilius, two-thirds of the staff-officers, and eighty senators survived, but the cited passage [1] lists them among the dead, making these claims unsupported and invented. | completeness: The answer covers the core facts of the disaster's magnitude, portents, and casualties, but omits Mommsen's analysis and some specific details from Polybius and Dio.",
+      "latency_ms": 8410,
+      "prompt_tokens": 2792,
+      "completion_tokens": 359
+    },
+    {
+      "question_id": "cb-004",
+      "category": "cross-book",
+      "question": "How do historians ancient and modern assess Pericles?",
+      "ideal_answer": "Thucydides' famous verdict: by rank, ability, and known integrity he led the multitude instead of being led, so that \"what was nominally a democracy became in his hands government by the first citizen.\" Plutarch gives the deathbed self-assessment — his proudest claim was that \"no Athenian, through my means, ever wore mourning.\" Grote notes that his immense ascendancy and unparalleled eloquence are attested even more forcibly by his enemies than his friends.",
+      "answer": "Historians both ancient and modern have presented the character of Pericles in various lights [3]. Despite these differing perspectives, his immense and long-continued leadership, as well as his unparalleled eloquence, are facts acknowledged by both his friends and his enemies [3]. Even those who opposed his political actions, such as the philosopher Plato, praised his \"majestic intelligence\" [3]. Additionally, even his enemies—including comic writers who sought to mock him—described him as a powerful orator whose words possessed the force of \"thunder and lightning\" [3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        25061,
+        25053,
+        2559,
+        25062,
+        30097
+      ],
+      "cited_chunk_ids": [
+        2559
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited source passage [3] and other passages, with no invented content. | completeness: The answer covers the core point of Pericles' acknowledged leadership and eloquence but misses key specific facts from the reference like Thucydides' verdict, Plutarch's deathbed self-assessment, and Grote's observation.",
+      "latency_ms": 5298,
+      "prompt_tokens": 2945,
+      "completion_tokens": 112
+    },
+    {
+      "question_id": "cb-005",
+      "category": "cross-book",
+      "question": "What did ancient writers know and say about Britain and its people?",
+      "ideal_answer": "Caesar, the first eyewitness, reports inland Britons who sow no corn, live on milk and flesh, dress in skins, dye themselves blue with woad, and hold wives in common. Tacitus weighs their origins from physical type — the ruddy-haired Caledonians suggesting German stock, the swarthy Silures Iberian. Strabo maps the island as a triangle parallel to the Gallic coast, roughly 4,300–4,400 stadia along its longest side.",
+      "answer": "Ancient writers provided various observations regarding the geography and inhabitants of Britain:\n\n*   **Geography and Sea:** Livy and Fabius Rusticus described the shape of Britain as an oblong target or a two-edged axe [2]. The northern part of the island is characterized by a large number of firths and inlets, and the sea there is reported to be sluggish and difficult for rowers due to a lack of land and mountains to generate tempests [2, 43]. Some writers, such as Tacitus, suggested the sea was in a \"thickened half solid state,\" though this was later noted as an error as the sea is never observed frozen [1].\n*   **The People of Britain:** The origin of the inhabitants—whether they were indigenous or immigrants—is obscured by the nature of the people [2, 5]. Different groups showed varying physical traits: the Caledonians had ruddy hair and large limbs, suggesting a German derivation [2, 5], while the Silures had a swarthy complexion and curled hair, suggesting they were a colony of the ancient Iberi [2, 5].\n*   **Cultural and Linguistic Ties:** Those living near the coast closest to Gaul were noted to be very similar to the Gauls in their manners [48]. The sacred rites, superstitions, and languages of the Britons were also found to be very similar to those of the Gauls [2, 5]. While both groups shared a tendency to provoke danger, the Britons were noted for their greater ferocity [2, 5].\n*   **Governance:** The Britons were formerly governed by kings, but at the time of the Roman period, they were divided into various factions and parties among their chiefs [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        1,
+        5
+      ],
+      "markers_dangling": [
+        43,
+        48
+      ],
+      "retrieved_chunk_ids": [
+        7382,
+        7288,
+        14865,
+        15292,
+        7289
+      ],
+      "cited_chunk_ids": [
+        7288,
+        7382,
+        7289
+      ],
+      "citation_span_recall": 0.3333333333333333,
+      "citation_precision": 0.6666666666666666,
+      "faithfulness": 5,
+      "completeness": 2,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the provided source passages, and no invented content is present. | completeness: The answer covers Tacitus's observations on origins but misses key facts from Caesar (inland Britons' lifestyle, woad, wives in common) and Strabo's map, which are central to the reference.",
+      "latency_ms": 7755,
+      "prompt_tokens": 2869,
+      "completion_tokens": 358
+    },
+    {
+      "question_id": "cb-006",
+      "category": "cross-book",
+      "question": "How is Cleopatra's death reported across the sources?",
+      "ideal_answer": "All three sources report the famous asp while admitting uncertainty. Plutarch describes her found dead in royal ornaments on a golden bed, Iras dying at her feet and Charmion adjusting her diadem — but says \"what really took place is known to no one,\" weighing the asp in the figs against poison in a hollow bodkin. Dio likewise: \"no one knows clearly in what manner she perished,\" only slight indentations on her arm. Suetonius adds that Augustus, wanting her alive for his triumph, sent the Psylli snake-charmers to suck out the poison.",
+      "answer": "The reports regarding the death of Cleopatra vary across the sources as follows:\n\n*   **Methods of Suicide:** One account suggests she may have used a hollow bodkin wrapped with her hair to carry poison, though no traces of poison or an asp were found in her monument [1]. Another report claims she was bitten by an asp that was hidden among figs; in this version, she discovered the snake and held out her arm to be bitten [1, 2]. A third account states the asp was kept in a vase and she pricked it with a golden spindle until it bit her [1].\n*   **The Scene of Death:** One account describes her being found \"stone-dead\" on a bed of gold, dressed in royal ornaments, with her two women, Iras and Charmion, nearby [2].\n*   **Preparation:** Before her death, she was reported to have taken a bath, eaten a sumptuous meal, and sent a letter to Caesar [2].\n*   **Preparation for Survival:** One source notes that she kept fire, asps, and other reptiles on hand to use on herself, having previously tested these methods on humans to see how they caused death [3].\n*   **Historical Context:** While the details of her death are debated, it is confirmed she died at the age of thirty-nine [1]. Additionally, a different historical figure named Kleopatra (distinct from the Cleopatra of the later era) was reported to have died a \"horrible death\" by being roasted or baked in a bronze vessel, or by being hanged, during the time of Alexander the Great [5].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4162,
+        4161,
+        11688,
+        4777,
+        29161
+      ],
+      "cited_chunk_ids": [
+        4162,
+        4161,
+        11688,
+        29161
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.5,
+      "faithfulness": 1,
+      "completeness": 3,
+      "judge_notes": "faithfulness: The answer invents a claim about a different historical figure named Kleopatra being roasted or hanged, which is from a passage about Philip of Macedon's wife, not Cleopatra VII, and is entirely unsupported by the source passages about Cleopatra's death. | completeness: Covers core details (methods of suicide, scene of death) but misses secondary facts: explicit uncertainty statements from Plutarch and Dio, Suetonius's account of the Psylli, and precise description of Iras and Charmion's actions.",
+      "latency_ms": 7835,
+      "prompt_tokens": 2736,
+      "completion_tokens": 332
+    },
+    {
+      "question_id": "cb-007",
+      "category": "cross-book",
+      "question": "What do the sources say about Alexander's final illness and death?",
+      "ideal_answer": "Both Plutarch and Arrian follow the Royal Diary: a fever after drinking with Medius, worsening day by day as he continued bathing and sacrificing, until he lay speechless — Arrian preserving the scene of the soldiers filing past while he could only greet them with his eyes — and died. Both record the later poisoning story; Plutarch calls it \"a mere made-up story,\" noting the body stayed uncorrupted for days, and Arrian notes Aristobulus and Ptolemy agree with the diary, adding only the alleged last word that the kingdom would go \"to the best.\"",
+      "answer": "During his final illness, Alexander's condition worsened over several days. He was observed to be in a state of fever and, at various points, was unable to speak [2][4][5]. Despite his declining health, he continued to perform sacrifices, bathe, and give orders to his generals regarding military matters and the filling of officer vacancies [2][4].\n\nThere are conflicting accounts regarding the specific causes and circumstances of his death:\n*   **Fever and Intemperance:** Some accounts attribute his death to a fever following a period of heavy drinking [1][3]. One account describes him drinking from a large goblet called the \"cup of Herakles\" and becoming ill [3]. Other reports suggest he was simply suffering from a \"plain\" fever [3].\n*   **Poisoning:** A different narrative, which gained some credit later, claimed he was poisoned [3]. This poison was allegedly provided by Aristotle and administered by his cupbearer, Iollas [3]. Some specific claims suggested the poison was a \"water, deadly cold as ice\" [5]. However, many believe the poisoning story was a fabrication created by political enemies [3].\n\nRegarding his final moments, Alexander was moved to his palace where he became speechless [2][4][5]. During this time, soldiers were allowed to pass his bedside to offer their sympathy [1][5]. Before he died, he is said to have uttered the words, \"To the strongest,\" when asked to whom he bequeathed his kingdom, and he handed his signet ring to Perdikkas [2]. He passed away on June 323 B.C., after a life of thirty-two years and eight months [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        4,
+        5,
+        1,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        29565,
+        29564,
+        29566,
+        3662,
+        3663
+      ],
+      "cited_chunk_ids": [
+        29564,
+        3662,
+        3663,
+        29565,
+        29566
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.4,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by at least one of the provided source passages, with no invented content. | completeness: The answer covers the core facts of the fever, worsening condition, speechlessness, soldiers filing past, and the poisoning story, but includes extra correct details (like the 'cup of Herakles' and signet ring) that do not lower the score, while missing the secondary fact that both Plutarch and Arrian follow the Royal Diary and that Plutarch notes the body's uncorrupted state.",
+      "latency_ms": 7338,
+      "prompt_tokens": 2994,
+      "completion_tokens": 352
+    },
+    {
+      "question_id": "cb-008",
+      "category": "cross-book",
+      "question": "How do Roman writers describe the Germans' way of fighting?",
+      "ideal_answer": "Caesar, from battlefield experience, describes them rapidly forming a phalanx so dense his soldiers leapt onto it to tear away shields from above. Tacitus, the ethnographer, details the framea — the short, sharp, all-purpose spear used at close quarters or thrown — the wedge-shaped battle line, the doctrine that giving ground to rally again is prudence rather than cowardice, and the carrying off of their dead mid-battle.",
+      "answer": "Roman writers describe the German way of fighting as follows:\n\n*   **Tactics and Formation:** The German infantry was typically arranged in several deep columns based on the specific tribes and families involved [3]. They were characterized by a lack of patience for delay, rushing into battle with \"dissonant shouts and disordered ranks\" [3]. Because they poured their entire souls into the initial attack, they did not know how to retreat or rally; consequently, a single repulse often resulted in total destruction [3].\n*   **Equipment and Weapons:** Due to a lack of iron, they rarely used swords or long lances [1]. Instead, they used *frameæ*, which were long spears with sharp but narrow iron points that could be thrown from a distance or used in close combat [1]. They also utilized a multitude of darts and shields made of wood or osier, which were sometimes decorated with various colors [1].\n*   **Cavalry:** While some German nations gained fame for their cavalry, their horses were not considered beautiful or swift, nor were they trained in the sophisticated maneuvers of the Roman style [1, 3]. In cavalry actions, they frequently jumped from their horses to fight on foot and trained their horses to remain stationary [4]. They also considered the use of housings to be unmanly and would advance against mounted opponents regardless of their numbers [4].\n*   **Physicality:** They were described as \"muscular\" and \"large\" in body, possessing a \"naked and unassisted valor\" [3, 4]. Their strength was bolstered by a lifestyle of physical exercise and a diet of milk and flesh [4].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        3,
+        1,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        13127,
+        8953,
+        13128,
+        7494,
+        11207
+      ],
+      "cited_chunk_ids": [
+        13128,
+        13127,
+        7494
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 2,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the source passages cited, with no invented or unsupported content. | completeness: The answer misses key facts from the reference, such as Caesar's phalanx and soldiers leaping, Tacitus's wedge formation, the doctrine of retreat as prudence, and carrying off the dead, while also mischaracterizing the framea and contradicting the retreat doctrine.",
+      "latency_ms": 7418,
+      "prompt_tokens": 2886,
+      "completion_tokens": 340
+    },
+    {
+      "question_id": "cb-009",
+      "category": "cross-book",
+      "question": "How was Caesar's funeral described, and what did it unleash?",
+      "ideal_answer": "Suetonius describes the planned pyre in the Campus Martius overtaken by the crowd: two armed men fired the bier before the Rostra and the throng heaped on benches and court furniture; afterwards the populace ran with torches to the houses of Brutus and Cassius and lynched the wrong Cinna. Plutarch adds the cause: Antony's funeral oration, climaxing in the unfolding of Caesar's bloody, pierced garment, after which the mob burned the body on an improvised pyre and ran with the half-burnt brands to fire the murderers' houses.",
+      "answer": "Caesar's funeral was characterized by a profound sense of loss and a \"wonderful affection\" for him among the people, fueled by the revelation of his will, which bequeathed 75 drachmas to each Roman citizen and his gardens beyond the Tiber to the public [1]. During the funeral, Antony delivered an oration in Caesar's praise; as the crowd became moved, he displayed Caesar's blood-stained garments to show the extent of his wounds [1].\n\nThe proceedings and the sight of the mangled body led to a state of \"confusion\" and \"passion\" [1, 3]. The crowd constructed a large funeral pyre using benches, tables, and other materials, and set the body on fire [1, 3]. This event unleashed a violent reaction: the crowd seized burning brands from the pyre and moved through the city to set fire to the houses of the conspirators [1, 3].\n\nThe atmosphere was further complicated by the actions of the soldiers, who intervened to prevent the burning of nearby temples and buildings by the crowd [2]. Despite these efforts, the situation remained volatile, and the crowd eventually attacked the houses of the murderers [2]. During this period of unrest, a man named Helvius Cinna—who was a friend of Caesar and not a conspirator—was mistakenly identified as a murderer and \"torn limb from limb\" [2, 3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        3,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4238,
+        11436,
+        3729,
+        21048,
+        4504
+      ],
+      "cited_chunk_ids": [
+        4238,
+        3729,
+        11436
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.3333333333333333,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited source passages, with no invented content. | completeness: The answer covers the core events (Antony's oration, display of blood-stained garments, improvised pyre, mob violence, lynching of Cinna) but misses the secondary detail from Suetonius about the planned Campus Martius pyre being overtaken and the two armed men firing the bier.",
+      "latency_ms": 7702,
+      "prompt_tokens": 2900,
+      "completion_tokens": 290
+    },
+    {
+      "question_id": "cb-010",
+      "category": "cross-book",
+      "question": "What did ancient writers believe about the sources and flooding of the Nile?",
+      "ideal_answer": "Herodotus reviews three Greek theories of the summer flood — the Etesian winds, the world-encircling Ocean, and melting snow — refutes them all (offering his own sun-driven explanation), and reports that no Egyptian, Libyan, or Greek professed to know the river's sources except a Sais scribe he didn't believe. Strabo, writing centuries later, says what the ancients only conjectured had become eyewitness knowledge: the Nile owes its rise to summer rains falling in the mountains of Upper Ethiopia.",
+      "answer": "Ancient writers offered several different accounts regarding the source and behavior of the Nile:\n\n*   **The Etesian Winds:** One account suggested that the Etesian Winds caused the river to rise by preventing it from flowing into the sea [1, 2].\n*   **The Ocean:** A second account claimed the river's effects were caused by it flowing from the Ocean, which was believed to flow around the entire earth [2].\n*   **Melting Snow:** A third account claimed the Nile flowed from melting snow; however, this was noted as being just as mistaken as the other theories, as the river actually flows out of Libya through the midst of the Ethiopians [2].\n*   **The Sun:** One author proposed that the Sun is the cause of the river's behavior. Because the Nile is the only river that does not receive rain and is instead \"drawn by the Sun,\" it flows in a much smaller volume during the winter than in the summer [3].\n*   **Summer Rain:** Another writer, Callisthenes, asserted that the cause of the river's rise was the rain of summer [4].\n*   **Specific Mountains:** A scribe at the city of Saïs claimed the sources were located between two mountains, Crophi and Mophi, which had peaks that reached a sharp point [1].\n*   **Historical Context:** The river's rise was noted to be more uniform in time and quantity than the Euphrates, and it deposited rich silt that fertilized the land [5].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        154,
+        912,
+        157,
+        10205,
+        23344
+      ],
+      "cited_chunk_ids": [
+        154,
+        912,
+        157,
+        10205,
+        23344
+      ],
+      "citation_span_recall": 0.3333333333333333,
+      "citation_precision": 0.2,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by at least one of the source passages, even if some citations are slightly off, and no invented content is present. | completeness: The answer covers the core theories (Etesian winds, Ocean, melting snow, sun, Sais scribe, and summer rains) but misattributes the summer rain discovery to Callisthenes instead of Strabo and does not explicitly state Herodotus's refutation of the other theories, missing some secondary facts.",
+      "latency_ms": 8782,
+      "prompt_tokens": 2884,
+      "completion_tokens": 317
+    },
+    {
+      "question_id": "lit-001",
+      "category": "literal",
+      "question": "How many wounds did Julius Caesar receive when he was assassinated?",
+      "ideal_answer": "According to Suetonius, Caesar was stabbed with twenty-three wounds. He uttered a groan at the first wound but no cry, though some report that he said \"And you too, my son?\" to Marcus Brutus.",
+      "answer": "Julius Caesar was struck with twenty-three wounds [1, 2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4502,
+        21046,
+        3727,
+        4859,
+        4235
+      ],
+      "cited_chunk_ids": [
+        4502,
+        21046
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: The claim that Julius Caesar was struck with twenty-three wounds is supported by both cited passages [1] and [2]. | completeness: The answer correctly states the key fact of 23 wounds, which is the core information requested.",
+      "latency_ms": 3274,
+      "prompt_tokens": 2713,
+      "completion_tokens": 17
+    },
+    {
+      "question_id": "lit-002",
+      "category": "literal",
+      "question": "According to Herodotus, what did Egyptian households do when a cat died a natural death?",
+      "ideal_answer": "According to Herodotus, everyone living in a house where a cat died a natural death shaved their eyebrows — only their eyebrows, whereas when a dog died they shaved their whole body and head.",
+      "answer": "In the event that a cat died of natural causes in a house, all of the people living in that residence would shave only their eyebrows [1, 2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        180,
+        938,
+        937,
+        944,
+        267
+      ],
+      "cited_chunk_ids": [
+        180,
+        938
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: The answer is fully supported by passages [1] and [2], which both state that when a cat dies a natural death, all who dwell in the house shave their eyebrows only. | completeness: The answer accurately states that all residents shaved only their eyebrows when a cat died naturally, which covers the key fact from the reference; the additional detail about dogs is not required for completeness.",
+      "latency_ms": 4217,
+      "prompt_tokens": 2865,
+      "completion_tokens": 34
+    },
+    {
+      "question_id": "lit-003",
+      "category": "literal",
+      "question": "What period of history did Gibbon declare the happiest and most prosperous for the human race?",
+      "ideal_answer": "Gibbon wrote that if asked to fix the period during which the condition of the human race was most happy and prosperous, one would without hesitation name the span from the death of Domitian to the accession of Commodus — the era of Nerva, Trajan, Hadrian, and the Antonines.",
+      "answer": "Gibbon identified the period from the death of Domitian to the accession of Commodus as the time during which the condition of the human race was most happy and prosperous [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        12880,
+        4658,
+        12820,
+        12715,
+        12713
+      ],
+      "cited_chunk_ids": [
+        12880
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: The answer is directly supported by passage [1], which states the period from the death of Domitian to the accession of Commodus as the happiest and most prosperous. | completeness: The answer correctly identifies the exact period from Domitian's death to Commodus' accession, which is the core fact of the reference, and does not omit any essential information.",
+      "latency_ms": 4997,
+      "prompt_tokens": 2930,
+      "completion_tokens": 37
+    },
+    {
+      "question_id": "lit-004",
+      "category": "literal",
+      "question": "According to Tacitus, what did the Germans consider the greatest disgrace in battle?",
+      "ideal_answer": "Tacitus says the greatest disgrace that could befall a German warrior was to have abandoned his shield. He adds that for a chief's companions it was lifelong reproach and infamy to retreat from the field surviving their chief.",
+      "answer": "According to Tacitus, the greatest disgrace among the Germans was the crimes of cowardice, treachery, and desertion [77]. These acts were considered so \"odious and ignominious\" that even the mere naming of a person with a term associated with these traits was punished severely [78].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [
+        77,
+        78
+      ],
+      "retrieved_chunk_ids": [
+        7334,
+        13127,
+        13120,
+        7268,
+        13128
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": 0.0,
+      "citation_precision": null,
+      "faithfulness": 5,
+      "completeness": 1,
+      "judge_notes": "faithfulness: The answer's claims about cowardice, treachery, and desertion being considered the greatest disgrace are supported by passage [77], and the detail about severe punishment for naming someone with such terms is supported by passage [78]. | completeness: The answer misses the key fact that abandoning the shield was the greatest disgrace, instead focusing on unrelated crimes like cowardice and treachery.",
+      "latency_ms": 3917,
+      "prompt_tokens": 2914,
+      "completion_tokens": 64
+    },
+    {
+      "question_id": "lit-005",
+      "category": "literal",
+      "question": "Whom did the Athenians send as a runner to Sparta before the battle of Marathon, and what happened to him on the way?",
+      "ideal_answer": "The Athenian generals sent Pheidippides, a professional long-distance runner, as herald to Sparta. On the way, by Mount Parthenion above Tegea, the god Pan met him, called him by name, and bade him ask the Athenians why they paid him no honor although he was well disposed to them and had often been — and would again be — serviceable.",
+      "answer": "The Athenians sent a runner named Pheidippides to Sparta [1][2]. He was described as an Athenian and a runner of long day-courses who practiced this as his profession [2].\n\nDuring his journey, he was met by Pan near mount Parthenion, which is located above Tegea [2]. Pan called out his name and told him to report to the Athenians to ask why they did not care for him, despite his past service to them [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        24012,
+        588,
+        24027,
+        24029,
+        593
+      ],
+      "cited_chunk_ids": [
+        24012,
+        588
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by the cited passages, with no invented content. | completeness: The answer covers all key facts from the reference, including Pheidippides being sent, the encounter with Pan at Mount Parthenion, and Pan's message, with extra detail about his profession not lowering the score.",
+      "latency_ms": 4048,
+      "prompt_tokens": 2795,
+      "completion_tokens": 98
+    },
+    {
+      "question_id": "lit-006",
+      "category": "literal",
+      "question": "What epitaph was inscribed for the Spartans who fell at Thermopylae?",
+      "ideal_answer": "The inscription for the Spartans read (in Macaulay's translation): \"Stranger, report this word, we pray, to the Spartans, that lying here in this spot we remain, faithfully keeping their laws.\"",
+      "answer": "The inscription for the Spartans specifically was: \"Stranger, report this word, we pray, to the Spartans, that lying Here in this spot we remain, faithfully keeping their laws\" [1, 3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        727,
+        24310,
+        24309,
+        24294,
+        24289
+      ],
+      "cited_chunk_ids": [
+        727,
+        24309
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: The answer is fully grounded in the cited passages, which contain the exact inscription for the Spartans, with no invented content. | completeness: The answer reproduces the entire epitaph from the reference exactly, with only a trivial capitalization difference that does not affect completeness.",
+      "latency_ms": 3748,
+      "prompt_tokens": 2825,
+      "completion_tokens": 43
+    },
+    {
+      "question_id": "lit-007",
+      "category": "literal",
+      "question": "What was Augustus' boast about the city of Rome and what he did for it?",
+      "ideal_answer": "Augustus so improved the city — which had not been built in a manner suited to the grandeur of the empire — that he boasted, in Suetonius' words, that he \"found it of brick, but left it of marble.\"",
+      "answer": "Augustus famously claimed that he found the city of Rome made of brick and left it as a city of marble [1, 2]. An alternative version of this sentiment, attributed to him by Dio, stated that he found Rome built of mud and left it firm as a rock [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        5249,
+        21091,
+        14773,
+        11782,
+        11825
+      ],
+      "cited_chunk_ids": [
+        5249,
+        21091
+      ],
+      "citation_span_recall": 0.6666666666666666,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by the cited passages: the brick-to-marble boast is in [2] and [1], and the mud-to-rock version is in [1]. | completeness: The answer includes the core boast about brick and marble, covers the improvement implied, and adds an extra correct detail without missing any key facts from the reference.",
+      "latency_ms": 3476,
+      "prompt_tokens": 2900,
+      "completion_tokens": 60
+    },
+    {
+      "question_id": "lit-008",
+      "category": "literal",
+      "question": "What honor did Caligula plan to give his horse Incitatus?",
+      "ideal_answer": "Suetonius reports it was said Caligula intended to make his horse Incitatus consul. He had already given the horse a marble stable, an ivory manger, purple housings, a jewelled frontlet, and a house with slaves and furniture for entertaining guests invited in the horse's name.",
+      "answer": "Caligula intended to appoint his horse, Incitatus, as consul [1, 3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4856,
+        4477,
+        12018,
+        11406,
+        4811
+      ],
+      "cited_chunk_ids": [
+        4856,
+        12018
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by source passages [1] and [3]. | completeness: The answer correctly states the key fact that Caligula intended to make Incitatus consul, which is the core of the reference.",
+      "latency_ms": 4225,
+      "prompt_tokens": 2407,
+      "completion_tokens": 22
+    },
+    {
+      "question_id": "lit-009",
+      "category": "literal",
+      "question": "How does Caesar describe the division of Gaul at the start of his commentaries?",
+      "ideal_answer": "Caesar opens by stating that all Gaul is divided into three parts, one inhabited by the Belgae, another by the Aquitani, and the third by the people called Celts in their own language and Gauls in Latin — all differing from each other in language, customs, and laws.",
+      "answer": "Caesar describes Gaul as being divided into three parts: the first is inhabited by the Belgae, the second by the Aquitani, and the third by those who are called Celts in their own language and Gauls in our language [1]. These three groups differ from one another in their laws, customs, and languages [1]. The river Garonne serves as the boundary between the Gauls and the Aquitani, while the Marne and the Seine separate the Gauls from the Belgae [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        7417,
+        7843,
+        9280,
+        11528,
+        5235
+      ],
+      "cited_chunk_ids": [
+        7417
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passage [1], which contains Caesar's exact description of the three-part division of Gaul. | completeness: The answer covers all key facts from the reference: the three parts (Belgae, Aquitani, Celts/Gauls) and the differences in language, customs, and laws. The extra correct details about rivers do not lower the score.",
+      "latency_ms": 4066,
+      "prompt_tokens": 2852,
+      "completion_tokens": 103
+    },
+    {
+      "question_id": "lit-010",
+      "category": "literal",
+      "question": "What answer did the Delphic oracle give Croesus when he asked whether to attack Persia?",
+      "ideal_answer": "The oracles answered that if Croesus marched against the Persians he would destroy a great empire, and counselled him to find the most powerful of the Hellenes and make them his friends. The prophecy was ambiguous — the great empire he destroyed turned out to be his own.",
+      "answer": "The Delphic oracle told Croesus that if he marched against the Persians, he would destroy a great empire [1, 331].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1
+      ],
+      "markers_dangling": [
+        331
+      ],
+      "retrieved_chunk_ids": [
+        32,
+        23793,
+        23791,
+        59,
+        28
+      ],
+      "cited_chunk_ids": [
+        32
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: The claim that the Delphic oracle told Croesus he would destroy a great empire is directly supported by both cited passages [1] and [2]. | completeness: The answer covers the core fact about destroying a great empire but misses the secondary facts about finding powerful Hellenes as friends and the ambiguous nature of the prophecy.",
+      "latency_ms": 4013,
+      "prompt_tokens": 2905,
+      "completion_tokens": 30
+    },
+    {
+      "question_id": "lit-011",
+      "category": "literal",
+      "question": "What were Nero's last words about himself as he prepared to die?",
+      "ideal_answer": "As his grave was prepared before his eyes, Nero wept and repeatedly said, \"What an artist is now about to perish!\"",
+      "answer": "Nero uttered the following words regarding his own death: \"Jupiter, what an artist perishes in me!\" [1, 2]",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        12160,
+        4985,
+        21110,
+        12159,
+        12109
+      ],
+      "cited_chunk_ids": [
+        12160,
+        4985
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: The claim that Nero said 'Jupiter, what an artist perishes in me!' is directly supported by both cited passages [1] and [2]. | completeness: The answer captures the core fact of Nero lamenting about an artist perishing, matching the reference's key point with minor variation and extra detail.",
+      "latency_ms": 4523,
+      "prompt_tokens": 2895,
+      "completion_tokens": 29
+    },
+    {
+      "question_id": "mh-001",
+      "category": "multi-hop",
+      "question": "What city did Alexander found in memory of the horse he had tamed as a boy?",
+      "ideal_answer": "Bucephala, on the Hydaspes. As a boy Alexander tamed the horse Bucephalas (turning him toward the sun after noticing he feared his own shadow); when the horse died of age and toil after the battle with Porus, Alexander founded the city of Bucephala in his memory.",
+      "answer": "Alexander founded a city named Bucephala (or Bucephalia) in memory of his horse, Bucephalas [1, 2, 3, 4].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        8382,
+        10071,
+        29525,
+        3648,
+        8585
+      ],
+      "cited_chunk_ids": [
+        8382,
+        10071,
+        29525,
+        3648
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.25,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited source passages, with no invented content. | completeness: The answer correctly identifies the city name Bucephala and its purpose, covering all key facts needed to answer the question.",
+      "latency_ms": 5128,
+      "prompt_tokens": 2933,
+      "completion_tokens": 36
+    },
+    {
+      "question_id": "mh-002",
+      "category": "multi-hop",
+      "question": "How did the wife of the emperor who added Britain to the empire meet her end?",
+      "ideal_answer": "The emperor is Claudius, who invaded Britain to gain a triumph; his wife Messalina, after publicly marrying her lover Silius, was ordered to answer for her conduct, failed in her attempts at suicide in the gardens of Lucullus, and was run through with a sword by a tribune.",
+      "answer": "The wife of the emperor who added Britain to the empire, Messalina, was not recorded as having a specific manner of death in the provided texts. While the sources describe her as having \"licentious tendencies\" and being \"imperious\" and \"ready to sacrifice every principle of virtue,\" they do not state how she died [1, 2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4996,
+        12065,
+        21109,
+        5087,
+        5357
+      ],
+      "cited_chunk_ids": [
+        4996,
+        12065
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 1,
+      "judge_notes": "faithfulness: The model correctly states that the provided passages do not describe Messalina's death, and it does not invent any content. | completeness: The answer claims no specific manner of death is recorded, but the reference clearly states she was run through with a sword after failed suicide attempts, thus missing the key facts entirely.",
+      "latency_ms": 7317,
+      "prompt_tokens": 2976,
+      "completion_tokens": 73
+    },
+    {
+      "question_id": "mh-003",
+      "category": "multi-hop",
+      "question": "Who tutored the son of the king who crushed the Greeks at Chaeronea?",
+      "ideal_answer": "Aristotle. The king is Philip of Macedon, victor at Chaeronea (where his son Alexander led the charge against the Theban Sacred Band); Philip had earlier sent for Aristotle, the most celebrated philosopher of the age, to instruct Alexander, rewarding him by rebuilding his native Stagira.",
+      "answer": "The son of the king who crushed the Greeks at Chaeronea (Alexander) was tutored by several individuals:\n\n*   **Aristotle:** He was the most learned and \"most cerebrated\" philosopher of his time, and Alexander studied under him for at least three years [1, 4].\n*   **Lysimachus the Acarnanian:** He served as the actual pedagogue and was known for calling himself \"Phoenix\" [1, 2].\n*   **Leonidas:** A near kinsman of Olympias, he was described as a man of an austere temper and was known as Alexander's \"foster father and governor\" [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        4,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        29203,
+        3579,
+        28657,
+        3581,
+        8525
+      ],
+      "cited_chunk_ids": [
+        29203,
+        3581,
+        3579
+      ],
+      "citation_span_recall": 0.3333333333333333,
+      "citation_precision": 0.3333333333333333,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by the source passages: Aristotle's tutoring is in [1] and [4], Lysimachus is in [1] and [2], and Leonidas is in [2]. | completeness: The answer correctly identifies Aristotle as a tutor of Alexander, covering the core fact from the reference, and includes additional correct details about other tutors without missing any key facts.",
+      "latency_ms": 4647,
+      "prompt_tokens": 2906,
+      "completion_tokens": 141
+    },
+    {
+      "question_id": "mh-004",
+      "category": "multi-hop",
+      "question": "Who avenged the Roman commander killed at Carrhae?",
+      "ideal_answer": "Ventidius (Publius Ventidius Bassus), Antony's lieutenant. The commander killed at Carrhae was Crassus, slain at a treacherous parley after the defeat by the Parthians; Ventidius later defeated the Parthians in three battles, killing prince Pacorus, a victory Plutarch says \"fully avenged\" the defeats under Crassus.",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": false,
+      "refusal_correct": false,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        21028,
+        20245,
+        20248,
+        11261,
+        20247
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": 0.0,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 3670,
+      "prompt_tokens": 2838,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "mh-005",
+      "category": "multi-hop",
+      "question": "Why did the Greek army Xenophon served with have to fight its way home?",
+      "ideal_answer": "Their employer Cyrus the Younger was killed at Cunaxa charging his brother King Artaxerxes (struck by a javelin under the eye), leaving the Greeks victorious but stranded deep in Persia; then Tissaphernes treacherously seized their five generals at a conference and cut down the captains, leaving the Ten Thousand leaderless and forced to fight their way to the sea.",
+      "answer": "The Greek army was forced to fight its way home because they were left in isolation after the death of Cyrus [2]. They were situated at the king's gates and were surrounded on all sides by many hostile cities and tribes of men [2]. Furthermore, they were separated from Hellas by more than a thousand miles and lacked a guide to show them the way [2]. Their path home was also obstructed by impassable rivers [2]. Additionally, they were betrayed by the Asiatics with whom they had marched to attack, and they lacked a single mounted trooper to assist them in pursuit [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        30154,
+        1665,
+        26910,
+        27148,
+        26914
+      ],
+      "cited_chunk_ids": [
+        1665
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by passage [2], which the model cited, and no content is invented. | completeness: The answer covers the core reason of Cyrus's death leaving them stranded, but omits the specific treachery of Tissaphernes seizing the generals, which is a key secondary fact in the reference.",
+      "latency_ms": 3858,
+      "prompt_tokens": 2902,
+      "completion_tokens": 123
+    },
+    {
+      "question_id": "mh-006",
+      "category": "multi-hop",
+      "question": "How did Alexander react on finding the tomb of the founder of the Persian empire desecrated?",
+      "ideal_answer": "Finding the tomb of Cyrus (whose epitaph read \"I am Cyrus, son of Cambyses, who founded the empire of the Persians\") dug through and pillaged at Pasargadae, Alexander was grieved; he commissioned Aristobulus to restore the tomb and its furnishings, seal the entrance, and he had the Magian guards arrested and tortured to find the culprits.",
+      "answer": "Alexander was grieved by the desecration of the tomb of Cyrus [2]. He ordered the Magians, who were the guards of the tomb, to be arrested and put to the torture to force them to confess who had committed the act [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        8454,
+        8453,
+        10116,
+        10117,
+        8058
+      ],
+      "cited_chunk_ids": [
+        8453,
+        8454
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passages: Alexander's grief is in [2], and the arrest and torture of the Magians is in [1]. | completeness: The answer covers the core facts of Alexander's grief and the arrest/torture of the Magian guards but omits secondary details like the restoration commissioned to Aristobulus and sealing the tomb.",
+      "latency_ms": 3779,
+      "prompt_tokens": 2405,
+      "completion_tokens": 52
+    },
+    {
+      "question_id": "mh-007",
+      "category": "multi-hop",
+      "question": "Which Spartan commanded the Greeks at the land battle fought the same day as the sea battle at Mycale?",
+      "ideal_answer": "Pausanias, son of Cleombrotos (regent for Leonidas' young son Pleistarchos). Herodotus reports that the victory at Plataea and the fight at Mycale fell on the same day, and that Pausanias was appointed to lead the Spartan army that won at Plataea.",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": false,
+      "refusal_correct": false,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        24453,
+        882,
+        883,
+        811,
+        881
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": 0.0,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 4618,
+      "prompt_tokens": 2835,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "mh-008",
+      "category": "multi-hop",
+      "question": "How did the statesman who championed Athens' Long Walls die?",
+      "ideal_answer": "Pericles — who, as Socrates attested, proposed the long wall to the people — died of the plague of Athens, in his case not with violent fits but as a dull, lingering distemper that slowly wasted his body and mind.",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": false,
+      "refusal_correct": false,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        24712,
+        24822,
+        24644,
+        24150,
+        3219
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": 0.0,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 2604,
+      "prompt_tokens": 2781,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "mh-009",
+      "category": "multi-hop",
+      "question": "How did the two leading assassins of Caesar die?",
+      "ideal_answer": "Both died at Philippi. Cassius, mistakenly believing the battle lost, bared his neck to his freedman Pindarus and was beheaded; in the second battle Brutus, defeated, fell on his sword — held, by some accounts, by his friend Strato — and died.",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": false,
+      "refusal_correct": false,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        11414,
+        4502,
+        4859,
+        11437,
+        3727
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": 0.0,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 2420,
+      "prompt_tokens": 2681,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "mh-010",
+      "category": "multi-hop",
+      "question": "What revolt broke out in Britain under the emperor who was the last of his dynasty?",
+      "ideal_answer": "The revolt of Boudicca (Buduica), queen of the Iceni, broke out under Nero — whom Dio calls the last of the descendants of Aeneas and Augustus. While the governor Paulinus was away at Mona she sacked two Roman cities with enormous slaughter before being defeated.",
+      "answer": "The revolt in Britain occurred in A.D. 61 under the reign of Nero, who was the last of the Claudian family [1]. This revolt was led by the British queen, Boadicea [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        21111,
+        5308,
+        7293,
+        12117,
+        14527
+      ],
+      "cited_chunk_ids": [
+        21111
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: All claims in the answer are supported by the source passages, which mention Nero as the last of the Claudian family and Boadicea's revolt in A.D. 61. | completeness: The answer correctly identifies the revolt as led by Boudicca under Nero, the last of his dynasty, but omits secondary details such as Governor Paulinus's campaign at Mona, the sacking of two Roman cities, and the defeat.",
+      "latency_ms": 2950,
+      "prompt_tokens": 2860,
+      "completion_tokens": 47
+    },
+    {
+      "question_id": "oos-001",
+      "category": "out-of-scope",
+      "question": "What did Napoleon do at the Battle of Austerlitz?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        7616,
+        13409,
+        4548,
+        21066,
+        21063
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 3738,
+      "prompt_tokens": 2862,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-002",
+      "category": "out-of-scope",
+      "question": "What does the Bayeux Tapestry depict about the Norman conquest?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        16956,
+        16886,
+        16885,
+        16932,
+        17074
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 9813,
+      "prompt_tokens": 2938,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-003",
+      "category": "out-of-scope",
+      "question": "What does the Code of Hammurabi say about punishments for theft?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        23079,
+        18172,
+        23078,
+        15870,
+        7334
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 3019,
+      "prompt_tokens": 2870,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-004",
+      "category": "out-of-scope",
+      "question": "What does the Epic of Gilgamesh say about the great flood?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        8499,
+        10130,
+        23322,
+        110,
+        14626
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 4087,
+      "prompt_tokens": 2897,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-005",
+      "category": "out-of-scope",
+      "question": "What is written on the Rosetta Stone?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        10346,
+        23351,
+        23391,
+        957,
+        256
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 3683,
+      "prompt_tokens": 2875,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-006",
+      "category": "out-of-scope",
+      "question": "What was the Antikythera mechanism used for?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        22300,
+        22302,
+        22301,
+        23316,
+        23315
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 4281,
+      "prompt_tokens": 2879,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-007",
+      "category": "out-of-scope",
+      "question": "What do the Linear B tablets reveal about Mycenaean Greece?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        22293,
+        21534,
+        30076,
+        22271,
+        30181
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 3414,
+      "prompt_tokens": 2805,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-008",
+      "category": "out-of-scope",
+      "question": "Who built Stonehenge, and for what purpose?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        15295,
+        15296,
+        241,
+        15302,
+        212
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 2739,
+      "prompt_tokens": 2897,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-009",
+      "category": "out-of-scope",
+      "question": "What do the Dead Sea Scrolls contain?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        15206,
+        2405,
+        13484,
+        16796,
+        13454
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 2819,
+      "prompt_tokens": 2855,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "oos-010",
+      "category": "out-of-scope",
+      "question": "Why is Roman concrete so durable compared to modern concrete?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        17853,
+        18611,
+        17854,
+        17855,
+        9010
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 3920,
+      "prompt_tokens": 2805,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "syn-001",
+      "category": "synonym",
+      "question": "What were the symptoms of the epidemic that devastated Athens?",
+      "ideal_answer": "Thucydides (who had the disease himself) describes the \"distemper\" thus: people in good health were suddenly attacked by violent heats in the head, redness and inflammation of the eyes, a bloody throat and tongue with fetid breath, then sneezing, hoarseness, chest pain and a hard cough, stomach upset and retching with violent spasms. Most died around the seventh to ninth day; in survivors the disease could descend into the bowels (fatal diarrhoea), or cost them fingers, toes, eyes, or memory.",
+      "answer": "The symptoms of the epidemic were as follows:\n\n*   **Initial Physical Reactions:** People in good health were suddenly struck by violent heats in the head and redness and inflammation in the eyes [1]. The internal parts, such as the tongue or throat, became bloody and produced an unnatural and fetid breath [1].\n*   **Respiratory and Digestive Issues:** These symptoms were followed by sneezing and hoarseness, followed by a hard cough caused by pain in the chest [1]. When the illness settled in the stomach, it caused distress and the discharge of various types of bile [1]. In many cases, this was accompanied by ineffectual retching and violent spasms [1].\n*   **Acute and Chronic Stages:** The onset was sudden, and many victims died after \"deplorable agonies\" on the seventh or ninth day [4]. Those who survived this initial period often suffered from exhausting and incurable diarrhea [4].\n*   **Localized Damage and Neurological Effects:** In some instances, the disease settled in specific parts of the body—such as the hands, feet, eyes, or genitals—rendering them permanently useless or requiring amputation [4]. Some survivors suffered a total loss of memory and could no longer recognize themselves or their friends [4].\n*   **External Appearance:** The body was not notably hot to the touch nor pale [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        1124,
+        24780,
+        25040,
+        25033,
+        25026
+      ],
+      "cited_chunk_ids": [
+        1124,
+        25033
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited source passages [1] and [4], with no invented content. | completeness: The answer covers all key symptoms, death timeline, and survivor effects from the reference, and includes extra correct details without omission.",
+      "latency_ms": 5964,
+      "prompt_tokens": 2790,
+      "completion_tokens": 279
+    },
+    {
+      "question_id": "syn-002",
+      "category": "synonym",
+      "question": "What role did mass kidnapping play in early Rome's search for wives?",
+      "ideal_answer": "Rome under Romulus was short of women and neighboring peoples refused intermarriage, so Romulus staged games (the Consualia) and invited the neighbors; at a signal the Roman youths rushed in and carried off the unmarried women — the \"rape of the Sabine women.\" The ensuing war with the Sabines ended with the women themselves brokering peace and the two peoples merging.",
+      "answer": "Mass kidnapping was used as a method to obtain women for the men of Rome because the population was too small and the inhabitants of neighboring cities refused to give their daughters to the Romans through peaceful means [2][4]. Romulus proclaimed a festival in honor of the god Consus to lure the Latins and Sabines to the city; during this event, Roman youths rushed the guests and carried off the virgins [3][4].\n\nThis act was intended as a \"commendable and politic exploit\" to establish a society by uniting different nations through the \"surest bonds\" of marriage [1][3]. The resulting unions were intended to create a foundation for friendship and public stability [1]. Following the conquest of the Sabines, Romulus's wife, Hersilia, persuaded him to pardon the fathers of the captured women and grant them citizenship so that the commonwealth could be joined together through reconciliation [5].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        4,
+        3,
+        1,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        2334,
+        9003,
+        2309,
+        20727,
+        6957
+      ],
+      "cited_chunk_ids": [
+        9003,
+        20727,
+        2309,
+        2334,
+        6957
+      ],
+      "citation_span_recall": 0.6666666666666666,
+      "citation_precision": 0.4,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by the cited source passages, with no invented content. | completeness: The answer covers the core facts of the kidnapping, festival, and eventual merging, but misses the secondary fact that the war ended with the women brokering peace, instead describing a different resolution.",
+      "latency_ms": 14550,
+      "prompt_tokens": 2849,
+      "completion_tokens": 185
+    },
+    {
+      "question_id": "syn-003",
+      "category": "synonym",
+      "question": "How did the Sabine commander Mettius Curtius end up in a swamp during the battle for Rome?",
+      "ideal_answer": "During the battle between Romans and Sabines on the future site of the Forum, Mettius Curtius' horse took fright at the noise of his pursuers and carried him headlong into a morass; he barely escaped (Plutarch says he abandoned the mired horse and saved himself). The spot was afterwards called the Curtian Lake.",
+      "answer": "Mettius Curtius was riding on horseback during the battle [2]. When he was driven back by the Romans, his horse became frightened by the noise of those pursuing him and bolted headlong into a morass [2]. This event caused the Sabines to lose their focus due to the danger posed to such a high-ranking person, allowing him to eventually escape with the help of his friends [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        2315,
+        6959,
+        6958,
+        6996,
+        20728
+      ],
+      "cited_chunk_ids": [
+        6959
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by passage [2], which was cited, and no content is invented. | completeness: The answer covers the core event of the horse being frightened and bolting into a morass, but omits the secondary detail about the location being called the Curtian Lake and the specific mention of Plutarch's account.",
+      "latency_ms": 3913,
+      "prompt_tokens": 2862,
+      "completion_tokens": 85
+    },
+    {
+      "question_id": "syn-004",
+      "category": "synonym",
+      "question": "What omens were believed to have foretold Claudius' death?",
+      "ideal_answer": "Suetonius lists as the chief presages a comet, lightning striking his father Drusus' monument, and the deaths of magistrates of all ranks that year. Cassius Dio adds a shower of blood, a thunderbolt on the Praetorian standards, the temple of Jupiter Victor opening of its own accord, and bees swarming in the camp.",
+      "answer": "The following omens were believed to have signaled the death of Claudius:\n\n*   A comet star visible over a wide area [1].\n*   A shower of blood [1].\n*   A bolt of lightning that struck the standards of the Pretorians [1].\n*   The temple of Jupiter Victor opening of its own accord [1].\n*   A swarming of bees in the camp [1].\n*   The death of one representative from every political office [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        12086,
+        11911,
+        4858,
+        5154,
+        4637
+      ],
+      "cited_chunk_ids": [
+        12086
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: All listed omens are directly supported by passage [1], with no invented content. | completeness: The answer covers most omens from both Suetonius and Cassius Dio but omits the omen of lightning striking Drusus' monument, a key fact from Suetonius.",
+      "latency_ms": 3111,
+      "prompt_tokens": 2541,
+      "completion_tokens": 104
+    },
+    {
+      "question_id": "syn-005",
+      "category": "synonym",
+      "question": "Does Thucydides describe anything like a tsunami?",
+      "ideal_answer": "Yes. He reports that during the earthquakes of 426 BC the sea at Orobiae in Euboea retired from the coast and returned in a huge wave, flooding part of the town and leaving some of it permanently under water, killing those who could not reach high ground (with a similar inundation at Atalanta). He even gives the correct causal explanation: the earthquake drives the sea back, and it recoils with redoubled force.",
+      "answer": "Thucydides describes a situation where the sea at Orobiae, in Euboea, retreated from the coastline and then returned in a large wave, flooding a significant portion of the town and leaving some areas underwater [1]. He notes that this occurred during a period of frequent earthquakes, and he attributes the cause of such an event to the earthquake's force [1]. Additionally, a similar flooding occurred at the island of Atalanta, which carried away part of an Athenian fort and wrecked one of two ships on the beach [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        1219,
+        8758,
+        25023,
+        24634,
+        24598
+      ],
+      "cited_chunk_ids": [
+        1219
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: All claims in the answer are directly supported by source [1], which is correctly cited, and no invented content is present. | completeness: The answer covers the main event at Orobiae, the similar occurrence at Atalanta, and the causal attribution, but omits the mention of casualties and the precise causal mechanism described in the reference.",
+      "latency_ms": 4371,
+      "prompt_tokens": 2767,
+      "completion_tokens": 111
+    },
+    {
+      "question_id": "syn-006",
+      "category": "synonym",
+      "question": "Which Persian king was said to suffer from epilepsy from birth?",
+      "ideal_answer": "Cambyses. Herodotus reports that he was said to have suffered from birth from a grievous malady \"called by some the sacred disease\" (the ancient name for epilepsy), and remarks it was no surprise that with so diseased a body his mind was not sound either.",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refusal_expected": false,
+      "refusal_correct": false,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        277,
+        26934,
+        4326,
+        24155,
+        297
+      ],
+      "cited_chunk_ids": [],
+      "citation_span_recall": 0.0,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "judge_notes": "",
+      "latency_ms": 3295,
+      "prompt_tokens": 2862,
+      "completion_tokens": 14
+    },
+    {
+      "question_id": "syn-007",
+      "category": "synonym",
+      "question": "How were the pontoon bridges across the Hellespont built?",
+      "ideal_answer": "After a storm destroyed the first pair (built by Phoenicians with flax cables and Egyptians with papyrus cables), the rebuilt bridges rested on rows of anchored fifty-oared galleys and triremes — 360 under one bridge and 314 under the other — over which cables of white flax and papyrus were stretched tight with wooden windlasses; planks, brushwood, and stamped earth were laid on top, with barriers so the animals would not see the sea.",
+      "answer": "The construction of the bridges across the Hellespont involved the following methods and materials:\n\n*   **Initial Preparation:** The work was initially entrusted to Phoenicians and Egyptians, who were ordered to prepare cables of great size and strength; the Phoenicians used flax while the Egyptians used papyrus [1].\n*   **Structure and Layout:** The bridge consisted of two separate bridges located near each other [1]. To build them, 670 vessels (comprising fifty-oared galleys and triremes) were joined together. Specifically, 360 vessels were placed under the bridge toward the Euxine Sea and 314 were placed under the other [2].\n*   **Anchoring and Tension:** The vessels were positioned in the direction of the Hellespont's stream and secured with large anchors—one set toward the Pontus to account for winds from within, and the other toward the West and the Aegean to account for South-East and South winds [2]. The ropes were then stretched tight using wooden wind [2].\n*   **Navigation:** An opening was left in the structure to allow small vessels to sail into and out of the Pontus [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        24177,
+        636,
+        8363,
+        24134,
+        399
+      ],
+      "cited_chunk_ids": [
+        24177,
+        636
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 3,
+      "completeness": 3,
+      "judge_notes": "faithfulness: The answer incorrectly states '670 vessels' when the source passages sum to 674 (360 + 314), which is a minor unsupported embellishment; otherwise all claims are grounded in the cited passages. | completeness: The answer covers the core facts about the vessels, cables, and windlasses but misses secondary details like the planks, brushwood, stamped earth, and barriers for animals.",
+      "latency_ms": 5970,
+      "prompt_tokens": 2846,
+      "completion_tokens": 248
+    },
+    {
+      "question_id": "syn-008",
+      "category": "synonym",
+      "question": "What solar eclipse marked the departure of Xerxes' army, and how was it interpreted?",
+      "ideal_answer": "As the army set out from Sardis in spring, the sun left its place in a perfectly clear sky and day became night. Xerxes, concerned, asked the Magians, who declared the god was foreshowing to the Greeks the abandonment of their cities — since the sun was the foreshower of events for the Greeks, the moon for the Persians. Xerxes marched on greatly pleased.",
+      "answer": "When the army of Xerxes set forth from Sardis toward Abydos at the beginning of spring, the Sun became invisible in a clear sky, turning day into night [4]. Xerxes inquired with the Magians regarding the meaning of this occurrence; they informed him that the Sun served as a foreteller of events for the Hellenes, and it was signaling that the Hellenes would leave 40 of their cities [4]. Upon receiving this information, Xerxes continued his march with great joy [4].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        647,
+        29415,
+        8245,
+        637,
+        25995
+      ],
+      "cited_chunk_ids": [
+        637
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: All claims are directly supported by passage [4], which describes the solar eclipse and its interpretation by the Magians; no invented content. | completeness: The answer covers the core facts of the eclipse and its interpretation regarding Greek cities, but misses the secondary fact that the moon was the foreshower for Persians, and adds an unverified detail of '40 cities' not present in the reference.",
+      "latency_ms": 3935,
+      "prompt_tokens": 2640,
+      "completion_tokens": 104
+    },
+    {
+      "question_id": "syn-009",
+      "category": "synonym",
+      "question": "How did the Persian royal postal relay system work?",
+      "ideal_answer": "According to Herodotus, men and horses were stationed along the route, one for each day's journey; the message was carried by the first rider to the second, the second to the third, and so on, like the Greek torch-race. Neither snow, rain, heat, nor darkness of night stopped them — nothing mortal travelled faster. The Persians called it the angareion.",
+      "answer": "The Persian royal postal relay system, which the Persians called *angareion*, functioned by having messengers travel at the utmost speed to deliver messages [1, 4]. The system was organized so that the number of horses and men set at intervals matched the number of days required for the entire journey [1]. Each man and horse was assigned to a specific day's journey; the first rider would deliver the message to the second, who would pass it to the third, and so on, in a manner similar to the torch-race performed by the Greeks for Hephaistos [1, 4].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        792,
+        12836,
+        23864,
+        793,
+        13771
+      ],
+      "cited_chunk_ids": [
+        792,
+        793
+      ],
+      "citation_span_recall": 1.0,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: All claims in the answer are directly supported by the cited passages [1] and [4], with no invented content. | completeness: The answer covers the system's structure and name but omits the reference's key detail about weather and night not stopping the messengers.",
+      "latency_ms": 4098,
+      "prompt_tokens": 2918,
+      "completion_tokens": 123
+    },
+    {
+      "question_id": "syn-010",
+      "category": "synonym",
+      "question": "Which people beyond Scythia practiced cannibalism?",
+      "ideal_answer": "The Androphagoi (\"man-eaters\"). Herodotus describes them as nomads dwelling north of Scythia with their own language and the most savage manners of all human beings, acknowledging no law — and alone of all these nations they are man-eaters.",
+      "answer": "The Androphagoi are a race apart from the Scythians who live in a desert region beyond the agricultural Scythians [5].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        9111,
+        23233,
+        14386,
+        23231,
+        366
+      ],
+      "cited_chunk_ids": [
+        366
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: The claim that the Androphagoi are a race apart from the Scythians living beyond the agricultural Scythians is directly supported by passage [5]. | completeness: The answer correctly identifies the Androphagoi as the people beyond Scythia who practiced cannibalism, covering the core fact, but omits secondary details from the reference such as Herodotus' description of their nomadic nature, language, and lawlessness.",
+      "latency_ms": 3206,
+      "prompt_tokens": 2885,
+      "completion_tokens": 30
+    },
+    {
+      "question_id": "synth-001",
+      "category": "synthesis",
+      "question": "How does Plutarch portray Antony's ruin through Cleopatra?",
+      "ideal_answer": "Plutarch frames Cleopatra as \"the last and crowning mischief\" that befell Antony — a love that awakened his dormant passions and corrupted what goodness and judgment remained. She kept him captive through ceaseless charm (dicing, drinking, hunting with him, never letting him escape by day or night); the passion rekindled \"like Plato's restive horse\" when he returned east and showered her with provinces; and after Actium it left him a misanthrope playing Timon of Athens in a sea-hut, before the final catastrophe in Alexandria.",
+      "answer": "Plutarch states that Antony's ruin was caused by his marriage to the \"foreign and unlawful woman\" [3]. While the actions of others, such as Demetrius, were attributed to their own choices, Antony's downfall was specifically linked to his union with Cleopatra [3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        11692,
+        11668,
+        4166,
+        4154,
+        4155
+      ],
+      "cited_chunk_ids": [
+        4166
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: All claims in the answer are directly supported by passage [3], which explicitly states Antony procured his ruin by his marriage to the foreign woman. | completeness: The answer captures the core idea that Cleopatra caused Antony's ruin through their union, but it omits nearly all the vivid secondary details from the reference about her charm, activities, and aftermath.",
+      "latency_ms": 4897,
+      "prompt_tokens": 2847,
+      "completion_tokens": 60
+    },
+    {
+      "question_id": "synth-002",
+      "category": "synthesis",
+      "question": "How does Arrian portray Alexander's bond with his soldiers?",
+      "ideal_answer": "As intense mutual devotion that survived even open conflict. At the Hyphasis the army's silent, grieved resistance forced the invincible king to turn back; when he nearly died among the Malli, the troops wept, cheered, and crowded to touch his hands, knees, and clothes as he showed himself alive; and at Opis the mutiny dissolved when he called every Macedonian his kinsman, sealing the reconciliation with kisses and a vast common banquet.",
+      "answer": "Arrian portrays Alexander's bond with his soldiers through the following details:\n\n*   **Shared Hardship:** Alexander addresses his soldiers by stating that he has endured greater toil and fatigue for them than they have for him [1]. He points to his own body, noting that no part of his front is free from wounds sustained from swords, arrows, and missiles from engines of war [1].\n*   **Shared Rewards and Status:** Alexander has celebrated his own weddings with those of his soldiers, making their children kin to his own [1]. He also liquidated the debts of his soldiers regardless of the reason for the debt [1]. Furthermore, he provided them with golden crowns as symbols of their valor and honor [1].\n*   **Care for the Fallen:** Alexander ensured that those killed in battle were honored with splendid burials and that their parents were released from public service and taxation [1]. He also noted that no one under his leadership was ever killed while fleeing [1].\n*   **Mutual Respect and Emotion:** When Alexander was presumed dead but was later seen alive, his soldiers reacted with intense emotion, shedding \"involuntary tears\" and cheering for him [3]. They also physically showed their devotion by touching his hands, knees, and clothes, or by throwing garlands and flowers upon him [3].\n*   **Leadership Style:** While some of Alexander's friends criticized him for exposing himself to danger in the front of the army—a role they claimed was for a private soldier rather than a general—Alexander was aware that their criticism was correct but lacked the self-control to avoid danger [3].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        8474,
+        8097,
+        8424,
+        29430,
+        29524
+      ],
+      "cited_chunk_ids": [
+        8474,
+        8424
+      ],
+      "citation_span_recall": 0.3333333333333333,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: All claims in the answer are directly supported by the cited source passages [1] and [3]. | completeness: The answer correctly covers the Malli event showing mutual devotion but misses the key facts of the Hyphasis silent resistance and the Opis mutiny reconciliation.",
+      "latency_ms": 7246,
+      "prompt_tokens": 2306,
+      "completion_tokens": 329
+    },
+    {
+      "question_id": "synth-003",
+      "category": "synthesis",
+      "question": "How does Livy portray the struggle between patricians and plebeians?",
+      "ideal_answer": "As the defining, recurring affliction of the early Republic — \"the discord among the several orders... the curse of this city.\" Driven by debt and oppression, the commons twice seceded (the first ended by Menenius Agrippa's fable of the belly and the members, the second on the Sacred Mount against the decemvirs); each crisis extracted new concessions — tribunes, appeal, laws — while Livy moralizes on how hard moderation is when each side's pursuit of power or liberty makes it an object of dread to the other.",
+      "answer": "Livy portrays the struggle between the patricians and the plebeians as a discord between the several orders that serves as a curse to the city [4]. He describes the conflict as a situation where the patricians have no limits in their pursuit of power, while the plebeians have no limits in their pursuit of liberty [4].\n\nLivy notes that the patricians have endured several concessions to the plebeians in the interest of maintaining concord, including:\n*   The granting of tribunes of the commons [4].\n*   The creation of decemvirs [4].\n*   The acceptance of a patrician magistracy being conceded to the people [4].\n*   The making of the acts of the commons binding upon the patricians under the pretext of equalizing the laws [4].\n*   The subversion of patrician privileges [4].\n\nLivy characterizes the situation as one where the patricians have submitted with greater resignation when defeated than the plebeians have when victorious [4].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        20644,
+        20755,
+        13735,
+        7231,
+        18378
+      ],
+      "cited_chunk_ids": [
+        7231
+      ],
+      "citation_span_recall": 0.25,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 4,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passage [4] from Livy. | completeness: The answer covers the core portrayal of discord and the curse, and includes key concessions like tribunes and decemvirs, but misses the specific secessions and Menenius Agrippa's fable, which are secondary facts.",
+      "latency_ms": 5404,
+      "prompt_tokens": 2566,
+      "completion_tokens": 212
+    },
+    {
+      "question_id": "synth-004",
+      "category": "synthesis",
+      "question": "How did the Romans become a naval power during the First Punic War, according to Polybius?",
+      "ideal_answer": "Through what Polybius calls extraordinary audacity. Having never thought of naval war and lacking even the knowledge to build quinqueremes, they used a wrecked Carthaginian ship as their model, trained rowers on benches set up on dry land, and invented the \"crow\" boarding-bridge that turned sea battles into land fights (first proven at Mylae); after catastrophic storm losses they persisted, rebuilt with lighter ships and trained crews, and won the decisive battle of Aegusa.",
+      "answer": "The Romans became a naval power during the First Punic War by taking the following actions:\n\n*   **Motivation:** The Romans realized that the war was lasting a long time and that while Italy was being ravaged by the Carthaginian fleet, Libya remained unharmed. This led them to decide to build a fleet to meet the Carthaginians at sea [1].\n*   **Initial Tactics:** Before building their own fleet, the Romans borrowed quinqueremes and triremes from cities such as Tarentum, Locri, Elea, and Neapolis to transport troops [1, 5].\n*   **Construction of the Fleet:** The Romans decided to build a fleet consisting of 100 quinqueremes and 20 triremes [1]. Because their shipbuilders were unfamiliar with quinqueremes, they used a stranded Carthaginian vessel as a model to construct their fleet [1, 2, 3, 5].\n*   **Training:** While the ships were being constructed, the rowers were trained on land. They sat on benches arranged in the same order as they would be in actual vessels and were trained by \"Celeustes\" to row in unison [3, 5].\n*   **Rapid Development:** The Romans demonstrated great audacity by building 130 ships in just sixty days after the trees were felled [3]. They successfully transitioned from a land power to a maritime power within a year [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        5,
+        2,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        5458,
+        18684,
+        20812,
+        5513,
+        5459
+      ],
+      "cited_chunk_ids": [
+        5458,
+        5459,
+        18684,
+        20812
+      ],
+      "citation_span_recall": 0.75,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is supported by at least one of the cited source passages, with no invented content. | completeness: The answer covers the core facts of using a Carthaginian ship as a model and training rowers on land, but misses key secondary details like the invention of the 'crow', storm losses, persistence, and the decisive battle of Aegusa.",
+      "latency_ms": 6952,
+      "prompt_tokens": 2876,
+      "completion_tokens": 299
+    },
+    {
+      "question_id": "synth-005",
+      "category": "synthesis",
+      "question": "How does Thucydides describe the moral collapse caused by civil war?",
+      "ideal_answer": "In his analysis of the Corcyra revolution, Thucydides argues that war is \"a rough master\" that levels men's characters to their fortunes. Words lost their ordinary meanings (recklessness became courage, moderation cowardice); religion was honored by neither side while fair phrases served guilty ends; the moderates perished between the factions; the \"ancient simplicity\" of honor was laughed out of existence and no man trusted his fellow. The concrete horror at Corcyra — fathers killing sons, suppliants slain at altars — set the pattern the whole Hellenic world then exceeded.",
+      "answer": "Thucydides describes a morbid political condition where the intensity of internal conflict, fueled by the dangers of foreign war and the intervention of foreign enemies, leads to a breakdown of social and moral standards [1, 3]. This state of affairs is characterized by:\n\n*   **The erosion of legal and moral authority:** The bonds of law and morality become relaxed because individuals face such uncertainty regarding their own lives and the lives of others [2].\n*   **The abandonment of restraint:** People stop trying to refrain from wrongdoing when punishment is unlikely, and they no longer attempt to control their passions or endure hardships for their convictions [2].\n*   **The pursuit of immediate gratification:** Because life and property are seen as fleeting, individuals seek immediate physical pleasures and any available gains, regardless of how they are obtained, while discarding all thoughts of honor or long-term advantage [2].\n*   **The perversion of morality:** Common words regarding blame or praise lose their original meaning, and the \"unnatural predominance\" of ambitious and contentious passions overrides all genuine public objectives [1].\n*   **The use of democracy and aristocracy as pretexts:** These systems are used merely as justifications for personal triumph [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        3,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        25216,
+        25039,
+        25217,
+        25215,
+        26702
+      ],
+      "cited_chunk_ids": [
+        25216,
+        25217,
+        25039
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited source passages [1], [2], and [3], with no invented content. | completeness: The answer captures the core idea of moral collapse and perversion of language but omits secondary facts like the fate of moderates, loss of ancient simplicity, and concrete horror examples from the reference.",
+      "latency_ms": 6091,
+      "prompt_tokens": 2775,
+      "completion_tokens": 248
+    },
+    {
+      "question_id": "synth-006",
+      "category": "synthesis",
+      "question": "How does Thucydides contrast the Athenian and Spartan national characters?",
+      "ideal_answer": "Largely through speeches. The Corinthians tell Sparta that the Athenians are addicted to innovation, swift in conception and execution, adventurous beyond their power, never at home — \"born into the world to take no rest themselves and to give none to others\" — while the Spartans keep what they have, invent nothing, and never go far enough. Archidamus answers by defending Spartan slowness as disciplined wisdom: warlike from self-control and honor, wise because educated too little to despise the laws.",
+      "answer": "Thucydides highlights a stark contrast between the national characters of the Athenians and the Spartans across several dimensions:\n\n*   **Innovation vs. Preservation:** Athenians are described as innovators by nature who are sharp in both the conception and execution of their plans [2, 3]. In contrast, Spartans are characterized by a \"genius for keeping what they have got,\" a lack of invention, and a tendency to do less than what is justified by their power [3].\n*   **Boldness vs. Caution:** The Athenians are portrayed as adventurous, daring beyond their judgment, and sanguine in the face of danger [3]. The Spartans, however, are characterized by a \"mistrust in conception,\" \"slackness in execution,\" and a tendency to be \"slow to recoil from a reverse\" [1, 3].\n*   **Action vs. Procrastination:** Athenians are characterized by \"promptitude\" and are \"never at home,\" seeking to expand their acquisitions [3]. Spartans are characterized by \"procrastination\" and are \"never from\" their homes, fearing that advancing will endanger what they have left behind [3].\n*   **Risk-taking vs. Safety:** Athenians are described as being \"ready to follow up a success\" and viewing an unexecuted scheme as a \"positive loss\" [3]. Spartans are described as \"slow to recoil from a reverse\" and are characterized by \"mistrust in conception\" and \"secrecy in counsel\" [1, 3].\n*   **Intellectual and Physical Investment:** Athenians are described as being willing to spend their bodies ungrudgingly for their country's cause and \"jealously husband\" their intellect for its service [3]. This is contrasted with the Spartan character, which is defined by a \"narrow, strictly-defined, and uniform range of ideas,\" a \"compression of all other impulses,\" and \"great habits of endurance as well as of submission\" [5].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        3,
+        1,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        27048,
+        24913,
+        1044,
+        22831,
+        24928
+      ],
+      "cited_chunk_ids": [
+        24913,
+        1044,
+        27048,
+        24928
+      ],
+      "citation_span_recall": 0.3333333333333333,
+      "citation_precision": 0.25,
+      "faithfulness": 4,
+      "completeness": 5,
+      "judge_notes": "faithfulness: The answer mostly grounds its claims in the source passages, but incorrectly attributes the trait 'slow to recoil from a reverse' to the Spartans when it is actually about the Athenians in passage [3]. | completeness: The answer covers all key facts from the reference, including the Corinthians' contrast and Archidamus' defense, and adds extra correct detail without lowering the score.",
+      "latency_ms": 7075,
+      "prompt_tokens": 2449,
+      "completion_tokens": 401
+    },
+    {
+      "question_id": "synth-007",
+      "category": "synthesis",
+      "question": "What does Herodotus find most remarkable about Babylon?",
+      "ideal_answer": "Its unmatched magnificence and its customs. He marvels at the city's scale — the deep moat and walls fifty royal cubits thick and two hundred high, and the temple of Zeus Belos with its eight stacked towers — and singles out two customs: the annual bride auction, where money from the beautiful maidens dowered the plain ones (in his opinion their wisest), and the carrying of the sick into the marketplace, since they use no physicians and every passer-by must offer advice.",
+      "answer": "Herodotus's account of Babylon is noted for its inclusion of many \"marvels\" [561]. Specifically, the broad and straight streets of the city were considered a spectacle that would cause great astonishment to a visitor like Herodotus, as such streets were unknown in Greek towns until the time of the Peloponnesian war [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2
+      ],
+      "markers_dangling": [
+        561
+      ],
+      "retrieved_chunk_ids": [
+        23323,
+        23321,
+        23324,
+        23827,
+        23329
+      ],
+      "cited_chunk_ids": [
+        23321
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 1,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by passages [2] and [561]. | completeness: The answer does not cover any of the key facts from the reference (city's scale, temple, bride auction, sick marketplace), instead discussing streets not mentioned in the reference.",
+      "latency_ms": 5716,
+      "prompt_tokens": 2773,
+      "completion_tokens": 74
+    },
+    {
+      "question_id": "synth-008",
+      "category": "synthesis",
+      "question": "How does Suetonius chart Caligula's descent from popular prince to monster?",
+      "ideal_answer": "Suetonius structures the Life around an explicit pivot: \"Thus far we have spoken of him as a prince. What remains to be said of him, bespeaks him rather a monster than a man.\" His accession brought genuine joy — the soldiers' beloved camp-child, heir to Germanicus' virtues — though Tiberius had already predicted he was \"rearing a hydra for the people of Rome.\" After the pivot comes the monster: claiming divine majesty, beheading the gods' statues to mount his own head, the temple to his own divinity, and cruelties without limit.",
+      "answer": "Suetonius describes Caligula's transition from a popular leader to a figure of \"moral turpitude and frantic extravagance\" as a sudden change that was not predicted by his initial actions [1].\n\nAt the start of his reign, Caligula was welcomed with \"unfeigned joy\" by the soldiers, the people in the capital, and those in the provinces [1, 3]. These groups were encouraged by the \"delusive expectation\" that he would possess the \"amiable virtues of Germanicus\" [1]. During this early period, his actions were \"generous and humane,\" and he performed acts such as recalling exiles, abolishing taxes, and providing the public with gifts and spectacles [3].\n\nThe shift in his character is characterized by a \"sudden change\" involving a mixture of \"imbecility and presumption\" [1]. This transformation included behaviors such as rolling himself over heaps of gold, his treatment of his horse Incitatus (whom he intended to make consul), and his \"moral turpitude\" [1]. Suetonius notes that these actions led some to suspect his mind had been affected by a \"potion\" or \"philtres\" (love-potions) given to him by his wife, Caesonia [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        4862,
+        5358,
+        21107,
+        4811,
+        5019
+      ],
+      "cited_chunk_ids": [
+        4862,
+        21107
+      ],
+      "citation_span_recall": 0.25,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited source passages, with no invented content or attribution errors. | completeness: The answer covers the core transition and early popularity but misses the explicit pivot statement, the hydra prediction, and specific monstrous acts like beheading statues and the temple to his divinity.",
+      "latency_ms": 5721,
+      "prompt_tokens": 2645,
+      "completion_tokens": 264
+    },
+    {
+      "question_id": "synth-009",
+      "category": "synthesis",
+      "question": "How does Tacitus characterize German marriage and the position of women?",
+      "ideal_answer": "With pointed admiration. The marriage gifts — oxen, a bridled horse, shield, spear, and sword — admonish the wife that she comes as a partner in toils and dangers, \"to suffer and to dare equally with him, in peace and in war... thus she is to live; thus to die.\" The Germans live \"fenced around with chastity\": adultery is extremely rare and instantly punished, no one calls seduction the way of the world, and in the strictest tribes a woman takes one husband \"as one body and one life.\"",
+      "answer": "Tacitus characterizes the marriage and status of German women through the following points:\n\n*   **Chastity and Virtue:** German women were regarded as possessing a high degree of chastity and virtue [1]. This was attributed to their innate virtue rather than the oversight of their husbands [2]. They were viewed as \"free and equal companions\" to their husbands, rather than being treated as objects of adoration or as slaves [4].\n*   **Social Standing and Roles:** German women were consulted on matters of importance and were respected as companions of soldiers [4]. They were associated with a life of toil, danger, and glory [4]. In some instances, women held positions of authority, such as Velleda, who governed fierce nations in the name of a deity [4].\n*   **Domestic Life:** The \"unpolished\" lives of these women were protected from the \"softness of the mind\" and the \"refinements of life\" by their poverty, solitude, and the demands of domestic life [4]. Their homes were open to the eyes of others, which served as a safeguard for their fidelity [4].\n*   **Punishments and Laws:** Adulteries were treated as rare and inexpiable crimes [1]. In some Germanic tribes, such as the Saxons, women themselves would inflict punishments for violated chastity, which could include being beaten by a group of women until death [5]. Additionally, the cutting of hair was considered a severe disgrace and was used as a punishment for certain crimes [2].\n*   **Marriage Practices:** While polygamy was practiced among the princes to multiply alliances, it was not common elsewhere [1]. In some tribes, such as the Ostfalii and Angrarii, a woman would retain her dowry during her life and pass it to her sons [2].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2,
+        4,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        13120,
+        7340,
+        13122,
+        13121,
+        7341
+      ],
+      "cited_chunk_ids": [
+        13120,
+        7340,
+        13121,
+        7341
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 3,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the provided source passages, with no invented content. | completeness: The answer covers core aspects like chastity and punishment of adultery but misses key secondary facts such as the specific marriage gifts and the phrase 'to suffer and to dare equally' from the reference.",
+      "latency_ms": 12312,
+      "prompt_tokens": 2932,
+      "completion_tokens": 376
+    },
+    {
+      "question_id": "synth-010",
+      "category": "synthesis",
+      "question": "How does Suetonius portray the character of Tiberius?",
+      "ideal_answer": "As a dissimulating tyrant whose vices, long imperfectly concealed, flowered once he withdrew to Capri. Even Augustus reportedly pitied the Roman people for being \"ground by the jaws of such a slow devourer.\" The soldiers' nickname Biberius marked his drunkenness from youth; at Capri, \"remote from the observation of the people of Rome, he abandoned himself to all the vicious propensities which he had long but imperfectly concealed\"; and the translator's verdict is of an \"execrable tyrant\" whose indiscriminate cruelty spared neither age nor sex.",
+      "answer": "Suetonius portrays the character of Tiberius through the following details:\n\n*   **Governance and Policy:** He governed with moderation [1]. He enacted sumptuary laws and repressed both the Jewish and Christian religions [1].\n*   **Justice and Temperament:** He was known for his rigorous justice [1], but also for his harsh temper and various cruelties [1].\n*   **Personal Habits:** He was characterized by his parsimony [1] and his debaucheries while he was in retirement at Capri [1].\n*   **Treatment of Others:** He showed specific treatment toward Livia, Drusus, Germanicus, and Agrippina, as well as his grandsons [1].\n*   **Final Years:** His life concluded with a period of his last illness and his subsequent death [1].",
+      "refused": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        5374,
+        11932,
+        11957,
+        11961,
+        4407
+      ],
+      "cited_chunk_ids": [
+        5374
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 2,
+      "judge_notes": "faithfulness: Every claim in the answer is directly supported by the cited passage [1]. | completeness: The answer misses the central theme of Tiberius as a dissimulating tyrant and fails to include key facts like Augustus's quote, the nickname Biberius, and the translator's verdict, while only partially covering the Capri debaucheries.",
+      "latency_ms": 4539,
+      "prompt_tokens": 2627,
+      "completion_tokens": 172
+    }
+  ]
+}
