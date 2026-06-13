@@ -62,3 +62,19 @@ def test_parse_structure_detects_classical() -> None:
     parser, divisions = parse_structure(paragraphs)
     assert parser == "classical"
     assert len(divisions) == 11
+
+
+def test_parse_structure_drops_index_divisions() -> None:
+    # A classical work whose back matter is an INDEX heading + alphabetized entries.
+    paragraphs = [f"{n}. chapter text here" for n in ["I", "II", "III", "IV", "V"]]
+    paragraphs += [f"{n}. more chapter text" for n in ["VI", "VII", "VIII", "IX", "X"]]
+    paragraphs += [
+        "GENERAL INDEX",
+        "Africa, circumnavigation of, iii. 283; expedition of Agathokles, ix. 88.",
+        "Brasidas, at Amphipolis, iv. 102; death of, v. 10.",
+    ]
+    parser, divisions = parse_structure(paragraphs)
+    assert parser == "classical"
+    headings = [d.heading for d in divisions]
+    assert "GENERAL INDEX" not in headings
+    assert not any("Africa, circumnavigation" in p for d in divisions for p in d.paragraphs)

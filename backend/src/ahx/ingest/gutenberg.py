@@ -16,6 +16,11 @@ _END_RE = re.compile(
 )
 
 
+def has_pg_markers(text: str) -> bool:
+    """True if both Project Gutenberg START and END markers are present."""
+    return _START_RE.search(text) is not None and _END_RE.search(text) is not None
+
+
 def strip_boilerplate(raw: str) -> str:
     """Cut everything outside the `*** START/END OF THE PROJECT GUTENBERG EBOOK` markers."""
     text = raw.replace("\r\n", "\n")

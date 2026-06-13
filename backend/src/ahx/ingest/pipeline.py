@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ahx.ingest.chunker import chunk_work
-from ahx.ingest.gutenberg import split_paragraphs, strip_boilerplate
+from ahx.ingest.clean import clean_raw
+from ahx.ingest.gutenberg import split_paragraphs
 from ahx.ingest.manifest import ManifestEntry
 from ahx.ingest.model import NormalizedWork
 from ahx.ingest.parsers import parse_structure
@@ -62,7 +63,7 @@ def normalize_work(entry: ManifestEntry, raw_dir: Path, out_dir: Path) -> Normal
             error="raw file missing — run `ahx ingest download` first",
         )
     try:
-        cleaned = strip_boilerplate(raw_path.read_text(encoding="utf-8"))
+        cleaned = clean_raw(raw_path.read_text(encoding="utf-8"), entry.raw_file)
     except ValueError as exc:
         return NormalizeReport(
             pg_id=entry.pg_id,

@@ -15,6 +15,8 @@ from ahx.ingest.model import Division
 
 _ROMAN_CHAPTER_RE = re.compile(r"^([IVXLCDM]{1,8})\.(?:\s+|$)")
 _CAPS_HEADING_RE = re.compile(r"^[A-Z][A-Z0-9 .,:;'\"()\[\]—-]{2,79}$")
+# Back-of-book index headings ("INDEX", "GENERAL INDEX", "GREEK INDEX", ...).
+_INDEX_HEADING_RE = re.compile(r"^(?:GENERAL|GREEK|LATIN|NAME|SUBJECT)?\s*INDEX\b", re.I)
 
 FRONT_MATTER = "front-matter"
 
@@ -57,10 +59,18 @@ def parse_flat(paragraphs: list[str]) -> list[Division]:
     return [Division(locator=["full-text"], heading=None, paragraphs=paragraphs)]
 
 
+def _drop_index_divisions(divisions: list[Division]) -> list[Division]:
+    """Drop back-of-book index divisions. Their alphabetized page-reference
+    entries ("Africa, circumnavigation of, iii. 283; ...") are dense keyword +
+    page-number noise that outranks narrative on lexical queries — pure
+    retrieval distractors (docs/eval-log.md 2026-06-12)."""
+    return [d for d in divisions if not (d.heading and _INDEX_HEADING_RE.match(d.heading))]
+
+
 def parse_structure(paragraphs: list[str]) -> tuple[str, list[Division]]:
     """Pick an archetype by evidence: enough Roman-numeral chapter markers ->
     classical, otherwise flat fallback."""
     chapter_markers = sum(1 for p in paragraphs if _ROMAN_CHAPTER_RE.match(p))
     if chapter_markers >= 10:
-        return "classical", parse_classical(paragraphs)
+        return "classical", _drop_index_divisions(parse_classical(paragraphs))
     return "flat", parse_flat(paragraphs)

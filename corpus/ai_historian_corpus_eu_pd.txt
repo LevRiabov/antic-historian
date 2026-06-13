@@ -26,7 +26,13 @@
 6400|primary|Suetonius|The Lives of the Twelve Caesars (complete)|Alexander Thomson|Thomson fl.~1796 (PD by age)|https://www.gutenberg.org/cache/epub/6400/pg6400.txt|https://www.gutenberg.org/ebooks/6400
 44125|primary|Polybius|The Histories of Polybius, Vol. I|Evelyn S. Shuckburgh|Shuckburgh d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/44125/pg44125.txt|https://www.gutenberg.org/ebooks/44125
 44126|primary|Polybius|The Histories of Polybius, Vol. II|Evelyn S. Shuckburgh|Shuckburgh d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/44126/pg44126.txt|https://www.gutenberg.org/ebooks/44126
-10828|primary|Livy|Roman History, Books I-III|D. Osborne (ed.)|Osborne d.1917 (+70=1987)|https://www.gutenberg.org/cache/epub/10828/pg10828.txt|https://www.gutenberg.org/ebooks/10828
+# Livy — complete surviving text (Books 1-10 + 21-45 + Epitomes/Fragments) in ONE consistent
+# Bohn's Classical Library translation (PD by age). Replaced the earlier Books I-III Osborne
+# edition (#10828, dropped 2026-06-12) so all surviving Livy is a single translation family.
+19725|primary|Livy|The History of Rome, Books 01 to 08|D. Spillan|Spillan fl.1849 Bohn ed. (PD by age)|https://www.gutenberg.org/cache/epub/19725/pg19725.txt|https://www.gutenberg.org/ebooks/19725
+10907|primary|Livy|The History of Rome, Books 09 to 26|D. Spillan & C. Edmonds|Edmonds d.1866 (+70=1936); Bohn ed.|https://www.gutenberg.org/cache/epub/10907/pg10907.txt|https://www.gutenberg.org/ebooks/10907
+12582|primary|Livy|The History of Rome, Books 27 to 36|Cyrus R. Edmonds|Edmonds d.1866 (+70=1936); Bohn ed.|https://www.gutenberg.org/cache/epub/12582/pg12582.txt|https://www.gutenberg.org/ebooks/12582
+44318|primary|Livy|The History of Rome, Books 37 to the End (w/ Epitomes & Fragments)|W. A. McDevitte|McDevitte d. by age; Bohn ed. 1869 (PD by age)|https://www.gutenberg.org/cache/epub/44318/pg44318.txt|https://www.gutenberg.org/ebooks/44318
 7524|primary|Tacitus|The Germany and the Agricola of Tacitus|Oxford Translation (rev.), ed. Edward Brooks|Brooks (ed.) d.1912 (+70=1982); orig. Oxford transl. anon./PD by age|https://www.gutenberg.org/cache/epub/7524/pg7524.txt|https://www.gutenberg.org/ebooks/7524
 10657|primary|Julius Caesar|"De Bello Gallico" and Other Commentaries|W. A. McDevitte|McDevitte d. by age; Bohn ed. 1869 (PD by age); verified English on PG 2026-06-10|https://www.gutenberg.org/cache/epub/10657/pg10657.txt|https://www.gutenberg.org/ebooks/10657
 46976|primary|Arrian|The Anabasis of Alexander|E. J. Chinnock|Chinnock d.1911 (+70=1981)|https://www.gutenberg.org/cache/epub/46976/pg46976.txt|https://www.gutenberg.org/ebooks/46976
@@ -39,6 +45,35 @@
 10883|primary|Cassius Dio|Dio's Rome, Vol. 4|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/10883/pg10883.txt|https://www.gutenberg.org/ebooks/10883
 10890|primary|Cassius Dio|Dio's Rome, Vol. 5|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/10890/pg10890.txt|https://www.gutenberg.org/ebooks/10890
 12061|primary|Cassius Dio|Dio's Rome, Vol. 6|Herbert Baldwin Foster|Foster d.1906 (+70=1976)|https://www.gutenberg.org/cache/epub/12061/pg12061.txt|https://www.gutenberg.org/ebooks/12061
+2850|primary|Josephus|The Wars of the Jews (History of the Destruction of Jerusalem)|William Whiston|Whiston d.1752 — fully PD by age|https://www.gutenberg.org/cache/epub/2850/pg2850.txt|https://www.gutenberg.org/ebooks/2850
+2848|primary|Josephus|Antiquities of the Jews (complete, 20 books)|William Whiston|Whiston d.1752 — fully PD by age|https://www.gutenberg.org/cache/epub/2848/pg2848.txt|https://www.gutenberg.org/ebooks/2848
+28587|primary|Ammianus Marcellinus|The Roman History (surviving Books XIV-XXXI)|Charles Duke Yonge|Yonge d.1891 (+70=1961); Bohn ed.|https://www.gutenberg.org/cache/epub/28587/pg28587.txt|https://www.gutenberg.org/ebooks/28587
+68946|primary|Pausanias|Description of Greece, Vol. I (Books I-VI)|A. R. Shilleto|Shilleto d.1894 (+70=1964); Bohn ed.|https://www.gutenberg.org/cache/epub/68946/pg68946.txt|https://www.gutenberg.org/ebooks/68946
+68680|primary|Pausanias|Description of Greece, Vol. II (Books VII-X)|A. R. Shilleto|Shilleto d.1894 (+70=1964); Bohn ed.|https://www.gutenberg.org/cache/epub/68680/pg68680.txt|https://www.gutenberg.org/ebooks/68680
+
+# --- NON-GUTENBERG SOURCES (active) ---
+# Synthetic ids >= 900000 (no Gutenberg id). A 9th pipe field gives the explicit
+# raw filename in corpus/raw/ (these scraped files don't follow pg<id>.txt).
+# txt_url/landing_url = the real scan/transcription source (re-downloadable);
+# pd_basis = translator death + scan source. Receipts for each source's cleaning
+# caveats are in the "NON-GUTENBERG RAW SOURCES" block at the bottom of this file.
+# Internet Classics Archive (ICA): hand-transcribed, clean; Church & Brodribb
+# translation (Church d.1912 +70=1982; Brodribb d.1905). ICA's web-presentation
+# (C) covers HTML markup only, not the PD translation text. Cleaned by
+# clean.py:strip_ica.
+900001|primary|Tacitus|The Annals|Church & Brodribb|Church d.1912 (+70=1982); Brodribb d.1905 (+70=1975); ICA web-presentation (C) ≠ PD translation|https://classics.mit.edu/Tacitus/annals.mb.txt|https://classics.mit.edu/Tacitus/annals.html|tacitus-annals-church-brodribb.txt
+900002|primary|Tacitus|The Histories|Church & Brodribb|Church d.1912 (+70=1982); Brodribb d.1905 (+70=1975); ICA web-presentation (C) ≠ PD translation|https://classics.mit.edu/Tacitus/histories.mb.txt|https://classics.mit.edu/Tacitus/histories.html|tacitus-histories-church-brodribb.txt
+# archive.org / Google-Books _djvu.txt OCR scans. Cleaned by clean.py:strip_djvu
+# (prose-density block filter: drops title page, table of contents, index,
+# running heads, page numbers, Google preamble, catalogue ads). Each QA'd 2026-06-12
+# against the clean-text bar; bodies measure 0.0–0.3% garble. The footnote-heavy
+# scholarship (Rostovtzeff, Bury Later Roman Empire) was REJECTED — its dense
+# citation footnotes OCR into interleaved columns (3–5% of lines) that can't be
+# separated from flat text; see receipts below.
+900003|primary|Appian|The Roman History, Vol. I — The Foreign Wars (1899)|Horace White|White (translator) d.1916 (+70=1986); IA OCR scan|https://archive.org/download/romanhistorytran01appiuoft/romanhistorytran01appiuoft_djvu.txt|https://archive.org/details/romanhistorytran01appiuoft|appian-1899-roman-history-v1.txt
+900004|primary|Appian|The Roman History, Vol. II — The Civil Wars (1899)|Horace White|White (translator) d.1916 (+70=1986); IA OCR scan|https://archive.org/download/romanhistorytran02appiuoft/romanhistorytran02appiuoft_djvu.txt|https://archive.org/details/romanhistorytran02appiuoft|appian-1899-roman-history-v2.txt
+900005|primary|Diodorus Siculus|The Historical Library, Vol. II — Books XI-XX + Fragments (1814)|G. Booth|Booth transl. (1700, repr. 1814) PD by age; Google/IA OCR scan|https://archive.org/download/HistoricalLibrary/The_Historical_Library_of_Diodorus_the_S_djvu.txt|https://archive.org/details/HistoricalLibrary|diodorus-booth-1814-v2-books-11-20.txt
+900006|scholarship|J. B. Bury|A History of Greece to the Death of Alexander the Great (1900)|— (orig. English)|Bury d.1927 (+70=1997); IA OCR scan|https://archive.org/download/AHistoryOfGreeceToTheDeathOfAlexanderTheGreat/BuryGreecetodeathofAlex_djvu.txt|https://archive.org/details/AHistoryOfGreeceToTheDeathOfAlexanderTheGreat|bury-1900-history-of-greece.txt
 
 # --- FOUNDATIONAL SCHOLARSHIP (modern, EU-PD) ---
 25717|scholarship|Edward Gibbon|The History of the Decline and Fall of the Roman Empire (complete)|— (Milman/Bury notes)|Gibbon d.1794; Bury d.1927 (+70=1997)|https://www.gutenberg.org/cache/epub/25717/pg25717.txt|https://www.gutenberg.org/ebooks/25717
@@ -57,6 +92,18 @@
 51183|scholarship|George Grote|History of Greece, Vol. 10 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/51183/pg51183.txt|https://www.gutenberg.org/ebooks/51183
 61469|scholarship|George Grote|History of Greece, Vol. 11 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/61469/pg61469.txt|https://www.gutenberg.org/ebooks/61469
 60786|scholarship|George Grote|History of Greece, Vol. 12 (of 12)|— (orig. English)|Grote d.1871 (+70=1941)|https://www.gutenberg.org/cache/epub/60786/pg60786.txt|https://www.gutenberg.org/ebooks/60786
+# George Rawlinson — The Seven Great Monarchies of the Ancient Eastern World (Persia/Near East),
+# complete 7-vol set (one per monarchy; Rawlinson d.1902, +70=1972). #28871 is only the index.
+16161|scholarship|George Rawlinson|Seven Great Monarchies, Vol. 1 — Chaldaea|— (orig. English)|Rawlinson d.1902 (+70=1972)|https://www.gutenberg.org/cache/epub/16161/pg16161.txt|https://www.gutenberg.org/ebooks/16161
+16162|scholarship|George Rawlinson|Seven Great Monarchies, Vol. 2 — Assyria|— (orig. English)|Rawlinson d.1902 (+70=1972)|https://www.gutenberg.org/cache/epub/16162/pg16162.txt|https://www.gutenberg.org/ebooks/16162
+16163|scholarship|George Rawlinson|Seven Great Monarchies, Vol. 3 — Media|— (orig. English)|Rawlinson d.1902 (+70=1972)|https://www.gutenberg.org/cache/epub/16163/pg16163.txt|https://www.gutenberg.org/ebooks/16163
+16164|scholarship|George Rawlinson|Seven Great Monarchies, Vol. 4 — Babylon|— (orig. English)|Rawlinson d.1902 (+70=1972)|https://www.gutenberg.org/cache/epub/16164/pg16164.txt|https://www.gutenberg.org/ebooks/16164
+16165|scholarship|George Rawlinson|Seven Great Monarchies, Vol. 5 — Persia|— (orig. English)|Rawlinson d.1902 (+70=1972)|https://www.gutenberg.org/cache/epub/16165/pg16165.txt|https://www.gutenberg.org/ebooks/16165
+16166|scholarship|George Rawlinson|Seven Great Monarchies, Vol. 6 — Parthia|— (orig. English)|Rawlinson d.1902 (+70=1972)|https://www.gutenberg.org/cache/epub/16166/pg16166.txt|https://www.gutenberg.org/ebooks/16166
+16167|scholarship|George Rawlinson|Seven Great Monarchies, Vol. 7 — The Sassanian Empire|— (orig. English)|Rawlinson d.1902 (+70=1972)|https://www.gutenberg.org/cache/epub/16167/pg16167.txt|https://www.gutenberg.org/ebooks/16167
+3623|scholarship|James George Frazer|The Golden Bough: A Study in Magic and Religion (1922 abridged)|— (orig. English)|Frazer d.1941 (+70=2011)|https://www.gutenberg.org/cache/epub/3623/pg3623.txt|https://www.gutenberg.org/ebooks/3623
+11256|scholarship|W. Warde Fowler|Social Life at Rome in the Age of Cicero|— (orig. English)|Fowler d.1921 (+70=1991)|https://www.gutenberg.org/cache/epub/11256/pg11256.txt|https://www.gutenberg.org/ebooks/11256
+34122|scholarship|Samuel Dill|Roman Society from Nero to Marcus Aurelius|— (orig. English)|Dill d.1924 (+70=1994)|https://www.gutenberg.org/cache/epub/34122/pg34122.txt|https://www.gutenberg.org/ebooks/34122
 
 # ==============================================================================
 # EXCLUDED ON PURPOSE (requested ids that fail the corpus rules) — kept here as receipts:
@@ -83,18 +130,175 @@
 #
 # TACITUS    : Use the CHURCH & BRODRIBB translation (A. J. Church d.1912; W. J. Brodribb
 #              d.1905) for Annals/Histories/Germania/Agricola — EU-PD.
+#              Annals + Histories NOT on Gutenberg in this translation -> scraped from the
+#              Internet Classics Archive; see "NON-GUTENBERG RAW SOURCES" section below.
+#              Germania + Agricola = PG #7524 (added above).
 #              DO NOT use PG #16927 (Histories, trans. W. Hamilton Fyfe): Fyfe d.1965,
 #              so that translation stays in EU copyright until 2036. (See EXCLUDED above.)
 # CAESAR     : English Gallic/Civil Wars = McDevitte & Bohn (1869) — EU-PD by age.
 #              ADDED above as #10657 ("De Bello Gallico" and Other Commentaries).
 #              PG #218 is the LATIN text only — see EXCLUDED.
-# JOSEPHUS   : Whiston translation (d.1752) — fully EU-PD. Wars / Antiquities / Life /
-#              Against Apion. Enumerate from Josephus author page (index = PG #29434).
+# JOSEPHUS   : Whiston translation (d.1752) — fully EU-PD. Wars (#2850) + Antiquities (#2848)
+#              ADDED above. Life / Against Apion still available from the Josephus author page
+#              (index = PG #29434) if wanted later.
 # ARRIAN     : Anabasis of Alexander = E. J. Chinnock translation (d.1911) — added above (#46976).
 # ==============================================================================
 # BULK / STRUCTURED ALTERNATIVE (not Gutenberg) — better for citation-addressable RAG:
 #   PerseusDL/canonical-greekLit   git clone https://github.com/PerseusDL/canonical-greekLit
 #   PerseusDL/canonical-latinLit   git clone https://github.com/PerseusDL/canonical-latinLit
 #   License: CC-BY-SA-4.0 (attribution + share-alike) — fine to serve, with credit.
-#   Also: William Smith's Dictionaries (Antiquities / Biography / Geography), PD, on Perseus.
+#   Also: William Smith's Dictionaries (Antiquities / Biography / Geography), PD, on Perseus
+#   — but SKIPPED for the text corpus; see "SKIPPED — NO CLEAN SOURCE" below.
+# ==============================================================================
+# SKIPPED — NO CLEAN SOURCE (collection rule: clean full text or skip; no garbled OCR)
+# ------------------------------------------------------------------------------
+#  William Smith's three dictionaries — Greek & Roman ANTIQUITIES; BIOGRAPHY & MYTHOLOGY;
+#  GEOGRAPHY (W. Smith d.1893, +70=1963 — PD is NOT the problem; clean TEXT is).
+#  Evaluated 2026-06-12; no clean, complete, downloadable full text exists for any of them:
+#    - Internet Archive _djvu.txt : complete but OCR-garbled (sampled — word-mangling like
+#      "antiqiaity"/"vfithout", page furniture, garbled Greek e.g. "ttSXis oiKov/xevT}").
+#    - LacusCurtius (penelope.uchicago.edu) : hand-clean but PARTIAL — Antiquities only,
+#      Roman articles only (Greek deliberately omitted), letters J/K/P/S/T/X/Z missing.
+#    - Wikisource : human-transcribed but flagged INCOMPLETE (Biography & Geography); many
+#      entries are unfilled red-links.
+#    - Perseus (1999.04.0064 Geography, etc.) : clean + complete + proofread, BUT per-entry
+#      pages only — no single-file / bulk download. latin-dict + EPWING repackage Perseus as
+#      dictionary-app binaries (Slob/EPWING), not analysis-ready text.
+#  Verdict: clean = per-entry Perseus scrape (thousands of requests/dict). Deferred, not
+#  collected. Revisit if a dictionary/reference layer is wanted (then scrape Perseus or
+#  decode EPWING). NB: these are encyclopedic reference works, not narrative sources.
+# ------------------------------------------------------------------------------
+#  Charles MERIVALE — History of the Romans under the Empire (7-8 vols; Merivale d.1893,
+#  +70=1963 — orig. English, PD is NOT the problem). Evaluated 2026-06-12; SKIPPED:
+#    - Not on Project Gutenberg (no clean transcription exists).
+#    - Internet Archive _djvu.txt (uoft + google scans both sampled, vol 1): the 19th-c.
+#      editions carry dense MARGINAL side-notes (running glosses every paragraph); OCR
+#      interleaves them into the body text, fragmenting nearly every sentence — e.g.
+#      "The state  Notwithstanding this foreign support the aris-", garbled date-notes
+#      "A.™666 / B.C. ss". Google scan adds heavy word-garbling ("universauty gfoat foT
+#      their excoUence", "KOMANS", "Csesar"). Readable to a human but would poison every
+#      RAG chunk — same failure class as the Smith dictionaries above.
+#    - IA editions are fragmented (1850-62 vs 1865-72 vs later) with no uniform clean 8-vol
+#      series; even the uoft set mixes editions (vol 4 = 1865-72) and lacks vol 5 & 8.
+#  Verdict: no clean source for a margin-glossed multi-vol work. Revisit only if a margin-
+#  free reprint edition surfaces, or if margin-note de-interleaving is built into normalize.
+# ------------------------------------------------------------------------------
+#  Tenney FRANK — An Economic History of Rome (Frank d.1939, +70=2009 — PD fine).
+#  Evaluated 2026-06-12; SKIPPED (no clean source):
+#    - Not on Project Gutenberg (his Vergil #10960 & Life & Literature #69272 are, this is not).
+#    - Online Books aggregator lists it only as HathiTrust PAGE IMAGES (no downloadable text).
+#    - Internet Archive (economichistoryo00franuoft, 1920 "to the end of the Republic"): body
+#      readable but steady OCR garble ("cuiiicd"/"cbotact"/"pOMessioo") + garbage-character
+#      lines + heavily-garbled dense academic footnotes. Same noisy tier as Diodorus Vol. I
+#      (skipped above) — below the clean bar.
+#  Verdict: deferred. Revisit if a clean scan/transcription of the 1920 or 1927 ed surfaces.
+# ==============================================================================
+# NON-GUTENBERG RAW SOURCES (scraped to corpus/raw/) — works not available on PG in an
+# EU-PD translation. Documented here as receipts; NOT active pipe lines because the manifest
+# parser requires an integer Gutenberg id and derives raw filenames as pg<id>.txt. Wiring
+# these into the automated pipeline needs a small parser extension (string id + explicit
+# raw filename) — a future-iteration task. For now the .txt files are collected and listed.
+# ------------------------------------------------------------------------------
+#  source : Internet Classics Archive (classics.mit.edu) — single-file text downloads.
+#  PD     : Church & Brodribb translation. A. J. Church d.1912 (+70=1982); W. J. Brodribb
+#           d.1905 (+70=1975). Both clear the corpus rule (translator died <=1955).
+#  caveat : The ICA footer claims copyright on the WEB PRESENTATION (HTML markup) only — it
+#           does NOT extend to the public-domain translation text itself. Verified 2026-06-12.
+#  status : ACTIVATED 2026-06-12 as synthetic ids 900001 (Annals) + 900002 (Histories).
+#           Cleaned by clean.py:strip_ica (region between the first/last '----' rule,
+#           internal rule lines dropped).
+#
+#  tacitus-annals-church-brodribb.txt
+#      Tacitus | The Annals | Church & Brodribb | primary
+#      txt:     https://classics.mit.edu/Tacitus/annals.mb.txt
+#      landing: https://classics.mit.edu/Tacitus/annals.html
+#  tacitus-histories-church-brodribb.txt
+#      Tacitus | The Histories | Church & Brodribb | primary
+#      txt:     https://classics.mit.edu/Tacitus/histories.mb.txt
+#      landing: https://classics.mit.edu/Tacitus/histories.html
+# ------------------------------------------------------------------------------
+#  source : Internet Archive full-text OCR (_djvu.txt). NOT a hand-transcription like the
+#           Tacitus above — clean readable body prose, but sparse systematic OCR artifacts
+#           (end-of-line soft-hyphen "¬", double-spacing, occasional letter swaps). Body is
+#           English (no Greek-OCR problem). Sampled & judged clean 2026-06-12. Normalize-stage
+#           cleanup expected (strip uploader watermark line + soft-hyphens + index/notes furniture).
+#  PD     : M. Rostovtzeff (orig. English author) d.1952 (+70=2022) — EU-PD as of 2026.
+#           THIS IS THE 1926 FIRST EDITION (Clarendon Press). DO NOT use the 1957 2nd ed.
+#           revised by P. M. Fraser (Fraser d.2007 -> in copyright until 2078).
+#  status : DEFERRED 2026-06-12 (NOT collected). Dense scholarly endnotes OCR catastrophically
+#           ("Gath. r6m. Kol.", "Kaistrztit") and interleave into the body; below the clean bar.
+#           Same failure class as Bury LRE below. Revisit only with a cleaner scan/transcription.
+#
+#  rostovtzeff-1926-sehre.txt
+#      Michael Rostovtzeff | The Social and Economic History of the Roman Empire (1926) | — (orig. English) | scholarship
+#      txt:     https://archive.org/download/rostovtzeff-1926-sehre/Rostovtzeff_1926_SEHRE_djvu.txt
+#      landing: https://archive.org/details/rostovtzeff-1926-sehre
+# ------------------------------------------------------------------------------
+#  source : Internet Archive full-text OCR (_djvu.txt). Clean narrative body prose; usual OCR
+#           artifacts. Two work-specific caveats sampled 2026-06-12, re-measured at ingest:
+#           - Greece (1900): ACTIVATED as 900006. Measured 0.00% body garble + 0.0% footnote-
+#             column collision across 10 sampled slices; the marginal side-notes are rare/local.
+#             Lightly-footnoted narrative — clears the clean bar.
+#           - Later Roman Empire (v1+v2): DEFERRED (NOT collected). Clean narrative, BUT the
+#             dense 1923 scholarly footnotes (Greek citations) OCR into interleaved columns on
+#             5.2% (v1) / 3.1% (v2) of body lines — valid words in scrambled order, unsalvageable
+#             from flat text. Same reason as Rostovtzeff. Revisit with a footnote-aware extractor.
+#  PD     : J. B. Bury (orig. English author) d.1927 (+70=1997) — EU-PD as of 2026.
+#           LRE = the 1923 work (Theodosius I -> Justinian, 395-565). This scan carries Dover
+#           reprint back-matter; a faithful unabridged reprint adds no new authorship, so the
+#           TEXT is Bury's (PD). NB the OTHER Bury LRE — 1889 "Arcadius to Irene" (395-800) — is
+#           a DIFFERENT, differently-scoped work; not collected.
+#
+#  bury-1900-history-of-greece.txt
+#      J. B. Bury | A History of Greece to the Death of Alexander the Great (1900) | — (orig. English) | scholarship
+#      txt:     https://archive.org/download/AHistoryOfGreeceToTheDeathOfAlexanderTheGreat/BuryGreecetodeathofAlex_djvu.txt
+#      landing: https://archive.org/details/AHistoryOfGreeceToTheDeathOfAlexanderTheGreat
+#  bury-1923-later-roman-empire-v1.txt
+#      J. B. Bury | History of the Later Roman Empire, Vol. I (1923) | — (orig. English) | scholarship
+#      txt:     https://archive.org/download/historyoflaterro01buryuoft/historyoflaterro01buryuoft_djvu.txt
+#      landing: https://archive.org/details/historyoflaterro01buryuoft
+#  bury-1923-later-roman-empire-v2.txt
+#      J. B. Bury | History of the Later Roman Empire, Vol. II (1923) | — (orig. English) | scholarship
+#      txt:     https://archive.org/download/historyoflaterr02buryuoft/historyoflaterr02buryuoft_djvu.txt
+#      landing: https://archive.org/details/historyoflaterr02buryuoft
+# ------------------------------------------------------------------------------
+#  source : Internet Archive full-text OCR (_djvu.txt). Clean narrative body (Rostovtzeff/Bury
+#           league). Page furniture (running heads + marginal B.C. dates) sits on SEPARATE lines,
+#           NOT interleaved into sentences (unlike Merivale, skipped above) — easy normalize strip.
+#           Caveats sampled 2026-06-12: translator's PREFACE/front-matter OCRs poorly (scan-gutter
+#           artifacts, leading-char noise); occasional line-edge garble in body. Body narrative clean.
+#  edition: 1899 Macmillan ENGLISH-ONLY 2-vol edition (Vol I Foreign Wars, Vol II Civil Wars).
+#           Deliberately NOT the 1912-13 Loeb 4-vol (facing Greek text would interleave Greek
+#           into the OCR). PD: Horace White (translator) d.1916 (+70=1986).
+#  status : ACTIVATED 2026-06-12 as 900003 (Foreign Wars) + 900004 (Civil Wars). Light footnotes;
+#           body measures ~0.02% garble after strip_djvu. Page numbers (e.g. inline "553") are an
+#           accepted low-level residual, like Diodorus.
+#
+#  appian-1899-roman-history-v1.txt
+#      Appian | The Roman History, Vol. I — The Foreign Wars (1899) | Horace White | primary
+#      txt:     https://archive.org/download/romanhistorytran01appiuoft/romanhistorytran01appiuoft_djvu.txt
+#      landing: https://archive.org/details/romanhistorytran01appiuoft
+#  appian-1899-roman-history-v2.txt
+#      Appian | The Roman History, Vol. II — The Civil Wars (1899) | Horace White | primary
+#      txt:     https://archive.org/download/romanhistorytran02appiuoft/romanhistorytran02appiuoft_djvu.txt
+#      landing: https://archive.org/details/romanhistorytran02appiuoft
+# ------------------------------------------------------------------------------
+#  source : Internet Archive full-text OCR (_djvu.txt) of the 1814 Booth edition. Acceptable
+#           narrative quality (recurring "^"-for-comma artifact + occasional garble e.g.
+#           "Whjlst"/"hapds"); running heads on separate lines (strippable). Sampled 2026-06-12.
+#           Carries a GOOGLE front-matter preamble (not PG boilerplate) for normalize to strip.
+#  PD     : G. Booth translation (1700, repr. 1814) — fully PD by age. (NOT the Loeb Oldfather:
+#           facing Greek + continuators Geer/Walton/Welles still in EU copyright.)
+#  PARTIAL: ONLY Vol. II collected (the "last ten" Books 11-20 + Fragments). Vol. I (Books 1-5,
+#           Egypt/Greece origins) SKIPPED 2026-06-12 — its only scans (historicallibra01diodgoog /
+#           historicallibra00bootgoog) are too OCR-garbled ("aDDojaneesy", "TrojaoSj", "citief",
+#           dictionary-level). Revisit Books 1-5 if a clean vol-1 scan or transcription surfaces.
+#  status : ACTIVATED 2026-06-12 as 900005. strip_djvu drops the Google preamble + back-of-book
+#           contents/colophon; body measures ~0.29% garble (the "^"/"iE"/letter-swap artifacts) —
+#           judged too important (a core primary source) to skip at that level.
+#
+#  diodorus-booth-1814-v2-books-11-20.txt
+#      Diodorus Siculus | The Historical Library, Vol. II — Books XI-XX + Fragments (1814) | G. Booth | primary
+#      txt:     https://archive.org/download/HistoricalLibrary/The_Historical_Library_of_Diodorus_the_S_djvu.txt
+#      landing: https://archive.org/details/HistoricalLibrary
 # ==============================================================================

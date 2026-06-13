@@ -135,3 +135,7 @@ def find_quote(pg_id: int, quote: str) -> dict[str, Any]:
 
 def run() -> None:
     server.run()
+
+
+if __name__ == "__main__":
+    run()
