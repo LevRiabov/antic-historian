@@ -161,8 +161,9 @@ def test_parse_verdict_tolerates_fences_and_rejects_garbage() -> None:
 class FakeJudge:
     model_name = "fake-judge"
 
-    def __init__(self, reply: str) -> None:
+    def __init__(self, reply: str, refusal_reply: str = "no") -> None:
         self._reply = reply
+        self._refusal_reply = refusal_reply  # answer for the yes/no refusal prompt
         self.calls = 0
         self.prompts: list[str] = []
 
@@ -172,8 +173,10 @@ class FakeJudge:
 
     async def complete(self, messages: Sequence[ChatMessage]) -> ChatResult:
         self.calls += 1
-        self.prompts.append(messages[-1].content)
-        return ChatResult(text=self._reply, usage=None)
+        content = messages[-1].content
+        self.prompts.append(content)
+        reply = self._refusal_reply if "Reply with ONLY one word" in content else self._reply
+        return ChatResult(text=reply, usage=None)
 
 
 async def test_judge_scores_answered_in_scope_question() -> None:
@@ -182,9 +185,12 @@ async def test_judge_scores_answered_in_scope_question() -> None:
     )
     judge = FakeJudge('{"score": 4, "reason": "well supported"}')
     await judge_question(judge, result, [citation(1)])
-    assert judge.calls == 2  # faithfulness + completeness
+    assert judge.calls == 4  # refusal check + faithfulness + completeness + attribution
+    assert result.refused_semantic is False
+    assert result.refusal_correct is True  # in-scope, answered
     assert result.faithfulness == 4
     assert result.completeness == 4
+    assert result.attribution == 4
     assert "well supported" in result.judge_notes
 
 
@@ -196,10 +202,52 @@ async def test_judge_sees_all_retrieved_sources_with_cited_flags() -> None:
     )
     judge = FakeJudge('{"score": 4, "reason": "ok"}')
     await judge_question(judge, result, [citation(1), citation(2)])
-    faithfulness_prompt = judge.prompts[0]
+    faithfulness_prompt = judge.prompts[1]  # prompts[0] is the yes/no refusal check
     assert "[1] (cited)" in faithfulness_prompt
     assert "[2] Suetonius" in faithfulness_prompt  # present, not flagged as cited
     assert "[2] (cited)" not in faithfulness_prompt
+
+
+async def test_attribution_rubric_is_third_and_sees_sources() -> None:
+    # judge-v3: attribution scored as a distinct dimension, with the same
+    # all-sources view as faithfulness (cited flags included).
+    result = score_generation(
+        question("contradiction"),
+        [span()],
+        sources(citation(1), citation(2)),
+        done(used=[1]),
+        latency_ms=1,
+    )
+    judge = FakeJudge('{"score": 3, "reason": "disagreement not attributed"}')
+    await judge_question(judge, result, [citation(1), citation(2)])
+    assert judge.calls == 4  # refusal + faithfulness + completeness + attribution
+    assert result.attribution == 3
+    attribution_prompt = judge.prompts[3]  # prompts[0] refusal, [1] faith, [2] compl
+    assert "ATTRIBUTION" in attribution_prompt
+    assert "[1] (cited)" in attribution_prompt
+    assert "[2] Suetonius" in attribution_prompt
+
+
+async def test_paraphrased_oos_refusal_accepted() -> None:
+    # judge-v3.1: an OOS answer that abstains in non-contract wording is mechanically
+    # a non-refusal, but the judge accepts it; the 1-5 dimensions stay None on OOS.
+    result = score_generation(
+        question("out-of-scope", n_spans=0),
+        [],
+        sources(citation(1)),
+        done(answer="The sources do not mention this topic.", refused=False),
+        latency_ms=1,
+    )
+    assert result.refused is False
+    assert result.refusal_correct is False  # mechanical: not the exact contract sentence
+    judge = FakeJudge('{"score": 5, "reason": "n/a"}', refusal_reply="yes")
+    await judge_question(judge, result, [citation(1)])
+    assert judge.calls == 1  # only the refusal check — no 1-5 dimensions on OOS
+    assert result.refused_semantic is True
+    assert result.refusal_correct is True
+    assert result.faithfulness is None
+    assert result.completeness is None
+    assert result.attribution is None
 
 
 async def test_judge_skips_refusals() -> None:
@@ -208,5 +256,6 @@ async def test_judge_skips_refusals() -> None:
     )
     judge = FakeJudge('{"score": 5, "reason": "n/a"}')
     await judge_question(judge, result, [])
-    assert judge.calls == 0
+    assert judge.calls == 0  # mechanical contract-sentence refusal needs no judge call
+    assert result.refused_semantic is True
     assert result.faithfulness is None

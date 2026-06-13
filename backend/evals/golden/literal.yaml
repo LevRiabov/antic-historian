@@ -3,6 +3,10 @@
 # Validate with: uv run ahx eval validate
 #
 # lit-001 is a WORKED EXAMPLE (verified to resolve) — keep, copy, extend.
+#
+# Spans here are ALTERNATIVES: the same fact recurs across works, so all spans
+# of a question share one `groups` label — retrieving any one fully answers
+# (recall is per requirement group, not per span; see docs/golden-set.md §4a).
 
 - id: lit-001
   category: literal
@@ -13,11 +17,37 @@
     said "And you too, my son?" to Marcus Brutus.
   gold_spans:
     - pg_id: 6400
+      groups: [wounds]
       quote: >-
         He was stabbed with three and twenty wounds, uttering a groan only,
         but no cry, at the first wound
       note: Suetonius, Julius LXXXII
-  notes: Worked example for the authoring format.
+    - pg_id: 900004
+      groups: [wounds]
+      quote: >-
+        They continued their attack after he had fallen until he had received
+        twenty-three wounds.
+      note: Appian, Civil Wars II.117 — independent narrative of the killing
+    - pg_id: 674
+      groups: [wounds]
+      quote: >-
+        he received three and twenty. And the conspirators themselves were
+        many of them wounded by each other
+      note: Plutarch, Caesar 66 — independent account
+    - pg_id: 44318
+      groups: [wounds]
+      quote: >-
+        He was slain in Pompey’s senate-house with three-and-twenty wounds
+      note: Livy, Periochae (Epitome of Book CXVI)
+    - pg_id: 19694
+      groups: [wounds]
+      quote: >-
+        he drew his toga over his head, and fell pierced with three-and-twenty
+        wounds
+      note: Smith, Smaller History of Rome — independent retelling
+  notes: >-
+    Worked example for the authoring format. The wound-count (twenty-three)
+    recurs across many works in the corpus; all are valid retrieval targets.
   status: reviewed
 
 - id: lit-002
@@ -29,11 +59,19 @@
     dog died they shaved their whole body and head.
   gold_spans:
     - pg_id: 2131
+      groups: [cat-mourning]
       quote: >-
         in whatever houses a cat has died by a natural death, all those who
         dwell in this house shave their eyebrows only, but those in which a
         dog has died shave their whole body and also their head
       note: Herodotus II.66 (An Account of Egypt)
+    - pg_id: 2707
+      groups: [cat-mourning]
+      quote: >-
+        in whatever houses a cat has died by a natural death, all those who
+        dwell in this house shave their eyebrows only, but those in whose
+        houses a dog has died shave their whole body and also their head
+      note: Herodotus II.66 (History Vol. I) — same account, different edition
   status: reviewed
 
 - id: lit-003
@@ -64,11 +102,13 @@
     chief.
   gold_spans:
     - pg_id: 7524
+      groups: [disgrace]
       quote: >-
         The greatest disgrace that can befall them is to have abandoned their
         shields.
       note: Tacitus, Germania 6
     - pg_id: 7524
+      groups: [disgrace]
       quote: >-
         In the field of battle, it is disgraceful for the chief to be
         surpassed in valor; it is disgraceful for the companions not to equal
@@ -77,7 +117,7 @@
       note: Tacitus, Germania 14
   notes: >-
     Two famous disgrace passages — a good answer may cite either or both, so
-    both are gold.
+    both are gold (alternatives, one requirement).
   status: reviewed
 
 - id: lit-005
@@ -91,6 +131,7 @@
     often been — and would again be — serviceable.
   gold_spans:
     - pg_id: 2456
+      groups: [pheidippides]
       quote: >-
         the generals sent off to Sparta a herald, namely Pheidippides 94 an
         Athenian and for the rest a runner of long day-courses and one who
@@ -103,11 +144,25 @@
         before that time, and would be so also yet again.
       note: Herodotus VI.105 ("94" is a footnote marker in the canonical text)
     - pg_id: 60426
+      groups: [pheidippides]
       quote: >-
         The god Pan had met the courier Pheidippidês on his hasty route from
         Athens to Sparta, and had told him that he was much hurt that the
         Athenians had as yet neglected to worship him
       note: Grote vol. IV — retells the full episode; equally valid retrieval target
+    - pg_id: 68946
+      groups: [pheidippides]
+      quote: >-
+        But he said that he had met with Pan near the Parthenian forest, and
+        he had said that he was friendly to the Athenians, and would come and
+        help them at Marathon
+      note: Pausanias I.28 — Philippides sent to Sparta, met Pan on the way
+    - pg_id: 900006
+      groups: [pheidippides]
+      quote: >-
+        The fast runner Philippides, speeding through Arcadia on his way to
+        seek Spartan help, had been accosted by Pan himself
+      note: Bury, History of Greece — retells the courier-and-Pan episode
   notes: >-
     Grote vol. IV also retells the journey itself (150 miles in 48 hours) in a
     separate passage without the Pan encounter — not gold (answers only half
@@ -123,10 +178,17 @@
     this spot we remain, faithfully keeping their laws."
   gold_spans:
     - pg_id: 2456
+      groups: [epitaph]
       quote: >-
         "Stranger, report this word, we pray, to the Spartans, that lying
         Here in this spot we remain, faithfully keeping their laws."
       note: Herodotus VII.228
+    - pg_id: 62098
+      groups: [epitaph]
+      quote: >-
+        Stranger, tell the Lacedæmonians, that we lie here, in obedience to
+        their orders
+      note: Grote vol. V — Grote's rendering of the same Spartan epitaph
   status: reviewed
 
 - id: lit-007
@@ -138,16 +200,19 @@
     words, that he "found it of brick, but left it of marble."
   gold_spans:
     - pg_id: 6400
+      groups: [brick-marble]
       quote: >-
         was so much improved under his administration, that he boasted, not
         without reason, that he “found it of brick, but left it of marble.”
       note: Suetonius, Augustus XXVIII
     - pg_id: 6400
+      groups: [brick-marble]
       quote: >-
         The well-known saying of Augustus, recorded by Suetonius, that he
         found a city of bricks, but left it of marble
       note: Same work, translator's footnote 150 — separate chunk region
     - pg_id: 19694
+      groups: [brick-marble]
       quote: >-
         Augustus was accustomed to say that he found Rome a city of brick, and
         left it a city of marble.
@@ -166,6 +231,7 @@
     furniture for entertaining guests invited in the horse's name.
   gold_spans:
     - pg_id: 6400
+      groups: [incitatus]
       quote: >-
         For this favourite animal, besides a marble stable, an ivory manger,
         purple housings, and a jewelled frontlet, he appointed a house, with a
@@ -174,6 +240,7 @@
         he intended to make him consul.
       note: Suetonius, Caligula LV
     - pg_id: 10883
+      groups: [incitatus]
       quote: >-
         One of the horses, that he named Incitatus, he invited to dinner,
         offered him golden barley, and drank his health in wine from gold
@@ -211,6 +278,7 @@
     great empire he destroyed turned out to be his own.
   gold_spans:
     - pg_id: 2707
+      groups: [oracle]
       quote: >-
         the answers of both the Oracles agreed in one, declaring to Croesus
         that if he should march against the Persians he should destroy a great
@@ -218,10 +286,22 @@
         Hellenes and join these with himself as friends.
       note: Herodotus I.53
     - pg_id: 2707
+      groups: [oracle]
       quote: >-
         Loxias told him beforehand that if he should march upon the Persians
         he should destroy a great empire
       note: Herodotus I.91 — the Pythia's own recap of the same prophecy
+    - pg_id: 60426
+      groups: [oracle]
+      quote: >-
+        they told Crœsus that, if he invaded the Persians, he would subvert a
+        mighty monarchy
+      note: Grote vol. IV — retells the oracle's answer
+    - pg_id: 900006
+      groups: [oracle]
+      quote: >-
+        if he crossed the Halys he would destroy a mighty empire
+      note: Bury, History of Greece — retells the Delphic response
   status: reviewed
 
 - id: lit-011
@@ -232,13 +312,19 @@
     "What an artist is now about to perish!"
   gold_spans:
     - pg_id: 6400
+      groups: [artist]
       quote: >-
         weeping at every thing that was done, and frequently saying, “What an
         artist is now about to perish!”
       note: Suetonius, Nero XLIX
     - pg_id: 10890
+      groups: [artist]
       quote: >-
         so he killed himself, uttering that far-famed sentence: "Jupiter, what
         an artist perishes in me!"
       note: Cassius Dio LXIII.29 — independent account of the same last words
+    - pg_id: 34122
+      groups: [artist]
+      quote: Qualis artifex pereo
+      note: Dill, Roman Society from Nero to Marcus Aurelius — quotes Nero's words
   status: reviewed

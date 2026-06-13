@@ -54,6 +54,50 @@ diminishing returns at our corpus size.
   status: draft                # draft -> reviewed (human-checked)
 ```
 
+## 4a. Requirement groups (`groups`) — how recall reads multiple spans
+
+A question often has several gold spans, and they relate to the answer in one of
+two ways. Retrieval recall must know which:
+
+- **Alternatives (any-of)** — the same fact recurs across works ("Caesar's
+  twenty-three wounds" in Suetonius, Appian, Plutarch, Livy, Smith). Retrieving
+  *any one* fully answers; surfacing one shouldn't score 0.2.
+- **Required (all-of)** — distinct facts the answer must combine (a multi-hop
+  question's two hops; a contradiction's two versions; the load-bearing passages
+  of a synthesis). Each is independently required.
+
+`groups` on a span is the list of **answer requirements it satisfies**. Recall is
+computed per requirement, not per span:
+
+```
+recall@k = (requirements with ≥1 covering span in top-k) / (total requirements)
+```
+
+Rules:
+1. Spans **sharing a label are alternatives** — any one covers that requirement.
+   So all five wound-count spans get `groups: [wounds]` → one requirement → a
+   single hit scores 1.0.
+2. **Distinct labels are conjunctive** — `groups: [hop1]` vs `groups: [hop2]`
+   are two requirements; you need a covering span for each.
+3. A span may satisfy **several requirements at once** — a chunk that answers
+   both hops gets `groups: [hop1, hop2]`; retrieving it alone covers both.
+4. **No `groups` = a singleton requirement** (independently required). This is
+   the back-compatible default and the right model for `cross-book` /
+   `synthesis`, where each load-bearing span is genuinely its own coverage
+   target. Single-span questions need no labels.
+
+Per category:
+
+| Category | Grouping |
+|---|---|
+| `literal`, `synonym` | all spans one label (alternatives) — usually a single requirement |
+| `multi-hop` | one label per hop (`hop1`, `hop2`); a combined chunk lists both |
+| `contradiction` | one label per version; group only *alternative attestations of the same version*; a passage stating both versions lists both |
+| `cross-book`, `synthesis` | no labels — each span its own requirement (coverage) |
+
+Labels are scoped to the question (reused freely across questions). Pick readable
+names (`wounds`, `hop1`, `apotheosis`) — they show up in run records and diffs.
+
 **Quote rules — the part that matters:**
 1. The quote must occur **exactly once** in that work. Too short → "ambiguous"; lengthen it.
 2. Wording must be **verbatim** (the resolver tolerates any whitespace/line-break differences,

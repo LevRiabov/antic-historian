@@ -15,7 +15,9 @@
     fixes on his chameleon-like versatility, adapting to Spartan austerity or
     Persian pomp at will. Grote, the modern voice, grants him boldness,
     resource, and vigor "not surpassed by any contemporary Greek" while
-    damning his want of public principle.
+    damning his want of public principle. Bury, a second modern voice,
+    judges him a born politician but no statesman — lacking the purpose,
+    perseverance, and self-control that statesmanship demands.
   gold_spans:
     - pg_id: 7142
       quote: >-
@@ -44,7 +46,15 @@
         to new habits, new necessities, and new persons, whenever
         circumstances required.
       note: Grote vol. VII ("[60]" is a footnote marker)
-  status: reviewed
+    - pg_id: 900006
+      quote: >-
+        Alcibiades indeed had not in him the stuff of which true statesmen
+        are made; he had not the purpose, the perseverance, or the
+        self-control. An extremely able and dexterous politician he certainly
+        was; but he wanted that balance which a politician, whether scrupulous
+        or unscrupulous, must have in order to be a great statesman.
+      note: Bury, History of Greece — the modern verdict
+  status: draft
 
 - id: cb-002
   category: cross-book
@@ -56,7 +66,8 @@
     "quite extraordinary and unparalleled." Grote balances the picture: his
     rapacity made him hated and feared among the allies, and the suspicions
     of treasonable medism at Athens grew from his own corrupt and
-    double-faced conduct.
+    double-faced conduct. Bury, a later modern voice, credits the man of
+    genius who made Athens a sea-power as the greatest of all her statesmen.
   gold_spans:
     - pg_id: 2456
       quote: >-
@@ -81,7 +92,12 @@
         Athens itself, and appears to have been connected with suspicions of
         treasonable inclinations towards the Persians.
       note: Grote vol. V — the dark side
-  status: reviewed
+    - pg_id: 900006
+      quote: >-
+        Themistocles had made his city a sea-power ; and this feat approved
+        him the greatest of all her statesmen. He was a man of genius.
+      note: Bury, History of Greece — the modern verdict
+  status: draft
 
 - id: cb-003
   category: cross-book
@@ -93,7 +109,11 @@
     fragment calls it the most fearful disaster Rome ever suffered, preceded
     by portents and Sibylline prophecy. Mommsen, the modern judge, treats the
     "unexampled success" as the moment Hannibal's grand political combination
-    against Rome seemed to mature.
+    against Rome seemed to mature. Appian tallies the toll — 50,000 Roman dead
+    in a few hours, with senators, every tribune and centurion, and both their
+    best generals among them. Livy registers the reaction at home: never, while
+    the city stood safe, was there so great a panic, at the loss of two
+    consular armies and their consuls.
   gold_spans:
     - pg_id: 44125
       quote: >-
@@ -117,7 +137,19 @@
         political combination, for the sake of which Hannibal had come to
         Italy.
       note: Mommsen, Book III ch. V
-  status: reviewed
+    - pg_id: 900003
+      quote: >-
+        in these few hours 50,000 of their soldiers were slain and a great
+        many taken prisoners. Many senators who were present lost their lives
+        and with them all the military tribunes and centurions, and their two
+        best generals.
+      note: Appian, Hannibalic War 25 — the casualty tally
+    - pg_id: 10907
+      quote: >-
+        Never when the city was in safety was there so great a panic and
+        confusion within the walls of Rome.
+      note: Livy XXII.54 — the panic at Rome
+  status: draft
 
 - id: cb-004
   category: cross-book
@@ -129,7 +161,9 @@
     gives the deathbed self-assessment — his proudest claim was that "no
     Athenian, through my means, ever wore mourning." Grote notes that his
     immense ascendancy and unparalleled eloquence are attested even more
-    forcibly by his enemies than his friends.
+    forcibly by his enemies than his friends. Bury, more measured, rates him a
+    man of finer fibre than Themistocles yet no statesman of originative
+    genius — one who perfected the ideas of others rather than creating them.
   gold_spans:
     - pg_id: 7142
       quote: >-
@@ -157,7 +191,12 @@
         than by his friends,—nay, even more forcibly by the former than by the
         latter.
       note: Grote vol. VI
-  status: reviewed
+    - pg_id: 900006
+      quote: >-
+        Pericles was a man of finer fibre than Themistocles, but he was not
+        like Themistocles a statesman of originative genius.
+      note: Bury, History of Greece — the modern assessment
+  status: draft
 
 - id: cb-005
   category: cross-book
@@ -169,6 +208,9 @@
     type — the ruddy-haired Caledonians suggesting German stock, the swarthy
     Silures Iberian. Strabo maps the island as a triangle parallel to the
     Gallic coast, roughly 4,300–4,400 stadia along its longest side.
+    Cassius Dio, writing later, divides the Britons into two great races, the
+    Caledonians and the Maeatians, who dwell coatless and shoeless in tents,
+    hold their women in common, and rear their children as a community.
   gold_spans:
     - pg_id: 10657
       quote: >-
@@ -191,7 +233,12 @@
         Keltica, in length neither exceeding nor falling short of it; for each
         of them extends as much as 4300 or 4400 stadia
       note: Strabo IV.5
-  status: reviewed
+    - pg_id: 10890
+      quote: >-
+        They dwell coatless and shoeless in tents, possess their women in
+        common, and rear all the offspring as a community.
+      note: Cassius Dio LXXVII (Severus in Britain) — Caledonians and Maeatians
+  status: draft
 
 - id: cb-006
   category: cross-book
@@ -248,7 +295,12 @@
     died. Both record the later poisoning story; Plutarch calls it "a mere
     made-up story," noting the body stayed uncorrupted for days, and Arrian
     notes Aristobulus and Ptolemy agree with the diary, adding only the
-    alleged last word that the kingdom would go "to the best."
+    alleged last word that the kingdom would go "to the best." Diodorus, the
+    other surviving ancient narrative, closes the twelve-year reign and
+    reports the same poisoning rumour (Antipater's son Iollas as cup-bearer).
+    Grote, the modern judge, weighs that rumour and concludes it was fomented
+    by the enemies of Antipater and Cassander, above all the rancorous
+    Olympias.
   gold_spans:
     - pg_id: 674
       quote: >-
@@ -278,7 +330,20 @@
         Companions asked him to whom he left his kingdom; and that he replied:
         “To the best.”
       note: Arrian VII.26 — sources weighed, "to the best"
-  status: reviewed
+    - pg_id: 900005
+      quote: >-
+        And thus died Alexander, when he had reigned twelve years and seven
+        months, having performed such mighty acts as no king ever did before
+        him, nor any since, to this day.
+      note: Diodorus XVII.117 — the death notice (chunk also reports the poison rumour)
+    - pg_id: 60786
+      quote: >-
+        There seems ground for supposing, however, that the report was
+        intentionally fomented, if not originally broached, by the
+        party-enemies of Antipater and Kassander—especially by the rancorous
+        Olympias.
+      note: Grote vol. XII — weighing the poison story
+  status: draft
 
 - id: cb-008
   category: cross-book
@@ -290,6 +355,11 @@
     all-purpose spear used at close quarters or thrown — the wedge-shaped
     battle line, the doctrine that giving ground to rally again is prudence
     rather than cowardice, and the carrying off of their dead mid-battle.
+    Tacitus' Annals adds, through Germanicus' battle-speech, that the German
+    goes without cuirass or helmet and carries only a flimsy shield of osiers
+    or painted board. Ammianus, centuries later, shows the Alamanni in action:
+    charging with javelins, hair streaming and eyes blazing, against the
+    locked Roman shield-wall.
   gold_spans:
     - pg_id: 10657
       quote: >-
@@ -312,7 +382,19 @@
         strategem, than cowardice. They carry off their slain even while the
         battle remains undecided.
       note: Tacitus, Germania 6 — tactics
-  status: reviewed
+    - pg_id: 900001
+      quote: >-
+        The German has neither cuirass nor helmet; even his shield is not
+        strengthened with leather or steel, but is of osiers woven together or
+        of thin and painted board.
+      note: Tacitus, Annals II.14 — Germanicus on German armament
+    - pg_id: 28587
+      quote: >-
+        the Germans, hastening on with the utmost impetuosity, brandishing
+        their javelins in their right hands, dashed among the squadrons of our
+        cavalry, uttering fearful cries.
+      note: Ammianus XVI.12 — the Alamanni charge at Strasbourg
+  status: draft
 
 - id: cb-009
   category: cross-book
@@ -325,7 +407,11 @@
     Plutarch adds the cause: Antony's funeral oration, climaxing in the
     unfolding of Caesar's bloody, pierced garment, after which the mob burned
     the body on an improvised pyre and ran with the half-burnt brands to fire
-    the murderers' houses.
+    the murderers' houses. Cassius Dio reports the same inflamed mob and the
+    lynching of the innocent Helvius Cinna in mistake for the praetor of that
+    name. Appian adds the decisive stagecraft: a wax effigy of Caesar revolved
+    on a mechanical device to display all twenty-three wounds, which tipped the
+    crowd into burning the body and the senate-house.
   gold_spans:
     - pg_id: 6400
       quote: >-
@@ -354,7 +440,19 @@
         burnt out of the pile, and ran about the city to fire the houses of
         the murderers of Caesar.
       note: Plutarch, Antony — the brands
-  status: reviewed
+    - pg_id: 11607
+      quote: >-
+        during the excitement they killed without reason Helvius Cinna, a
+        tribune, and some others; this man had not only not plotted against
+        Caesar, but was one of his most devoted friends.
+      note: Cassius Dio XLIV.50 — the wrong Cinna lynched
+    - pg_id: 900004
+      quote: >-
+        The image was turned round and round by a mechanical device, showing
+        the twenty-three wounds in all parts of the body and on the face, which
+        gave him a shocking appearance.
+      note: Appian, Civil Wars II.147 — the wax effigy of the wounds
+  status: draft
 
 - id: cb-010
   category: cross-book
@@ -367,6 +465,9 @@
     scribe he didn't believe. Strabo, writing centuries later, says what the
     ancients only conjectured had become eyewitness knowledge: the Nile owes
     its rise to summer rains falling in the mountains of Upper Ethiopia.
+    Ammianus, the latest voice, rehearses the same snow-melt, Etesian-wind and
+    Ethiopian-rain theories but judges the river's sources as unknowable to
+    posterity as they were in his own day.
   gold_spans:
     - pg_id: 2131
       quote: >-
@@ -392,4 +493,9 @@
         Ethiopia, particularly in the most distant mountains. On the rains
         ceasing, the fulness of the river gradually subsides.
       note: Strabo XVII.1 — the later, correct answer
-  status: reviewed
+    - pg_id: 28587
+      quote: >-
+        The sources of the Nile, in my opinion, will be as unknown to
+        posterity as they are now.
+      note: Ammianus XXII.15 — the sources still unknown
+  status: draft

@@ -1,7 +1,12 @@
 # Golden set — MULTI-HOP: answering requires combining facts from DIFFERENT
 # passages (possibly same work): "Who commanded the fleet at the battle where
 # X died?" needs passage A (where X died) + passage B (who commanded there).
-# Each hop gets its own gold span. Spec: docs/golden-set.md
+# Spec: docs/golden-set.md
+#
+# Each hop is a separate requirement (`groups: [hop1]` / `[hop2]`); within a hop
+# the spans are alternatives (any one covers that hop). A single passage that
+# answers both hops lists both labels ([hop1, hop2]). Recall is per requirement
+# group, so retrieving one alternative per hop scores 1.0 (see §4a).
 
 - id: mh-001
   category: multi-hop
@@ -13,6 +18,7 @@
     founded the city of Bucephala in his memory.
   gold_spans:
     - pg_id: 674
+      groups: [hop1]
       quote: >-
         he immediately ran to the horse, and taking hold of the bridle, turned
         him directly towards the sun, having, it seems, observed that he was
@@ -23,6 +29,7 @@
         securely mounted him
       note: "Hop 1: the taming (Plutarch, Alexander)"
     - pg_id: 46976
+      groups: [hop2]
       quote: >-
         Alexander founded two cities, one where the battle took place, and the
         other on the spot whence he started to cross the river Hydaspes; the
@@ -31,7 +38,27 @@
         there, not from having been wounded by any one, but from the effects
         of toil and old age
       note: "Hop 2: the founding (Arrian V.19; [694] is a footnote marker)"
-  status: reviewed
+    - pg_id: 674
+      groups: [hop2]
+      quote: >-
+        built a city, which he named Bucephalia, in memory of him, on the
+        bank of the river Hydaspes.
+      note: "Hop 2 alternate: Plutarch's own founding passage (same Life, distant from hop 1)"
+    - pg_id: 44886
+      groups: [hop2]
+      quote: One of these cities he called Bucephalia
+      note: "Hop 2 alternate: Strabo, Geography XV.1 (city named for the horse killed at the Porus battle)"
+    - pg_id: 60786
+      groups: [hop2]
+      quote: >-
+        so named in commemoration of his favorite horse, who died here of age
+        and fatigue.
+      note: "Hop 2 alternate: Grote vol. XII"
+    - pg_id: 900006
+      groups: [hop2]
+      quote: the city of Bucephala, named after Alexander’s steed, which died here
+      note: "Hop 2 alternate: Bury (new source)"
+  status: draft
 
 - id: mh-002
   category: multi-hop
@@ -43,6 +70,7 @@
     Lucullus, and was run through with a sword by a tribune.
   gold_spans:
     - pg_id: 6400
+      groups: [hop1]
       quote: >-
         Claudius, at the time of his accession, was fifty years of age; and
         though he had hitherto lived apparently unambitious of public honours,
@@ -56,12 +84,43 @@
         of such an enterprize; and the former was chosen
       note: "Hop 1: Claudius conquers Britain (Suetonius, Claudius disquisition)"
     - pg_id: 6400
+      groups: [hop1]
+      quote: he selected Britain, which had never been attempted by any one since Julius Caesar
+      note: "Hop 1 alternate: Suetonius, Claudius XVII (the Life proper — Britain chosen for a real triumph)"
+    - pg_id: 10883
+      groups: [hop1]
+      quote: >-
+        The senate on learning of his achievement gave him the title of
+        Britannicus and allowed him to celebrate a triumph.
+      note: "Hop 1 alternate: Cassius Dio, Rome vol. 4 (conquest + triumph)"
+    - pg_id: 19694
+      groups: [hop1]
+      quote: >-
+        In A.D. 43 a Roman army invaded Britain. Claudius himself entered that
+        country soon after, and returned to Rome to triumph.
+      note: "Hop 1 alternate: William Smith, A Smaller History of Rome"
+    - pg_id: 6400
+      groups: [hop2]
       quote: >-
         Again she made an effort, but again her resolution abandoned her; when
         a tribune burst into the gardens, and plunging his sword into her
         body, she instantly expired.
       note: "Hop 2: Messalina's death (same work, distant passage)"
-  status: reviewed
+    - pg_id: 900001
+      groups: [hop2]
+      quote: a blow from the tribune drove it through her.
+      note: "Hop 2 alternate: Tacitus, Annals XI (new source — the famous account)"
+    - pg_id: 10883
+      groups: [hop2]
+      quote: he put to death Mnester with many others and then slew Messalina
+      note: "Hop 2 alternate: Cassius Dio, Rome vol. 4 (Dio puts it in the gardens of Asiaticus)"
+    - pg_id: 34122
+      groups: [hop2]
+      quote: >-
+        had the imperial harlot ruthlessly struck down as she lay grovelling
+        in the gardens of Lucullus.
+      note: "Hop 2 alternate: Samuel Dill, Roman Society from Nero to Marcus Aurelius"
+  status: draft
 
 - id: mh-003
   category: multi-hop
@@ -73,19 +132,26 @@
     instruct Alexander, rewarding him by rebuilding his native Stagira.
   gold_spans:
     - pg_id: 674
+      groups: [hop1]
       quote: >-
         At the battle of Chaeronea, which his father fought against the
         Grecians, he is said to have been the first man that charged the
         Thebans' sacred band.
       note: "Hop 1: Philip–Chaeronea–son link (Plutarch, Alexander)"
     - pg_id: 61469
+      groups: [hop1]
       quote: >-
         In the field of battle near Chæroneia, Philip himself commanded a
         chosen body of troops on the wing opposed to the Athenians, while his
         youthful son, Alexander, aided by experienced officers, commanded
         against the Thebans on the other wing.
       note: "Hop 1 alternate: Grote vol. XI"
+    - pg_id: 46976
+      groups: [hop1]
+      quote: At the age of 18 by his skill and courage he greatly assisted Philip in gaining the battle of Chaeronea.
+      note: "Hop 1 alternate: Arrian, translator's note (Alexander aided Philip at Chaeronea)"
     - pg_id: 674
+      groups: [hop2]
       quote: >-
         he sent for Aristotle, the most learned and most cerebrated
         philosopher of his time, and rewarded him with a munificence
@@ -93,7 +159,23 @@
       note: >-
         Hop 2: Aristotle hired as tutor (Plutarch; "cerebrated" is a
         typo in the canonical text — keep verbatim)
-  status: reviewed
+    - pg_id: 46976
+      groups: [hop2]
+      quote: In his youth he was placed under the tuition of Aristotle
+      note: "Hop 2 alternate: Arrian, translator's note"
+    - pg_id: 60786
+      groups: [hop2]
+      quote: >-
+        At the age of thirteen, Alexander was placed under the instruction of
+        Aristotle, whom Philip expressly invited for the purpose
+      note: "Hop 2 alternate: Grote vol. XII"
+    - pg_id: 900006
+      groups: [hop2]
+      quote: >-
+        He chose an accomplished man of letters, Aristotle of Stagira, who had
+        been educated at Athens, to be the instructor of his son Alexander.
+      note: "Hop 2 alternate: Bury (new source)"
+  status: draft
 
 - id: mh-004
   category: multi-hop
@@ -106,19 +188,56 @@
     the defeats under Crassus.
   gold_spans:
     - pg_id: 674
+      groups: [hop1]
       quote: >-
         Crassus was killed by a Parthian, called Pomaxathres; others say, by a
         different man, and that Pomaxathres only cut off his head and right
         hand after he had fallen.
       note: "Hop 1: Crassus' death (Plutarch, Crassus)"
+    - pg_id: 11607
+      groups: [hop1]
+      quote: >-
+        Crassus fell among the rest, whether he was slain by one of his own
+        men to prevent his capture alive, or whether by the enemy because he
+        was wounded anyway. This was his end.
+      note: "Hop 1 alternate: Cassius Dio, Rome vol. 2 (the parley ambush)"
+    - pg_id: 19694
+      groups: [hop1]
+      quote: >-
+        He was treacherously seized, and, in the scuffle which ensued, was
+        slain by some unknown hand.
+      note: "Hop 1 alternate: William Smith, A Smaller History of Rome"
+    - pg_id: 10706
+      groups: [hop1]
+      quote: >-
+        was unwilling to serve as a living trophy to the enemy, and sought and
+        found death.
+      note: "Hop 1 alternate: Mommsen (Crassus dies at the conference at Sinnaca)"
+    - pg_id: 16166
+      groups: [hop1]
+      quote: >-
+        in the confusion Crassus was killed, whether by one of his own side
+        and with his own consent, or by the hand of a Parthian is uncertain.
+      note: "Hop 1 alternate: Rawlinson, Seven Great Monarchies vol. 6 (Parthia)"
     - pg_id: 674
+      groups: [hop2]
       quote: >-
         was met by Ventidius, who gave him battle in the country of
         Cyrrhestica, slew a large number of his men, and Pacorus among the
         first. This victory was one of the most renowned achievements of the
         Romans, and fully avenged their defeats under Crassus
       note: "Hop 2: Ventidius' revenge (Plutarch, Antony)"
-  status: reviewed
+    - pg_id: 10162
+      groups: [hop2]
+      quote: >-
+        he had paid the Parthians in full through the death of Pacorus for the
+        disasters that Roman arms had incurred in the time of Crassus
+      note: "Hop 2 alternate: Cassius Dio, Rome vol. 3 (avenged Crassus — both fell on the same day of the year)"
+    - pg_id: 19694
+      groups: [hop2]
+      quote: Ventidius gained a signal victory over them, and Pacorus himself fell in the battle.
+      note: "Hop 2 alternate: William Smith, A Smaller History of Rome"
+  status: draft
 
 - id: mh-005
   category: multi-hop
@@ -132,6 +251,7 @@
     sea.
   gold_spans:
     - pg_id: 1170
+      groups: [hop1]
       quote: >-
         As Cyrus delivered the blow, some one struck him with a javelin under
         the eye severely; and in the struggle which then ensued between the
@@ -141,6 +261,7 @@
         his bravest companions lay on the top of him.
       note: "Hop 1: Cyrus killed at Cunaxa (Anabasis I.8; '27' is a footnote marker)"
     - pg_id: 1170
+      groups: [hop2]
       quote: >-
         On arrival at the doors of Tissaphernes's quarters the generals were
         summoned inside. They were Proxenus the Boeotian, Menon the
@@ -150,12 +271,38 @@
         without cut down
       note: "Hop 2: generals seized (Anabasis II.5)"
     - pg_id: 51182
+      groups: [hop1]
       quote: >-
         the battle of Kunaxa was fought, in which, though the Greeks were
         victorious, Cyrus himself lost his life. They were then obliged to
         commence their retreat, which occupied about one year
       note: "Hop 1 alternate: Grote vol. IX states cause and consequence plainly"
-  status: reviewed
+    - pg_id: 674
+      groups: [hop1]
+      quote: >-
+        And thus Cyrus falls, as some say, by the hand of the king; as others,
+        by the dart of a Carian
+      note: "Hop 1 alternate: Plutarch, Artaxerxes (Cyrus's death at Cunaxa)"
+    - pg_id: 900006
+      groups: [hop1]
+      quote: >-
+        he was himself wounded in the eye by a Carian soldier, and falling
+        from his horse, was presently slain.
+      note: "Hop 1 alternate: Bury (new source)"
+    - pg_id: 51182
+      groups: [hop2]
+      quote: >-
+        the generals in the interior were detained, put in chains, and carried
+        up as prisoners to the Persian court.
+      note: "Hop 2 alternate: Grote vol. IX (Tissaphernes seizes the generals)"
+    - pg_id: 900006
+      groups: [hop2]
+      quote: >-
+        the captains and soldiers were cut down, and the generals were
+        fettered and sent to the Persian court, where they were all put to
+        death.
+      note: "Hop 2 alternate: Bury (new source)"
+  status: draft
 
 - id: mh-006
   category: multi-hop
@@ -168,6 +315,7 @@
     Magian guards arrested and tortured to find the culprits.
   gold_spans:
     - pg_id: 46976
+      groups: [hop1]
       quote: >-
         Upon the tomb an inscription in Persian letters had been placed, which
         bore the following meaning in the Persian language: “O man, I am
@@ -175,22 +323,47 @@
         was king of Asia. Do not therefore grudge me this monument.”
       note: "Hop 1: Cyrus = founder (Arrian VI.29, the epitaph)"
     - pg_id: 46976
+      groups: [hop2]
       quote: >-
         He was grieved by the outrage committed upon the tomb of Cyrus, son of
         Cambyses; for according to Aristobulus, he found it dug through and
         pillaged.
       note: "Hop 2: the grief (Arrian VI.29, separate chunk)"
     - pg_id: 46976
+      groups: [hop2]
       quote: >-
         Aristobulus says that he was himself commissioned by Alexander to
         restore the tomb for Cyrus, to put in the coffin the parts of the body
         still preserved, to put the lid on, and to restore the parts of the
         coffin which had been defaced.
       note: "Hop 2 continued: the restoration order"
+    - pg_id: 44886
+      groups: [hop1]
+      quote: I ESTABLISHED THE PERSIAN EMPIRE AND WAS KING OF ASIA.
+      note: "Hop 1 alternate: Strabo, Geography XV.3 (the epitaph, Aristobulus's version)"
+    - pg_id: 44886
+      groups: [hop2]
+      quote: >-
+        Aristobulus says, he entered through this opening, by order of
+        Alexander, and decorated the tomb.
+      note: "Hop 2 alternate: Strabo (Aristobulus restores the tomb by Alexander's order)"
+    - pg_id: 674
+      groups: [hop1, hop2]
+      quote: >-
+        The reading of this sensibly touched Alexander, filling him with the
+        thought of the uncertainty and mutability of human affairs.
+      note: "Hops 1+2: Plutarch, Alexander (same chunk holds the 'founder' epitaph and Alexander's reaction + execution of Polymachus)"
+    - pg_id: 60786
+      groups: [hop1, hop2]
+      quote: >-
+        Visiting the tomb of Cyrus the Great, founder of the Persian empire,
+        he was incensed to find it violated and pillaged.
+      note: "Hops 1+2: Grote vol. XII (founder + the reaction in one passage)"
   notes: >-
     All hops within Arrian's long tomb chapter, but spread across multiple
     chunks at our chunk size — still a genuine multi-chunk retrieval test.
-  status: reviewed
+    Now also cross-source (Strabo, Plutarch, Grote) after the new ingest.
+  status: draft
 
 - id: mh-007
   category: multi-hop
@@ -202,6 +375,7 @@
     lead the Spartan army that won at Plataea.
   gold_spans:
     - pg_id: 2456
+      groups: [hop1]
       quote: >-
         when the day of the defeat at Plataia and of that which was about to
         take place at Mycale happened to be the same, a rumour came to the
@@ -209,17 +383,49 @@
         eagerly desirous to face the danger
       note: "Hop 1: same-day coincidence (Herodotus IX.100)"
     - pg_id: 2456
+      groups: [hop2]
       quote: >-
         they sent out five thousand Spartans, with no less than seven of the
         Helots set to attend upon each man of them, 901 appointing Pausanias
         the son of Cleombrotos to lead them forth
       note: "Hop 2: Pausanias appointed commander (Herodotus IX.10; '901' is a footnote marker)"
+    - pg_id: 62098
+      groups: [hop1, hop2]
+      quote: the victory of Platæa in Bœotia had been gained by Pausanias that very morning.
+      note: "Hops 1+2: Grote vol. V (same-day coincidence AND Pausanias as victor of Plataea)"
+    - pg_id: 900006
+      groups: [hop1]
+      quote: >-
+        Mycale followed so hard upon Plataea, that the belief easily arose
+        that the two victories were won on the same afternoon.
+      note: "Hop 1 alternate: Bury (new source)"
+    - pg_id: 1170
+      groups: [hop1]
+      quote: at Plataea and Mycale, B.C. 479, on the same day.
+      note: "Hop 1 alternate: Xenophon Anabasis, translator's note"
+    - pg_id: 900006
+      groups: [hop2]
+      quote: >-
+        The command was entrusted to Pausanias, who was acting as regent for
+        his child-cousin Pleistarchus
+      note: "Hop 2 alternate: Bury (new source — Pausanias regent for Pleistarchos given the Plataea command)"
+    - pg_id: 68946
+      groups: [hop2]
+      quote: >-
+        was Regent for Plistarchus Leonidas’ son during his minority, and he
+        led the Lacedæmonians to Platæa
+      note: "Hop 2 alternate: Pausanias the geographer, Description of Greece"
+    - pg_id: 16165
+      groups: [hop2]
+      quote: his brother Pausanias--a brave, clever, and ambitious man--took his place.
+      note: "Hop 2 alternate: Rawlinson, Seven Great Monarchies vol. 5 (Persia)"
   notes: >-
     Caveat: IX.101 ("a victory had been already gained by the Hellenes with
     Pausanias") nearly answers both hops in one passage — the hop-1 span sits
-    adjacent to it. Grote vol. V also narrates Pausanias at Plataea but no
-    single plain-answer chunk surfaced.
-  status: reviewed
+    adjacent to it. Grote vol. V DOES carry a single chunk answering both
+    hops (added above); the new ingest also brings Bury, Pausanias the
+    geographer, and Rawlinson into play.
+  status: draft
 
 - id: mh-008
   category: multi-hop
@@ -230,11 +436,23 @@
     but as a dull, lingering distemper that slowly wasted his body and mind.
   gold_spans:
     - pg_id: 674
+      groups: [hop1]
       quote: >-
         the long wall, which Socrates says he himself heard Pericles propose
         to the people, was undertaken by Callicrates.
       note: "Hop 1: Pericles and the Long Walls (Plutarch, Pericles)"
+    - pg_id: 54936
+      groups: [hop1]
+      quote: >-
+        the third of the long walls connecting Athens with the harbor was the
+        proposition of Periklês
+      note: "Hop 1 alternate: Grote vol. VI (the third/middle long wall was Pericles's proposal)"
+    - pg_id: 62098
+      groups: [hop1]
+      quote: the long walls formed a part of the foreign policy of Periklês
+      note: "Hop 1 alternate: Grote vol. V"
     - pg_id: 674
+      groups: [hop2]
       quote: >-
         the plague seized Pericles, not with sharp and violent fits, as it did
         others that had it, but with a dull and lingering distemper, attended
@@ -242,7 +460,13 @@
         wasting the strength of his body, and undermining the noble faculties
         of his soul.
       note: "Hop 2: his death by plague (same Life, distant passage)"
-  status: reviewed
+    - pg_id: 54936
+      groups: [hop2]
+      quote: >-
+        he fell a victim, not to the violent symptoms of the epidemic, but to
+        a slow and wearing fever
+      note: "Hop 2 alternate: Grote vol. VI (the lingering fever, matching Plutarch's 'dull distemper')"
+  status: draft
 
 - id: mh-009
   category: multi-hop
@@ -254,12 +478,22 @@
     his friend Strato — and died.
   gold_spans:
     - pg_id: 674
+      groups: [hop1]
       quote: >-
         pulling up his mantle over his head, he made his neck bare, and held
         it forth to Pindarus, commanding him to strike. The head was certainly
         found lying severed from the body.
       note: "Hop 1: Cassius' death (Plutarch, Brutus)"
+    - pg_id: 900004
+      groups: [hop1]
+      quote: Then, as he presented his throat, Pindarus slew him.
+      note: "Hop 1 alternate: Appian, Civil Wars IV (new source)"
+    - pg_id: 10162
+      groups: [hop1]
+      quote: ordered Pindarus, a freedman, to kill him.
+      note: "Hop 1 alternate: Cassius Dio, Rome vol. 3"
     - pg_id: 674
+      groups: [hop2]
       quote: >-
         Him he placed next to himself, and, taking hold of the hilt of his
         sword and directing it with both his hands, he fell upon it, and
@@ -268,7 +502,25 @@
         sword, upon which he violently throwing himself, it pierced his
         breast, and he immediately died.
       note: "Hop 2: Brutus' suicide (Plutarch, Brutus)"
-  status: reviewed
+    - pg_id: 900004
+      groups: [hop2]
+      quote: he thrust his sword into the side of Brutus, who did not shrink or turn away.
+      note: "Hop 2 alternate: Appian, Civil Wars IV (Strato holds the sword; new source)"
+    - pg_id: 10162
+      groups: [hop2]
+      quote: Then he called one of the bystanders to kill him.
+      note: "Hop 2 alternate: Cassius Dio, Rome vol. 3"
+    - pg_id: 19694
+      groups: [hop1, hop2]
+      quote: >-
+        in the night-time fell upon his sword, which Strato, who had been his
+        teacher in rhetoric, held for him.
+      note: "Hops 1+2: William Smith (one chunk holds Cassius's freedman-death and Brutus's sword)"
+    - pg_id: 44318
+      groups: [hop1, hop2]
+      quote: the death of Cassius turned the scale of fortune
+      note: "Hops 1+2: Livy, prose epitome (Periochae CXXIV — both deaths in one passage)"
+  status: draft
 
 - id: mh-010
   category: multi-hop
@@ -280,12 +532,28 @@
     with enormous slaughter before being defeated.
   gold_spans:
     - pg_id: 10890
+      groups: [hop1]
       quote: >-
         Of the descendants of Aeneas and of Augustus he was the last, as was
         plainly indicated by the fact that the laurels planted by Livia and
         the breed of white chickens perished somewhat before his death.
       note: "Hop 1: Nero last of the dynasty (Dio LXIII)"
     - pg_id: 10890
+      groups: [hop1]
+      quote: For Nero was indeed the last emperor of the Julian line descended from Aeneas.
+      note: "Hop 1 alternate: Cassius Dio, Rome vol. 5 (the Sibylline-oracle passage, distinct chunk)"
+    - pg_id: 25717
+      groups: [hop1]
+      quote: >-
+        Nero was the last prince who could allege any hereditary claim to the
+        honors of the Julian line.
+      note: "Hop 1 alternate: Gibbon, Decline and Fall"
+    - pg_id: 6400
+      groups: [hop1]
+      quote: The race of the Caesars became extinct in Nero
+      note: "Hop 1 alternate: Suetonius, Galba I (the Julio-Claudian line ends with Nero)"
+    - pg_id: 10890
+      groups: [hop2]
       quote: >-
         Buduica led her army against the Romans. The latter chanced to be
         without a leader for the reason that Paulinus their commander had gone
@@ -294,10 +562,22 @@
         indescribable slaughter.
       note: "Hop 2: the revolt under Nero (Dio LXII)"
     - pg_id: 6400
+      groups: [hop2]
       quote: >-
         The successes of Boadicea, queen of the Iceni, who inhabited
         Derbyshire, were probably the cause of Nero’s wishing to withdraw the
         legions; she having reduced London, Colchester, and Verulam, and put
         to death seventy thousand of the Romans and their British allies.
       note: "Hop 2 alternate: Suetonius translator's footnote 578 — names the revolt and Nero"
-  status: reviewed
+    - pg_id: 900001
+      groups: [hop2]
+      quote: First, his wife Boudicea was scourged, and his daughters outraged.
+      note: "Hop 2 alternate: Tacitus, Annals XIV (new source — the canonical revolt account)"
+    - pg_id: 6400
+      groups: [hop2]
+      quote: >-
+        under the conduct of Boadicea, queen of the Iceni, who had been treated
+        in the most ignominious manner by the Roman tribunes, had already driven
+        the hateful invaders from their several settlements.
+      note: "Hop 2 alternate: Suetonius, Nero LVII (the Life proper, not the footnote)"
+  status: draft

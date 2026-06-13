@@ -2,6 +2,12 @@
 # attributing each version ("Suetonius reports X, but Plutarch says Y").
 # Gold spans: the disagreeing passages, >= 2 different pg_ids (or clearly
 # separated passages within one work). The headline demo category.
+#
+# Each VERSION is a requirement (`groups: [<version>]`); group only ALTERNATIVE
+# attestations of the SAME version (they're substitutable). A passage that
+# states both versions lists both labels. Where each version has a single
+# attestation, leave spans unlabelled — the singleton default already makes both
+# versions independently required (see docs/golden-set.md §4a).
 
 - id: con-001
   category: contradiction
@@ -15,27 +21,34 @@
     his body to pieces, each carrying away a part — Plutarch placing the deed
     in the temple of Vulcan.
   gold_spans:
-    - pg_id: 10828
+    - pg_id: 19725
+      groups: [apotheosis]
       quote: >-
-        the Roman youth seeing the royal seat empty--though they readily
-        believed the words of the fathers who had stood nearest him, that he
-        had been carried up to heaven by the storm--yet, struck as it were
-        with the fear of being fatherless, for a considerable time preserved a
-        sorrowful silence.
-      note: Livy I.16 — the apotheosis version
-    - pg_id: 10828
+        when the Roman youth saw the royal seat empty, though they readily
+        believed the fathers who had stood nearest him, that he was carried
+        aloft by the storm, yet, struck with the dread as it were of
+        orphanage, they preserved a sorrowful silence for a considerable time
+      note: Livy I.16 (Bohn/Spillan tr.) — the apotheosis version
+    - pg_id: 19725
+      groups: [murder]
       quote: >-
-        I believe that even then there were some, who in secret were convinced
-        that the king had been torn in pieces by the hands of the fathers--for
-        this rumour also spread
-      note: Livy I.16 — the murder rumor
+        I believe that even then there were some, who silently surmised that
+        the king had been torn in pieces by the hands of the fathers; for this
+        rumour also spread, but was not credited
+      note: Livy I.16 (Bohn/Spillan tr.) — the murder rumor
     - pg_id: 674
+      groups: [murder]
       quote: >-
         So that some fancied, the senators, having fallen upon him ill the
         temple of Vulcan, cut his body into pieces, and took each a part away
         in his bosom
       note: Plutarch, Romulus — the murder version, independently ("ill" is a typo in the canonical text)
-  status: reviewed
+    - pg_id: 900003
+      groups: [apotheosis, murder]
+      quote: >-
+        he was nevertheless slain, or, as some think, translated
+      note: Appian, Foreign Wars (king-list preface) — the contradiction in miniature, both versions in one clause
+  status: draft  # migrated 10828->19725 (Bohn tr.) 2026-06-12; +Appian span 2026-06-13; re-review then set reviewed
 
 - id: con-002
   category: contradiction
@@ -49,12 +62,14 @@
     that it was a fast-acting poison.
   gold_spans:
     - pg_id: 7142
+      groups: [disease]
       quote: >-
         Disease was the real cause of his death; though there is a story of
         his having ended his life by poison, on finding himself unable to
         fulfil his promises to the king.
       note: Thucydides I.138 — disease, poison as rumor
     - pg_id: 674
+      groups: [suicide]
       quote: >-
         He sacrificed to the gods, and invited his friends; and, having
         entertained them and shaken hands with them, drank bull's blood, as is
@@ -62,7 +77,13 @@
         and ended his days in the city of Magnesia, having lived sixty-five
         years
       note: Plutarch, Themistocles — bull's blood suicide as the usual story
-  status: reviewed
+    - pg_id: 900006
+      groups: [suicide]
+      quote: >-
+        Half a century after the death of Themistocles it was popularly
+        supposed that he had poisoned himself with bull’s blood
+      note: Bury, History of Greece — critical voice; bull's-blood suicide is a later legend from a misread monument
+  status: draft  # +Bury span 2026-06-13 (was reviewed); re-review then set reviewed
 
 - id: con-003
   category: contradiction
@@ -83,6 +104,9 @@
         promised besides that he would appoint him consul. This he would
         certainly have done, too, if he had lived longer.
       note: Cassius Dio LIX.14 — stated as near-certain
+  notes: >-
+    Two versions (hedged rumor vs near-assertion), one attestation each —
+    unlabelled, so both are independently required (singleton default).
   status: reviewed
 
 - id: con-004
@@ -98,18 +122,26 @@
     (Bucephala) in his memory.
   gold_spans:
     - pg_id: 46976
+      groups: [age]
       quote: >-
         Bucephala in memory of his horse Bucephalas, which died there, not
         from having been wounded by any one, but from the effects of toil and
         old age
       note: Arrian V.19 — age, explicitly not wounds
     - pg_id: 674
+      groups: [age, wounds]
       quote: >-
         Some little time after the battle with Porus, Bucephalas died, as most
         of the authorities state, under cure of his wounds, or as Onesicritus
         says, of fatigue and age, being thirty years old.
       note: Plutarch, Alexander — wounds (most) vs. age (Onesicritus)
-  status: reviewed
+    - pg_id: 900006
+      groups: [age]
+      quote: >-
+        named after Alexander’s steed, which died here—probably shortly before
+        the battle—of old age and weaniness
+      note: Bury, History of Greece — sides with the age version ("weaniness" = OCR of "weariness")
+  status: draft  # +Bury span 2026-06-13 (was reviewed); re-review then set reviewed
 
 - id: con-005
   category: contradiction
@@ -124,6 +156,7 @@
     relates but disbelieves.
   gold_spans:
     - pg_id: 2456
+      groups: [land]
       quote: >-
         when passing on from Thrace they came to the passage, they crossed
         over the Hellespont in haste to Abydos by means of the ships, for they
@@ -131,6 +164,7 @@
         by a storm.
       note: Herodotus VIII.117 — the land-march version
     - pg_id: 2456
+      groups: [sea]
       quote: >-
         There is also another story reported as follows, namely that when
         Xerxes on his march away from Athens came to Eïon on the Strymon, from
@@ -138,10 +172,21 @@
         delivered his army to Hydarnes to lead back to the Hellespont, while
         he himself embarked in a Phenician ship and set forth for Asia
       note: Herodotus VIII.118 — the sea-storm version (which he goes on to reject)
+    - pg_id: 16165
+      groups: [land, sea]
+      quote: >-
+        finally returned into Asia, not by his magnificent bridge, which a
+        storm had destroyed, but on board a vessel, which, according to some,
+        narrowly escaped shipwreck during the passage
+      note: Rawlinson, Seven Great Monarchies V (Persia) — modern scholarship carrying both versions forward (ship "according to some")
   notes: >-
-    Both spans are within one work, but Herodotus explicitly attributes them
-    as rival accounts — the doc allows clearly-separated passages in one work.
-  status: reviewed
+    The first two spans are within one work, but Herodotus explicitly
+    attributes them as rival accounts — the doc allows clearly-separated
+    passages in one work. Rawlinson is a cross-book echo of the same dispute.
+    GROUPING JUDGMENT (review): Rawlinson references the destroyed bridge
+    (land) and the ship "according to some" (sea), so it is tagged [land, sea].
+    Narrow it to [sea] if you judge it attests only the ship version.
+  status: draft  # +Rawlinson span 2026-06-13 (was reviewed); re-review then set reviewed
 
 - id: con-006
   category: contradiction
@@ -150,24 +195,32 @@
     Livy gives two versions side by side: that Remus fell in the brawl that
     broke out when the brothers' rival bird-omens were disputed, or — the
     "more common account" — that he leaped over Romulus's newly-built walls in
-    derision and Romulus killed him in a rage, crying "So perish every one
-    hereafter, who shall leap over my walls." Smith's history follows the
+    derision and Romulus killed him in a rage, crying "So shall every one fare,
+    who shall dare to leap over my fortifications." Smith's history follows the
     leaping-the-wall version as the standard one.
   gold_spans:
-    - pg_id: 10828
+    - pg_id: 19725
+      groups: [brawl, leap]
       quote: >-
         there Remus fell from a blow received in the crowd. A more common
-        account is that Remus, in derision of his brother, leaped over the
-        newly-erected walls, and was thereupon slain by Romulus in a fit of
-        passion, who, mocking him, added words to this effect:" So perish
-        every one hereafter, who shall leap over my walls."
-      note: Livy I.7 — both versions in one sentence
+        account is, that Remus, in derision of his brother, leaped over his
+        new-built wall, and was, for that reason, slain by Romulus in a
+        passion; who, after sharply chiding him, added words to this effect
+      note: Livy I.7 (Bohn/Spillan tr.) — both versions in one sentence
     - pg_id: 19694
+      groups: [leap]
       quote: >-
         One day Remus leapt over it in scorn; whereupon Romulus slew him,
         exclaiming, "So die whosoever hereafter shall leap over my walls."
       note: Smith, Smaller History — the leaping version as standard
-  status: reviewed
+    - pg_id: 12061
+      groups: [brawl]
+      quote: >-
+        a dispute arose between the brothers regarding the sovereignty and
+        regarding the city, and they got into a conflict in which Remus was
+        killed
+      note: Cassius Dio (Zonaras epitome) — the brawl/quarrel version, independently
+  status: draft  # migrated 10828->19725 (Bohn tr.) 2026-06-12; +Dio span 2026-06-13; re-review then set reviewed
 
 - id: con-007
   category: contradiction
@@ -181,6 +234,7 @@
     says he undid it easily by pulling out the pin.
   gold_spans:
     - pg_id: 46976
+      groups: [cut, untie]
       quote: >-
         It is said by some that when Alexander could find out no way to loosen
         the cord and yet was unwilling to allow it to remain unloosened, lest
@@ -191,6 +245,7 @@
         the cord together.
       note: Arrian II.3 — sword vs. pin
     - pg_id: 674
+      groups: [cut, untie]
       quote: >-
         Most authors tell the story that Alexander, finding himself unable to
         untie the knot, the ends of which were secretly twisted round and
@@ -199,6 +254,10 @@
         of the pole, to which the yoke was tied, and afterwards drawing off
         the yoke itself from below.
       note: Plutarch, Alexander — same two versions, same attribution to Aristobulus
+  notes: >-
+    Both passages give BOTH versions (sword vs. pin), so each is tagged
+    [cut, untie]: retrieving either Arrian or Plutarch covers the whole
+    contradiction. Without grouping, per-span recall would wrongly demand both.
   status: reviewed
 
 - id: con-008
@@ -221,6 +280,9 @@
         so he killed himself, uttering that far-famed sentence: "Jupiter, what
         an artist perishes in me!"
       note: Cassius Dio LXIII.29 — at the moment of the death-blow, different wording
+  notes: >-
+    Two versions (wording/timing), one attestation each — unlabelled, so both
+    are independently required (singleton default).
   status: reviewed
 
 - id: con-009
@@ -236,28 +298,31 @@
     Plutarch agrees she coveted the golden bracelets and asked for "the things
     they wore on their left arms."
   gold_spans:
-    - pg_id: 10828
+    - pg_id: 19725
+      groups: [treachery]
       quote: >-
-        his maiden daughter, who at the time had gone by chance outside the
-        walls to fetch water for sacrifice, was bribed by Tatius, to admit
-        some armed soldiers into the citadel. After they were admitted, they
-        crushed her to death by heaping their arms upon her
-      note: Livy I.11 — the treacherous version
-    - pg_id: 10828
+        Tatius bribes his maiden daughter with gold, to admit armed soldiers
+        into the citadel: she had gone by chance outside the walls to fetch
+        water for the sacrifice. Those who were admitted crushed her to death
+        by heaping their arms upon her
+      note: Livy I.11 (Bohn/Spillan tr.) — the treacherous version
+    - pg_id: 19725
+      groups: [exculpatory]
       quote: >-
-        Some say that, in accordance with the agreement that they should
-        deliver up what was on their left hands, she expressly demanded their
-        shields, and that, as she seemed to be acting treacherously, she
-        herself was slain by the reward she had chosen for herself.
-      note: Livy I.11 — the exculpatory alternative
+        There are some who say that in pursuance of the compact to deliver up
+        what was on their left hands, she expressly demanded their shields,
+        and that appearing to act with treachery, she was killed by the reward
+        of her own choosing
+      note: Livy I.11 (Bohn/Spillan tr.) — the exculpatory alternative
     - pg_id: 674
+      groups: [treachery]
       quote: >-
         But Tarpeia, daughter to the captain, coveting the golden bracelets
         she saw them wear, betrayed the fort into the Sabines' hands, and
         asked, in reward of her treachery, the things they wore on their left
         arms.
       note: Plutarch, Romulus — covetous-treachery version
-  status: reviewed
+  status: draft  # migrated 10828->19725 (Bohn tr.) 2026-06-12; re-review then set reviewed
 
 - id: con-010
   category: contradiction
@@ -292,7 +357,33 @@
         brother, belonging to the other or Prokleid line of Spartan kings,
         though they do not perfectly agree respecting his parentage.
       note: Grote vol. II — the specific Herodotus-vs-rest disagreement ("[568]" is a footnote marker)
-  status: reviewed
+    - pg_id: 2707
+      groups: [herodotus-version]
+      quote: >-
+        but the Lacedemonians themselves say that Lycurgos having become
+        guardian of Leobotes his brother's son, who was king of the Spartans,
+        brought in these things from Crete
+      note: Herodotus I.66 — the actual primary source Grote cites (guardian of the Agid king; Leobotes = Labotas)
+    - pg_id: 68946
+      groups: [herodotus-version]
+      quote: >-
+        had during his minority the famous legislator Lycurgus as his Regent,
+        only Herodotus calls him Leobotes instead of Labotas
+      note: Pausanias III — independently attests the Herodotus version and flags the name variant
+    - pg_id: 900006
+      quote: >-
+        Herodotus states that the Spartans declared Lycurgus to have been the
+        guardian of one of their early kings, and to have introduced from Crete
+        their laws and institutions
+      note: Bury, History of Greece — sharpens the contradiction further (doubts Lycurgus existed at all)
+  notes: >-
+    GROUPING JUDGMENT (review): this is a meta-contradiction shading into
+    synthesis. Only the two primary attestations of the Herodotus/Agid-line
+    version (Herodotus I.66 + Pausanias III) are grouped as alternatives
+    [herodotus-version]; Plutarch (the "all sources disagree" thesis), Grote
+    (the specific disagreement framing), and Bury (sharpening) are left as
+    distinct singleton requirements. Adjust if you want a different facet split.
+  status: draft  # +Herodotus/Pausanias/Bury spans 2026-06-13 (was reviewed); re-review then set reviewed
 
 - id: con-011
   category: contradiction
@@ -307,16 +398,32 @@
     which forced the cautious Paullus to yield to Varro's will.
   gold_spans:
     - pg_id: 44125
+      groups: [personal]
       quote: >-
         some few escaped into Venusia, among whom was Gaius Terentius, the
         Consul, who thus sought a flight, as disgraceful to himself, as his
         conduct in office had been disastrous to his country.
       note: Polybius III.116 — blame on Varro personally
     - pg_id: 10706
+      groups: [systemic]
       quote: >-
         According to the old custom foolishly retained, the decisive voice in
         the council of war alternated between the commanders-in-chief day by
         day; it was necessary therefore on the following day to submit, and to
         let the hero of the pavement have his way.
       note: Mommsen, Book III ch. V — blame on the alternating-command system
-  status: reviewed
+    - pg_id: 10907
+      groups: [personal]
+      quote: >-
+        if any disaster should befall the legions thus exposed and betrayed
+        into an ill-advised and imprudent battle, he should be exempt from any
+        blame, though the sharer of all the consequences
+      note: Livy XXII — Paullus disclaims blame in advance, faulting Varro's imprudence (personal-blame camp)
+    - pg_id: 900003
+      groups: [personal]
+      quote: >-
+        But Varro, like the demagogue he was, reminded his colleague of the
+        charge which the people had laid upon them at their departure, that they
+        should bring matters to a speedy decision by battle
+      note: Appian, Hannibalic War — blames Varro the demagogue personally (independent of Polybius)
+  status: draft  # +Livy/Appian spans 2026-06-13 (was reviewed); re-review then set reviewed

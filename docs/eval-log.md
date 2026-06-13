@@ -305,3 +305,81 @@ judge-v2 deepseek-v4-flash) — only retrieval changed (dense-v1 0.6b → dense-
    wrong-context sources — the trust property survived the retrieval upgrade.
 5. **Latency cost is real:** mean 5.4s/answer (hosted query embed ~1s + longer, fuller
    answers at 138 mean completion tokens). The Phase 6 router/caching arms own this.
+
+---
+
+## 2026-06-13 — Recall redesign: per-requirement-group, not per-span (measurement fix)
+
+**Why (measurement-bug class, rule #5):** the corpus grew with many corroborating sources,
+so a single fact now recurs across works (Caesar's 23 wounds: Suetonius, Appian, Plutarch,
+Livy, Smith). The old recall counted **every** gold span as independently required
+(`covered_spans / total_spans`), so a literal question with 5 equivalent attestations
+capped at 0.2 even when retrieval surfaced the one best passage. Worse, it created a
+**perverse incentive**: adding more corroborating sources — exactly the diligence this
+project values — *lowered* the score (bigger denominator, same coverage). MRR already did
+the right thing (any-of), so MRR and recall disagreed, and recall was the broken one.
+
+**Change:** recall is now per **requirement group**, not per span (docs/golden-set.md §4a).
+Each span declares a `groups` list — the answer requirement(s) it satisfies. Spans sharing
+a label are *alternatives* (any one covers the requirement); distinct labels are
+*conjunctive*; a span may satisfy several at once (a chunk answering two hops). Empty
+`groups` = a singleton requirement (the back-compatible default). Recall@k = requirements
+with ≥1 covering span in top-k / total requirements. Grouping applied to `literal`/`synonym`
+(alternatives → one requirement), `multi-hop` (per-hop), `contradiction` (per-version);
+`cross-book`/`synthesis` left ungrouped — there each load-bearing span is a genuine coverage
+target. Golden set also grew this day: **154 → 240 gold spans** (new public-domain sources),
+72 questions unchanged.
+**Isolation:** scored the *identical current set* on *one fresh retrieval* both ways — the
+delta below is the metric alone, zero retrieval change.
+**Config:** qwen3-embedding-8b · Nebius-pinned · 1024d · structural-v1 · naive dense top-20,
+no rerank (the D2 gate-final retrieval; query embed ≈ 0.9s). Run cost ≈ $0.00 (62 short
+query embeds).
+**Run record:** `backend/evals/runs/2026-06-13T11-22-00Z-dense-v1.json` (retriever label is
+the default `dense-v1`; embedder field confirms the 8b corpus).
+
+| category | n | old r@5 (per-span) | new r@5 (per-group) | Δ@5 | new r@1 | new r@20 | new MRR |
+|---|---|---|---|---|---|---|---|
+| contradiction | 11 | 0.647 | **0.841** | +0.194 | 18.2% | 95.5% | 0.568 |
+| literal | 11 | 0.726 | **0.909** | +0.183 | 72.7% | 90.9% | 0.818 |
+| synonym | 10 | 0.750 | **0.900** | +0.150 | 60.0% | 90.0% | 0.678 |
+| multi-hop | 10 | 0.273 | **0.350** | +0.077 | 25.0% | 70.0% | 0.522 |
+| cross-book | 10 | 0.463 | 0.463 | +0.000 | 12.3% | 75.0% | 0.725 |
+| synthesis | 10 | 0.167 | 0.167 | +0.000 | 5.0% | 44.2% | 0.319 |
+| **overall** | **62** | **0.510** | **0.614** | **+0.103** | **32.6%** | **78.1%** | **0.608** |
+
+**The three-number story (set growth × metric, both isolated):**
+D2 floor (old set 154 spans, old metric) **53.2%** → current set (240 spans, old metric)
+**51.0%** → current set, new metric **61.4%**. The middle step is the perverse incentive in
+the raw: adding corroborating sources *dropped* per-span recall 2.2pp. The redesign both
+reverses that and re-bases the floor.
+
+**Findings:**
+
+1. **The lift is the measurement getting honest, not retrieval improving.** +10.3 overall
+   recall@5, landing *only* on the redundant-source categories (contradiction +19.4,
+   literal +18.3, synonym +15.0) and **exactly 0.0** on the two ungrouped coverage
+   categories. cross-book and synthesis are byte-identical old-vs-new — the control that
+   proves the change is surgical, not a global inflation.
+2. **Effect concentrates at low k** (+10.3 @5 vs +7.0 @20) — where it matters, since the
+   generator is fed top-5. By @20 even per-span recall catches the redundant alternatives.
+3. **The honest metric exposes three real full-misses** previously blended into the
+   redundant-source noise, all single-requirement questions, all on ingested works (153/
+   463/275 chunks present — not ingestion bugs): **syn-006** (Cambyses "sacred disease" —
+   synonym gap the 8b doesn't bridge), **lit-004** (retrieves Tacitus' Germania at rank 2
+   but the wrong chunk — chunk-granularity/rerank), **mh-005** (both hops missed). These
+   are clean Phase-4 rerank/chunking targets.
+4. **multi-hop's gains are real but partial** (+7.7 @5): grouping per-hop means a question
+   that finds one hop's passage now scores 0.5 honestly instead of a diluted per-span
+   fraction; several sit at exactly 0.5 @20 (one hop found, one not) — still the hardest
+   single-retrieval category.
+5. **synthesis/cross-book unchanged and still hard** (synthesis @5 0.167, the rag-historian
+   prior): distributed answers are a retrieval-architecture problem, untouched by a metric
+   that was never wrong for them.
+6. **Three grouping judgment calls flagged for review** in the YAML (`GROUPING JUDGMENT`):
+   syn-005 (wave + its cause as one requirement), con-005 (Rawlinson tagged both versions),
+   con-010 (Lycurgus meta-contradiction facet split).
+
+**Phase 4 measures retrieval against THIS row** (per-group, 240-span set): recall@5 **61.4%**
+· recall@20 78.1% · MRR 0.608. The old per-span dense-8b row (53.2%) is superseded — it
+measured a different set with a metric that mismodeled redundancy. Records carry per-span
+`groups` so a future per-span vs per-group reading can't be silently confused.

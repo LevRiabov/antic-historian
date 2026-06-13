@@ -2,6 +2,10 @@
 # (modern phrasing vs Victorian translation; "epilepsy" vs "falling sickness").
 # Tests vocabulary-mismatch robustness. Spec: docs/golden-set.md
 #
+# Spans are ALTERNATIVES (the same fact retold across works), so all spans of a
+# question share one `groups` label — any one fully answers (recall is per
+# requirement group, not per span; see docs/golden-set.md §4a).
+#
 # Template:
 # - id: syn-001
 #   category: synonym
@@ -10,6 +14,7 @@
 #     ...
 #   gold_spans:
 #     - pg_id: 0
+#       groups: [topic]
 #       quote: >-
 #         ...exact archaic-vocabulary passage...
 #   status: draft
@@ -27,6 +32,7 @@
     bowels (fatal diarrhoea), or cost them fingers, toes, eyes, or memory.
   gold_spans:
     - pg_id: 7142
+      groups: [symptoms]
       quote: >-
         people in good health were all of a sudden attacked by violent heats
         in the head, and redness and inflammation in the eyes, the inward
@@ -36,6 +42,7 @@
         produced a hard cough.
       note: Thucydides II.49 — text calls it "the distemper" / "pestilence"
     - pg_id: 54936
+      groups: [symptoms]
       quote: >-
         The seizures were perfectly sudden, and a large proportion of the
         sufferers perished, after deplorable agonies, on the seventh or on the
@@ -43,7 +50,12 @@
         this period, found themselves the victims of exhausting and incurable
         diarrhœa afterwards
       note: Grote vol. VI retells the symptoms — equally valid retrieval target
-  notes: Vocabulary gap — "epidemic" never appears; the texts say distemper/pestilence/malady.
+  notes: >-
+    Vocabulary gap — "epidemic" never appears; the texts say
+    distemper/pestilence/malady. Swept new corpus 2026-06-13: Bury (900006) and
+    Diodorus (900005) both retell the plague but neither lists the SYMPTOMS the
+    question asks for (Bury covers origin/social collapse, Diodorus is brief) —
+    not gold spans for this question.
   status: reviewed
 
 - id: syn-002
@@ -57,20 +69,23 @@
     Sabines ended with the women themselves brokering peace and the two
     peoples merging.
   gold_spans:
-    - pg_id: 10828
+    - pg_id: 19725
+      groups: [sabine-rape]
       quote: >-
-        according to preconcerted arrangement, a disturbance was made, and, at
-        a given signal, the Roman youths rushed in different directions to
-        carry off the unmarried women. A great number were carried off at
-        hap-hazard, by those into whose hands they severally fell
-      note: Livy I.9 — "carry off", not "kidnap"
+        according to concert a tumult began, and upon a signal given the Roman
+        youth ran different ways to carry off the virgins by force. A great
+        number were carried off at hap-hazard, according as they fell into
+        their hands
+      note: Livy I.9 (Bohn/Spillan tr.) — "carry off", not "kidnap"
     - pg_id: 674
+      groups: [sabine-rape]
       quote: >-
         drawing their swords and falling on with a great shout, they ravished
         away the daughters of the Sabines, they themselves flying without any
         let or hindrance
       note: Plutarch, Romulus — independent retelling
     - pg_id: 19694
+      groups: [sabine-rape]
       quote: >-
         He proclaimed that games were to be celebrated in honor of the god
         Consus, and invited his neighbors, the Latins and Sabines, to the
@@ -78,7 +93,7 @@
         wives and children, but the Roman youths rushed upon their guests and
         carried off the virgins.
       note: Smith, Smaller History of Rome — scholarship retelling
-  status: reviewed
+  status: draft  # migrated 10828->19725 (Bohn tr.) 2026-06-12; re-review then set reviewed
 
 - id: syn-003
   category: synonym
@@ -90,13 +105,15 @@
     he abandoned the mired horse and saved himself). The spot was afterwards
     called the Curtian Lake.
   gold_spans:
-    - pg_id: 10828
+    - pg_id: 19725
+      groups: [curtius]
       quote: >-
-        Mettius, his horse taking fright at the noise of his pursuers, rode
-        headlong into a morass: this circumstance drew off the attention of
-        the Sabines also at the danger of so high a personage.
-      note: Livy I.12 — "morass", not "swamp"
+        Mettus, his horse taking fright at the din of his pursuers, threw
+        himself into a lake; and this circumstance drew the attention of the
+        Sabines at the risk of so important a person
+      note: Livy I.12 (Bohn/Spillan tr.) — source says "lake"/"marsh", not "swamp"
     - pg_id: 674
+      groups: [curtius]
       quote: >-
         Curtius, a gallant man, eager of honor, and of aspiring thoughts,
         being mounted on horseback, was galloping on before the rest, and
@@ -105,7 +122,7 @@
         saved himself; the place from him to this very time is called the
         Curtian Lake.
       note: Plutarch, Romulus — "deep blind mud and slime"
-  status: reviewed
+  status: draft  # migrated 10828->19725 (Bohn tr.) 2026-06-12; re-review then set reviewed
 
 - id: syn-004
   category: synonym
@@ -118,12 +135,14 @@
     bees swarming in the camp.
   gold_spans:
     - pg_id: 6400
+      groups: [omens]
       quote: >-
         The chief presages of his death were, the appearance of a comet, his
         father Drusus’s monument being struck by lightning, and the death of
         most of the magistrates of all ranks that year.
       note: Suetonius, Claudius XLVI — "presages", not "omens"
     - pg_id: 10883
+      groups: [omens]
       quote: >-
         It seemed that indications of this event were given in advance by the
         comet star, which was seen over a wide expanse of territory, by the
@@ -132,7 +151,20 @@
         Victor, by the swarming of bees in the camp, and by the fact that one
         representative of each political office died.
       note: Cassius Dio LX.35 — independent list
-  status: reviewed
+    - pg_id: 900001
+      groups: [omens]
+      quote: >-
+        The soldiers' standards and tents were set in a blaze by lightning. A
+        swarm of bees settled on the summit of the Capitol; births of monsters,
+        half man, half beast, and of a pig with a hawk's talons, were reported.
+        It was accounted a portent that every order of magistrates had had its
+        number reduced, a quaestor, an aedile, a tribune, a praetor and consul
+        having died within a few months.
+      note: >-
+        Tacitus, Annals XII.64 (AD 54, consulship of Asinius/Acilius) — third
+        independent witness; lightning on the standards + bees on the Capitol +
+        deaths of every order of magistrate echo Suetonius and Dio.
+  status: draft  # 2026-06-13 added Tacitus 900001 span (new corpus); re-review then set reviewed
 
 - id: syn-005
   category: synonym
@@ -146,6 +178,7 @@
     drives the sea back, and it recoils with redoubled force.
   gold_spans:
     - pg_id: 7142
+      groups: [tsunami]
       quote: >-
         the sea at Orobiae, in Euboea, retiring from the then line of coast,
         returned in a huge wave and invaded a great part of the town, and
@@ -154,12 +187,21 @@
         to the higher ground in time.
       note: Thucydides III.89 — the word "tsunami" obviously never appears
     - pg_id: 7142
+      groups: [tsunami]
       quote: >-
         The cause, in my opinion, of this phenomenon must be sought in the
         earthquake. At the point where its shock has been the most violent,
         the sea is driven back and, suddenly recoiling with redoubled force,
         causes the inundation.
       note: Same chapter — his causal explanation; an ideal answer cites both
+  notes: >-
+    Swept new corpus 2026-06-13: Diodorus' vivid tsunami (Helice & Bura, 900005)
+    is the 373 BC Achaean quake — a DIFFERENT event, not Thucydides' 426 BC
+    Orobiae/Atalanta wave — so not a gold span here.
+    GROUPING JUDGMENT (review): the two spans (the wave + its cause) sit in one
+    chapter and either alone answers "does he describe a tsunami?", so they are
+    one requirement [tsunami]. Split into two requirements if you want recall to
+    demand the causal-explanation passage as well.
   status: reviewed
 
 - id: syn-006
@@ -178,7 +220,9 @@
       note: Herodotus III.33 — "sacred disease", never "epilepsy"
   notes: >-
     Swept Grote vol. IV — he describes Cambyses' madness but not the
-    congenital disease, so not a gold span.
+    congenital disease, so not a gold span. Swept Rawlinson's Persia (16165,
+    new corpus 2026-06-13): he argues the madness was an Egyptian-priest fiction
+    and omits the sacred disease entirely — not a gold span either.
   status: reviewed
 
 - id: syn-007
@@ -194,6 +238,7 @@
     see the sea.
   gold_spans:
     - pg_id: 2456
+      groups: [bridge]
       quote: >-
         They put together fifty-oared galleys and triremes, three hundred and
         sixty to be under the bridge towards the Euxine Sea, and three hundred
@@ -202,6 +247,7 @@
         Pontus), to support the tension of the ropes.
       note: Herodotus VII.36 — "bridges" of galleys; "pontoon" never appears
     - pg_id: 62098
+      groups: [bridge]
       quote: >-
         The execution of the work was at first intrusted, not to Greeks, but
         to Phenicians and Egyptians, who had received orders long beforehand
@@ -209,7 +255,18 @@
         purpose; the material used by the Phenicians was flax, that employed
         by the Egyptians was the fibre of the papyrus.
       note: Grote vol. V — "bridge of boats"; detailed retelling
-  status: reviewed
+    - pg_id: 900006
+      groups: [bridge]
+      quote: >-
+        On this foundation a road was made with wood and earth, and at each side
+        palisades were set, high enough to prevent the animals which passed over
+        from seeing the water.
+      note: >-
+        Bury, History of Greece (new corpus) — full construction retelling in the
+        same chunk: the two lines of 360 + 314 moored ships, six cables (two flax,
+        four papyrus), planks, then this earth road + palisades so the animals
+        could not see the sea.
+  status: draft  # 2026-06-13 added Bury 900006 span (new corpus); re-review then set reviewed
 
 - id: syn-008
   category: synonym
@@ -247,6 +304,7 @@
     — nothing mortal travelled faster. The Persians called it the angareion.
   gold_spans:
     - pg_id: 2456
+      groups: [relay]
       quote: >-
         there is nothing mortal which accomplishes a journey with more speed
         than these messengers, so skilfully has this been invented by the
@@ -257,7 +315,20 @@
         accomplishing each one the task proposed to him, with the very utmost
         speed.
       note: Herodotus VIII.98 — "messengers"/"angareion", never "postal" or "relay"
-  status: reviewed
+    - pg_id: 16165
+      groups: [relay]
+      quote: >-
+        When a despatch was to be forwarded it was taken to the first post-house
+        along the route, where a courier received it, and immediately mounting on
+        horseback galloped with it to the next station. Here it was delivered to a
+        new courier, who, mounted on a fresh horse, took it the next stage on its
+        journey; and thus it passed from hand to hand till it reached its
+        destination.
+      note: >-
+        Rawlinson, Seven Great Monarchies V (Persia, new corpus) — describes the
+        relay as a "post" of post-houses and couriers; cites Xenophon for the
+        night-and-day speed "compared to the flight of birds".
+  status: draft  # 2026-06-13 added Rawlinson 16165 span (new corpus); re-review then set reviewed
 
 - id: syn-010
   category: synonym
@@ -269,6 +340,7 @@
     these nations they are man-eaters.
   gold_spans:
     - pg_id: 2707
+      groups: [man-eaters]
       quote: >-
         The Androphagoi have the most savage manners of all human beings, and
         they neither acknowledge any rule of right nor observe any customary
@@ -279,4 +351,15 @@
         Herodotus IV.106 — "man-eaters", never "cannibalism". Grote vol. III
         mentions the Androphagi only in an untranslated-Greek footnote — not a
         gold span.
-  status: reviewed
+    - pg_id: 28587
+      groups: [man-eaters]
+      quote: >-
+        Next to these are the Melanchaenae and the Anthropophagi, who roam about
+        upon different tracts of land and live on human flesh. And these men are
+        so avoided on account of their horrid food, that all the tribes which
+        were their neighbours have removed to a distance from them.
+      note: >-
+        Ammianus XXXI.2.15 (new corpus) — the Latin "Anthropophagi" beyond the
+        Sauromatae/Scythians, shunned for eating human flesh; independent of
+        Herodotus' Androphagoi.
+  status: draft  # 2026-06-13 added Ammianus 28587 span (new corpus); re-review then set reviewed

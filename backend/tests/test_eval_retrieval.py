@@ -20,8 +20,8 @@ def ref(pg_id: int, start: int, end: int, rank: int) -> RetrievedChunk:
     )
 
 
-def span(pg_id: int, start: int, end: int) -> ResolvedSpan:
-    return ResolvedSpan(pg_id=pg_id, char_start=start, char_end=end)
+def span(pg_id: int, start: int, end: int, groups: list[str] | None = None) -> ResolvedSpan:
+    return ResolvedSpan(pg_id=pg_id, char_start=start, char_end=end, groups=groups or [])
 
 
 def question(spans: list[ResolvedSpan], category: str = "literal") -> GoldenQuestion:
@@ -74,6 +74,47 @@ def test_multi_span_partial_recall() -> None:
     assert result.recall[10] == 2 / 3
     assert result.first_hit_rank == 1
     assert result.mrr == 1.0
+
+
+def test_grouped_spans_are_alternatives_any_one_covers() -> None:
+    # Same fact attested in two works, one requirement group: retrieving either
+    # alternative fully covers it (recall 1.0, not 0.5). This is the literal /
+    # synonym case that per-span recall used to understate.
+    spans = [
+        span(1, 0, 100, ["fact"]),
+        span(2, 0, 100, ["fact"]),
+    ]
+    retrieved = [ref(2, 0, 100, 3)]  # only the second alternative, at rank 3
+    result = score(spans, retrieved, "literal")
+    assert result.recall[1] == 0.0  # not within top-1
+    assert result.recall[5] == 1.0  # the one requirement is covered
+    assert result.first_hit_rank == 3
+
+
+def test_multi_membership_span_covers_several_requirements() -> None:
+    # A combined passage satisfies both hops at once (groups=[hop1, hop2]);
+    # retrieving it alone covers both required requirements.
+    spans = [
+        span(1, 0, 100, ["hop1"]),
+        span(1, 1000, 1100, ["hop2"]),
+        span(2, 0, 100, ["hop1", "hop2"]),  # one chunk answering both hops
+    ]
+    retrieved = [ref(2, 0, 100, 4)]  # only the combined span
+    result = score(spans, retrieved, "multi-hop")
+    assert result.recall[1] == 0.0
+    assert result.recall[5] == 1.0  # both requirements covered by one chunk
+
+
+def test_distinct_groups_are_conjunctive() -> None:
+    # Two distinct requirements (e.g. the two versions of a contradiction):
+    # covering only one yields half recall.
+    spans = [
+        span(1, 0, 100, ["v1"]),
+        span(2, 0, 100, ["v2"]),
+    ]
+    retrieved = [ref(1, 0, 100, 1)]  # only v1
+    result = score(spans, retrieved, "contradiction")
+    assert result.recall[5] == 0.5
 
 
 def test_mrr_uses_first_hit_across_spans() -> None:

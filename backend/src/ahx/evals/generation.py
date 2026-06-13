@@ -7,9 +7,10 @@ Two layers (docs/golden-set.md cost policy):
    citation precision (used markers that point at a gold-covering chunk),
    refusal accuracy (out-of-scope questions are only measurable here),
    latency and token usage.
-2. **Judge** — LLM-scored faithfulness (claims supported by cited sources)
-   and completeness (vs ideal_answer), 1-5 rubrics. Optional; runs at phase
-   boundaries with a strong judge (weak judges miscalibrate — known footgun).
+2. **Judge** — LLM-scored faithfulness (claims supported by cited sources),
+   completeness (vs ideal_answer), and attribution (surfacing disagreement +
+   naming sources where the policy requires it), 1-5 rubrics. Optional; runs at
+   phase boundaries with a strong judge (weak judges miscalibrate — known footgun).
 
 Run records mirror the retrieval-tier layout: aggregates first, then
 per-question results with ideal_answer next to the model's actual answer.
@@ -48,9 +49,11 @@ class GenQuestionResult(BaseModel):
     question: str
     ideal_answer: str
     answer: str
-    refused: bool
+    refused: bool  # mechanical: answer == the exact contract sentence
+    refused_semantic: bool | None = None  # judge yes/no (judge-v3.1): accepts a
+    # paraphrased abstention as a refusal; None until/unless the judge layer runs
     refusal_expected: bool  # True only for out-of-scope questions
-    refusal_correct: bool
+    refusal_correct: bool  # uses refused_semantic when judged, else refused
     markers_used: list[int]
     markers_dangling: list[int]
     retrieved_chunk_ids: list[int]
@@ -59,6 +62,8 @@ class GenQuestionResult(BaseModel):
     citation_precision: float | None  # None when no markers were used
     faithfulness: int | None = None  # 1-5, judge layer
     completeness: int | None = None  # 1-5, judge layer
+    attribution: int | None = None  # 1-5, judge layer (judge-v3): surfacing
+    # disagreement + naming sources where the policy requires it
     judge_notes: str = ""
     latency_ms: int
     prompt_tokens: int | None
@@ -73,6 +78,7 @@ class GenCategoryAggregate(BaseModel):
     citation_precision: float | None
     faithfulness: float | None
     completeness: float | None
+    attribution: float | None = None  # judge-v3; absent on older run records
     mean_latency_ms: int
 
 
@@ -84,6 +90,7 @@ class GenAggregates(BaseModel):
     citation_precision: float | None
     faithfulness: float | None
     completeness: float | None
+    attribution: float | None = None  # judge-v3; absent on older run records
     mean_latency_ms: int
     mean_completion_tokens: float | None
     by_category: dict[str, GenCategoryAggregate]
@@ -161,11 +168,16 @@ def _mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def _eff_refused(r: GenQuestionResult) -> bool:
+    """Effective refusal: the semantic verdict once judged, else the mechanical flag."""
+    return r.refused_semantic if r.refused_semantic is not None else r.refused
+
+
 def compute_gen_aggregates(results: list[GenQuestionResult]) -> GenAggregates:
     def block(subset: list[GenQuestionResult]) -> GenCategoryAggregate:
         return GenCategoryAggregate(
             count=len(subset),
-            refused=sum(1 for r in subset if r.refused),
+            refused=sum(1 for r in subset if _eff_refused(r)),
             refusal_correct=sum(1 for r in subset if r.refusal_correct) / len(subset),
             citation_span_recall=_mean(
                 [r.citation_span_recall for r in subset if r.citation_span_recall is not None]
@@ -175,6 +187,7 @@ def compute_gen_aggregates(results: list[GenQuestionResult]) -> GenAggregates:
             ),
             faithfulness=_mean([float(r.faithfulness) for r in subset if r.faithfulness]),
             completeness=_mean([float(r.completeness) for r in subset if r.completeness]),
+            attribution=_mean([float(r.attribution) for r in subset if r.attribution]),
             mean_latency_ms=round(sum(r.latency_ms for r in subset) / len(subset)),
         )
 
@@ -189,14 +202,15 @@ def compute_gen_aggregates(results: list[GenQuestionResult]) -> GenAggregates:
     overall = block(results)
     return GenAggregates(
         questions=len(results),
-        refusal_accuracy_oos=(sum(1 for r in oos if r.refused) / len(oos)) if oos else None,
-        false_refusal_rate=(sum(1 for r in in_scope if r.refused) / len(in_scope))
+        refusal_accuracy_oos=(sum(1 for r in oos if _eff_refused(r)) / len(oos)) if oos else None,
+        false_refusal_rate=(sum(1 for r in in_scope if _eff_refused(r)) / len(in_scope))
         if in_scope
         else 0.0,
         citation_span_recall=overall.citation_span_recall,
         citation_precision=overall.citation_precision,
         faithfulness=overall.faithfulness,
         completeness=overall.completeness,
+        attribution=overall.attribution,
         mean_latency_ms=overall.mean_latency_ms,
         mean_completion_tokens=_mean(
             [float(r.completion_tokens) for r in results if r.completion_tokens is not None]
@@ -218,7 +232,27 @@ class JudgeVerdict(BaseModel):
 #   like fabrications, double-counting what citation_precision already measures.
 # judge-v2: judge sees ALL retrieved passages exactly as the answer model did;
 #   misattribution of grounded content caps at 4, invention is the real failure.
-JUDGE_RUBRIC_VERSION = "judge-v2"
+# judge-v3: adds the ATTRIBUTION dimension — faithfulness rewards a grounded answer
+#   even if it silently picks one side of a contradiction, so that behavior (and
+#   un-attributed multi-source synthesis) needs its own axis. Pairs with the
+#   baseline-v2 answer prompt, which instructs the model to surface disagreement.
+# judge-v3.1: three calibration fixes after the first judge-v3 run (over-severity on
+#   concise correct answers, brittle refusal match):
+#   (a) semantic refusal — the mechanical refused flag is an exact match on the contract
+#       sentence, so a correct-but-paraphrased abstention (esp. out-of-scope) scored as a
+#       non-refusal. A yes/no judge call now accepts paraphrased refusals; refusal_correct
+#       and the refusal aggregates use it. The 1-5 dimensions stay None on out-of-scope
+#       (no ideal answer; binary refuse/answer only).
+#   (b) completeness graded against the QUESTION's scope, not every detail of the rich
+#       reference — a concise answer that fully answers what was asked scores 5 (lit-001:
+#       "23 wounds" answers "how many wounds", was wrongly dinged to 3 for omitting
+#       reference context the question never asked for).
+#   (c) attribution scored in explicit agree/disagree steps so the all-agree case (bare
+#       markers, nothing misattributed) reliably scores 5 instead of being penalised for
+#       lacking prose attribution it doesn't need. Disagreement = incompatible claims (not
+#       mere omission/emphasis); misattribution = citing a source that doesn't support the
+#       claim (not an extra on-topic corroborating marker).
+JUDGE_RUBRIC_VERSION = "judge-v3.1"
 
 FAITHFULNESS_RUBRIC = """You are grading a RAG system's answer for FAITHFULNESS: did the
 model invent content, or is everything grounded in the source passages it was shown?
@@ -242,20 +276,102 @@ Answer to grade:
 
 Reply with ONLY a JSON object: {{"score": <1-5>, "reason": "<one sentence>"}}"""
 
-COMPLETENESS_RUBRIC = """You are grading a RAG system's answer for COMPLETENESS
-against a reference answer.
-Score 1-5: 5 = covers all key facts of the reference; 3 = covers the core but misses
-secondary facts; 1 = misses the point. Extra correct detail must not lower the score.
+COMPLETENESS_RUBRIC = """You are grading a RAG system's answer for COMPLETENESS: does it
+cover everything the QUESTION asks for?
+
+Judge against the QUESTION. Use the reference answer only as the gold standard for which
+facts the question requires — the reference is a rich 5/5 example and often includes
+context BEYOND what was asked. Do NOT penalize the answer for omitting such extra detail:
+a concise answer that fully and correctly answers what the question asked scores 5.
+
+Score 1-5:
+5 = answers everything the question asks (being more concise than the reference is fine);
+3 = answers the core but omits a part the question explicitly asks for;
+1 = misses the point of the question.
+Extra correct detail must not lower the score.
 
 Question: {question}
 
-Reference answer:
+Reference answer (gold standard — may exceed the question's scope):
 {ideal}
 
 Answer to grade:
 {answer}
 
 Reply with ONLY a JSON object: {{"score": <1-5>, "reason": "<one sentence>"}}"""
+
+ATTRIBUTION_RUBRIC = """You are grading a RAG system's answer for ATTRIBUTION.
+
+Policy: when the source passages DISAGREE, or the answer draws on SEVERAL different
+sources, the answer must make clear IN PROSE which source each version or contribution
+comes from (e.g. "Suetonius reports X, but Dio says Y", or "Plutarch describes... while
+Arrian adds..."). When the sources simply agree, naming each one is optional and its
+absence is NOT a fault. Bare citation markers like [1][2] are NOT prose attribution: they
+cannot tell a reader that two sources DISAGREE.
+
+Step 1 — do the passages relevant to the question AGREE or DISAGREE on the point at issue?
+Treat them as DISAGREEING only when they make INCOMPATIBLE claims about the SAME point (X
+cannot be true if Y is). One source merely OMITTING a detail another includes, or differing
+in emphasis, wording, or which aspects it covers, is NOT a disagreement — that is agreement
+plus extra detail, and needs no disagreement-surfacing.
+Step 2 — score 1-5:
+- If they AGREE (or only one source is used): score 5 as long as nothing is misattributed.
+  Bare markers are correct here — do NOT penalize the absence of prose attribution, and do
+  NOT invent a disagreement that isn't there.
+- If they DISAGREE: 5 = the answer surfaces the disagreement AND names each version's
+  source in prose (or, for multi-source synthesis, attributes the distinct contributions);
+  3 = surfaces the disagreement but leaves it unattributed, or attributes some parts while
+  blurring others; 1 = presents the contested point as settled (silently picks one side).
+- Misattribution scores 1 in either case: a claim is credited to a source that does not
+  actually support it. This INCLUDES naming the wrong author in prose — e.g. writing
+  "Tacitus says X" when X comes from a different author's passage (say Gibbon) or from an
+  editorial footnote, not from that author's own text. Check that the author NAMED in the
+  prose matches the author of a passage that genuinely supports the claim.
+  NOT misattribution: a claim correctly credited to a supporting source that ALSO carries
+  extra on-topic corroborating markers from other authors (stray extra markers are a
+  citation-precision matter; a question scoped to one author does not make a correct
+  corroborating citation a misattribution).
+
+Below are ALL passages the model saw, numbered as shown to it; the ones it cited are
+flagged "(cited)".
+
+Question: {question}
+
+Source passages:
+{sources}
+
+Answer to grade:
+{answer}
+
+Reply with ONLY a JSON object: {{"score": <1-5>, "reason": "<one sentence>"}}"""
+
+
+REFUSAL_JUDGE = """Decide whether the following answer is a REFUSAL: does it decline to
+answer, stating in any wording that the provided sources do not contain the information
+needed — as opposed to actually attempting to answer the question?
+
+Question: {question}
+
+Answer:
+{answer}
+
+Reply with ONLY one word: "yes" if it is a refusal/abstention, "no" if it attempts a
+substantive answer."""
+
+
+def _parse_yes_no(raw: str) -> bool | None:
+    """First clear yes/no token wins; None if the reply commits to neither."""
+    text = raw.strip().lower()
+    if text.startswith("yes"):
+        return True
+    if text.startswith("no"):
+        return False
+    has_yes, has_no = "yes" in text, "no" in text
+    if has_yes and not has_no:
+        return True
+    if has_no and not has_yes:
+        return False
+    return None
 
 
 def parse_verdict(raw: str) -> JudgeVerdict | None:
@@ -272,12 +388,33 @@ def parse_verdict(raw: str) -> JudgeVerdict | None:
 async def judge_question(
     judge: ChatModel, result: GenQuestionResult, citations: list[Citation]
 ) -> None:
-    """Mutates result with faithfulness/completeness scores (in-scope, answered only).
+    """Mutates result with the judge-layer fields (judge-v3.1).
 
-    The judge sees ALL retrieved passages (what the answer model saw), with
-    cited ones flagged — judge-v2; see rubric history above.
+    First a yes/no semantic refusal check accepts a paraphrased abstention the
+    exact-match `refused` flag missed, and refusal_correct is recomputed on it.
+    Then — for answered, in-scope questions only — faithfulness, completeness,
+    and attribution (1-5). The judge sees ALL retrieved passages (what the answer
+    model saw), with cited ones flagged; see rubric history above.
     """
-    if result.refused or result.refusal_expected:
+    if result.refused:
+        result.refused_semantic = True  # the exact contract sentence is unambiguous
+    else:
+        reply = await judge.complete(
+            [
+                ChatMessage(
+                    role="user",
+                    content=REFUSAL_JUDGE.format(question=result.question, answer=result.answer),
+                )
+            ]
+        )
+        verdict = _parse_yes_no(reply.text)
+        result.refused_semantic = verdict if verdict is not None else result.refused
+    result.refusal_correct = result.refused_semantic == result.refusal_expected
+
+    # 1-5 dimensions: answered, in-scope only (out-of-scope has no ideal answer —
+    # it stays binary refuse/answer, scored above; the user's call, to keep the
+    # faithfulness aggregate clean).
+    if result.refused_semantic or result.refusal_expected:
         return
     sources_text = "\n\n".join(
         f"[{c.marker}]{' (cited)' if c.marker in result.markers_used else ''} "
@@ -298,6 +435,14 @@ async def judge_question(
             "completeness",
             COMPLETENESS_RUBRIC.format(
                 question=result.question, ideal=result.ideal_answer, answer=result.answer
+            ),
+        ),
+        (
+            "attribution",
+            ATTRIBUTION_RUBRIC.format(
+                question=result.question,
+                sources=sources_text or "(none cited)",
+                answer=result.answer,
             ),
         ),
     ):
@@ -425,6 +570,8 @@ async def rejudge_run(
         ]
         result.faithfulness = None
         result.completeness = None
+        result.attribution = None
+        result.refused_semantic = None
         result.judge_notes = ""
         await judge_question(judge, result, citations)
         if on_result is not None:

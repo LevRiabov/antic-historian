@@ -86,7 +86,7 @@ async def test_ask_streams_sources_deltas_done(ask_client: httpx.AsyncClient) ->
     assert [name for name, _ in events] == ["sources", "delta", "delta", "done"]
 
     _, sources = events[0]
-    assert sources["prompt_version"] == "baseline-v1"
+    assert sources["prompt_version"] == "baseline-v2"
     assert [c["marker"] for c in sources["citations"]] == [1, 2]
     assert sources["citations"][0]["author"] == "Suetonius"
 

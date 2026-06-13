@@ -51,17 +51,28 @@ TARGET_V21_PER_CATEGORY = 20
 
 
 class GoldSpan(BaseModel):
-    """Where the answer lives: an exact quote from one work's canonical text."""
+    """Where the answer lives: an exact quote from one work's canonical text.
+
+    `groups` declares which answer requirement(s) this span satisfies (see
+    docs/golden-set.md §4a). Spans sharing a label are *alternatives* — any one
+    covers that requirement (e.g. the same fact retold in three works). A span
+    may list several labels when one passage satisfies several requirements at
+    once (a multi-hop chunk answering two hops). An empty list means the span is
+    its own singleton requirement — the back-compatible default where every gold
+    span is independently required (correct for cross-book / synthesis coverage).
+    """
 
     pg_id: int
     quote: str
     note: str = ""
+    groups: list[str] = []
 
 
 class ResolvedSpan(BaseModel):
     pg_id: int
     char_start: int
     char_end: int
+    groups: list[str] = []
 
 
 class GoldenQuestion(BaseModel):
@@ -144,4 +155,9 @@ def resolve_span(
             problem="ambiguous",
             occurrences=len(matches),
         )
-    return ResolvedSpan(pg_id=span.pg_id, char_start=matches[0].start(), char_end=matches[0].end())
+    return ResolvedSpan(
+        pg_id=span.pg_id,
+        char_start=matches[0].start(),
+        char_end=matches[0].end(),
+        groups=span.groups,
+    )

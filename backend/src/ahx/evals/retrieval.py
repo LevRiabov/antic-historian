@@ -6,9 +6,16 @@ lives elsewhere and runs at phase boundaries.
 
 Hit rule (carried from rag-historian, chunking-invariant): a retrieved chunk
 COVERS a gold span iff it is from the same work and contains the span's
-midpoint. Question recall@k = covered spans / total spans within top-k;
-category and overall numbers are means over questions. MRR uses the rank of
-the first chunk covering ANY of the question's spans.
+midpoint.
+
+Recall is per *requirement group*, not per span (see docs/golden-set.md §4a).
+Each span declares the answer requirement(s) it satisfies via `groups`; spans
+sharing a label are alternatives (any one covers that requirement), so a fact
+attested in five works counts once, not five times. A span with no label is its
+own singleton requirement (the back-compatible default). Question recall@k =
+requirement groups with ≥1 covering span in top-k / total requirement groups;
+category and overall numbers are means over questions. MRR uses the rank of the
+first chunk covering ANY of the question's spans.
 
 Every run is persisted as a typed, versioned record (rule #5) under
 backend/evals/runs/. Record layout mirrors rag-historian's results format
@@ -48,6 +55,7 @@ class GoldSpanRef(BaseModel):
     pg_id: int
     char_start: int
     char_end: int
+    groups: list[str] = []
 
 
 class QuestionResult(BaseModel):
@@ -95,6 +103,19 @@ def _covers(chunk: RetrievedChunk, span: ResolvedSpan) -> bool:
     return chunk.char_start <= midpoint < chunk.char_end
 
 
+def _requirement_groups(spans: list[ResolvedSpan]) -> dict[str, list[int]]:
+    """Map each requirement label to the span indices that satisfy it. A span
+    with no `groups` is its own singleton requirement (back-compat: every gold
+    span independently required); spans sharing a label are alternatives; a span
+    may belong to several requirements at once."""
+    groups: dict[str, list[int]] = {}
+    for i, span in enumerate(spans):
+        labels = span.groups or [f"__singleton_{i}"]
+        for label in labels:
+            groups.setdefault(label, []).append(i)
+    return groups
+
+
 def score_question(
     question: GoldenQuestion,
     spans: list[ResolvedSpan],
@@ -105,10 +126,20 @@ def score_question(
     span_hits = [next((c.rank for c in retrieved if _covers(c, span)), None) for span in spans]
     hit_ranks = [rank for rank in span_hits if rank is not None]
     first_hit = min(hit_ranks) if hit_ranks else None
-    total = len(spans)
-    recall = {
-        k: (sum(1 for rank in hit_ranks if rank <= k) / total) if total else 0.0 for k in K_VALUES
-    }
+    groups = _requirement_groups(spans)
+    total = len(groups)
+
+    def covered_groups(k: int) -> int:
+        count = 0
+        for members in groups.values():
+            for i in members:
+                rank = span_hits[i]
+                if rank is not None and rank <= k:
+                    count += 1
+                    break
+        return count
+
+    recall = {k: (covered_groups(k) / total) if total else 0.0 for k in K_VALUES}
     return QuestionResult(
         question_id=question.id,
         category=question.category,
@@ -116,7 +147,10 @@ def score_question(
         ideal_answer=question.ideal_answer,
         notes=question.notes,
         gold_spans=[
-            GoldSpanRef(pg_id=s.pg_id, char_start=s.char_start, char_end=s.char_end) for s in spans
+            GoldSpanRef(
+                pg_id=s.pg_id, char_start=s.char_start, char_end=s.char_end, groups=s.groups
+            )
+            for s in spans
         ],
         gold_chunk_ids=gold_chunk_ids,
         retrieved_chunk_ids=[c.chunk_id for c in retrieved],

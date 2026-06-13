@@ -97,7 +97,7 @@
   question: How does Livy portray the struggle between patricians and plebeians?
   ideal_answer: >-
     As the defining, recurring affliction of the early Republic — "the
-    discord among the several orders... the curse of this city." Driven by
+    discord among the several orders... the bane of this city." Driven by
     debt and oppression, the commons twice seceded (the first ended by
     Menenius Agrippa's fable of the belly and the members, the second on the
     Sacred Mount against the decemvirs); each crisis extracted new
@@ -105,43 +105,40 @@
     moderation is when each side's pursuit of power or liberty makes it an
     object of dread to the other.
   gold_spans:
-    - pg_id: 10828
+    - pg_id: 19725
       quote: >-
-        it was resolved that Agrippa Menenius, an eloquent man, and a
-        favourite with the people, because he was sprung from them, should be
-        sent to negotiate with them. Being admitted into the camp, he is said
-        to have simply related to them the following story in an old-fashioned
-        and unpolished style: "At the time when the parts of the human body
-        did not, as now, all agree together, but the several members had each
-        their own counsel, and their own language, the other parts were
-        indignant that, while everything was provided for the gratification of
-        the belly by their labour and service, the belly, resting calmly in
-        their midst, did nothing but enjoy the pleasures afforded it.
-      note: First secession and the fable of the belly (II.32)
-    - pg_id: 10828
+        At a time when all the parts in the human body did not, as now, agree
+        together, but the several members had each its own scheme, its own
+        language, the other parts, indignant that every thing was procured for
+        the belly by their care, labour, and service; that the belly,
+        remaining quiet in the centre, did nothing but enjoy the pleasures
+        afforded it
+      note: First secession and the fable of the belly (II.32, Bohn/Spillan tr.)
+    - pg_id: 19725
       quote: >-
-        they pitched their camp on the Sacred Mount, imitating the moderation
+        they pitched their camp on the Sacred mount, imitating the moderation
         of their fathers by committing no violence. The commons followed the
         army, no one whose age would permit him declining to go. Their wives
-        and children attended them, piteously asking to whom they were leaving
-        them, in a city where neither chastity nor liberty were respected.
-      note: Second secession, against the decemvirs (III.52)
-    - pg_id: 10828
+        and children attended their steps, piteously asking to whom would they
+        leave them, in a city in which neither chastity nor liberty were
+        respected
+      note: Second secession, against the decemvirs (III.52, Bohn/Spillan tr.)
+    - pg_id: 19725
       quote: >-
-        It is the discord among the several orders that is the curse of this
-        city, the contests between the patricians and commons. While we have
-        neither bounds in the pursuit of power, nor you in that of liberty,
-        while you are wearied of patrician, we of plebeian magistrates, they
-        have taken courage.
-      note: Quinctius' speech — the thesis in a character's mouth (III.67)
-    - pg_id: 10828
+        The discord among the several orders is the bane of this city; the
+        contests of the patricians and commons have raised their spirits;
+        whilst we have neither bounds in the pursuit of power, nor you in that
+        of liberty, whilst you are tired of patrician, these of plebeian
+        magistrates
+      note: Quinctius' speech — the thesis in a character's mouth (III.67, Bohn/Spillan tr.)
+    - pg_id: 19725
       quote: >-
-        So difficult a thing is moderation in maintaining liberty, while every
-        one, by pretending to desire equality, exalts himself in such a manner
-        as to put down another, and men, by their very precautions against
-        fear, cause themselves to become objects of dread
-      note: Livy's own moral (III.65)
-  status: reviewed
+        So difficult a thing is moderation in maintaining liberty, whilst by
+        pretending to desire equalization, every person raises himself in such
+        a manner as to depress another; and men, by their very precautions
+        against fear, cause themselves to become objects of dread
+      note: Livy's own moral (III.65, Bohn/Spillan tr.)
+  status: draft  # migrated 10828->19725 (Bohn tr.) 2026-06-12; re-review then set reviewed
 
 - id: synth-004
   category: synthesis

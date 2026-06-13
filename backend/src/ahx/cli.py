@@ -442,6 +442,7 @@ def generate(
         "cit precision",
         "faith",
         "compl",
+        "attrib",
         "latency",
     ):
         table.add_column(column)
@@ -459,6 +460,7 @@ def generate(
             pct(agg.citation_precision),
             score(agg.faithfulness),
             score(agg.completeness),
+            score(agg.attribution),
             f"{agg.mean_latency_ms}ms",
         )
     table.add_row(
@@ -470,6 +472,7 @@ def generate(
         f"[bold]{pct(aggregates.citation_precision)}[/bold]",
         score(aggregates.faithfulness),
         score(aggregates.completeness),
+        score(aggregates.attribution),
         f"{aggregates.mean_latency_ms}ms",
     )
     console.print(table)
@@ -506,7 +509,7 @@ def rejudge(
         if result.faithfulness is not None:
             console.print(
                 f"  {result.question_id:<10} faith={result.faithfulness} "
-                f"compl={result.completeness}"
+                f"compl={result.completeness} attrib={result.attribution}"
             )
 
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
@@ -521,6 +524,7 @@ def rejudge(
     console.print(
         f"\nfaith={score(run.aggregates.faithfulness)} "
         f"compl={score(run.aggregates.completeness)} "
+        f"attrib={score(run.aggregates.attribution)} "
         f"(judge {run.judge_model}, rubric {run.judge_rubric})"
     )
     runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
