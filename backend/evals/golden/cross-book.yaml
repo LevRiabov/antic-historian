@@ -499,3 +499,582 @@
         posterity as they are now.
       note: Ammianus XXII.15 — the sources still unknown
   status: draft
+
+- id: cb-011
+  category: cross-book
+  question: How do the sources describe the Roman siege and destruction of Jerusalem?
+  ideal_answer: >-
+    Josephus, the eyewitness, gives the fullest narrative: Titus encamped about
+    the city, and though he resolved to storm the temple, "that house, God had,
+    for certain, long ago doomed it to the fire" — it was burned as the siege
+    reached its terrible climax of famine and slaughter. Tacitus supplies the
+    Roman view, describing how Titus pitched his camp before the walls and drew
+    up his legions in order of battle against the Jews massed beneath their
+    fortifications. Cassius Dio records the storming of the temple precinct and
+    the city's fall — "thus was Jerusalem destroyed on the very day of Saturn,
+    which even now the Jews reverence most."
+  gold_spans:
+    - pg_id: 2850
+      quote: >-
+        But as for that house, God had, for certain, long ago doomed it to the
+        fire; and now that fatal day was come
+      note: Josephus, Wars VI.4 — the burning of the temple
+    - pg_id: 900002
+      quote: >-
+        Accordingly he pitched his camp, as I have related, before the walls of
+        Jerusalem, and displayed his legions in order of battle.
+      note: Tacitus, Histories V — the Roman siege
+    - pg_id: 10890
+      quote: >-
+        Thus was Jerusalem destroyed on the very day of Saturn, which even now
+        the Jews reverence most.
+      note: Cassius Dio LXVI (Vol. 5) — the city's fall
+  status: reviewed
+
+- id: cb-012
+  category: cross-book
+  question: How do the sources portray the reign and death of Herod the Great?
+  ideal_answer: >-
+    Josephus gives the fullest portrait. In the Antiquities he records the
+    grand works of the reign — in his eighteenth year Herod "undertook a very
+    great work, that is, to build of himself the temple of God" — alongside his
+    implacable cruelty, and then the loathsome final illness in which "his
+    privy-member was putrefied, and produced worms," read as divine punishment.
+    The parallel narrative in the Wars closes the reign with the bare notice
+    that, having survived the killing of his son by only five days, Herod died,
+    "having reigned thirty-four years."
+  gold_spans:
+    - pg_id: 2848
+      quote: >-
+        undertook a very great work, that is, to build of himself the temple of
+        God
+      note: Josephus, Antiquities XV.11 — rebuilding the temple
+    - pg_id: 2848
+      quote: >-
+        his privy-member was putrefied, and produced worms; and when he sat
+        upright
+      note: Josephus, Antiquities XVII.6 — the disease-ridden death
+    - pg_id: 2850
+      quote: >-
+        So Herod, having survived the slaughter of his son five days, died,
+        having reigned thirty-four years
+      note: Josephus, Wars I.33 — the death notice
+  status: reviewed
+
+- id: cb-013
+  category: cross-book
+  question: How do the sources describe Vespasian's rise to the throne during the civil war?
+  ideal_answer: >-
+    The sources agree that Vespasian was raised to the throne by the armies of
+    the East while the Jewish war was still in progress. Josephus, present in
+    his camp, says he "desire[d] to obtain that government, in order to
+    corroborate his attempts upon the whole empire," and was proclaimed by the
+    soldiers in Judaea and Egypt. Tacitus reports the news reaching the East —
+    "messengers from Syria and Judaea brought the news that the provinces of the
+    East had sworn allegiance to him." Suetonius records the acclamation against
+    Vitellius: the troops in Moesia and Pannonia revolted, "as did likewise, of
+    the armies beyond sea, those in Judaea and Syria," who swore allegiance to
+    Vespasian as emperor.
+  gold_spans:
+    - pg_id: 2850
+      quote: >-
+        Justly, therefore, did Vespasian desire to obtain that government, in
+        order to corroborate his attempts upon the whole empire
+      note: Josephus, Wars IV.10 — the proclamation in the East
+    - pg_id: 900002
+      quote: >-
+        messengers from Syria and Judaea brought the news that the provinces of
+        the East had sworn allegiance to him
+      note: Tacitus, Histories II — the eastern provinces declare for Vespasian
+    - pg_id: 6400
+      quote: >-
+        the troops both in Moesia and Pannonia revolted from him; as did
+        likewise, of the armies beyond sea, those in Judaea and Syria, some of
+        which swore allegiance to Vespasian as emperor in his own presence
+      note: Suetonius, Vitellius XV — the acclamation against Vitellius
+  status: reviewed
+
+- id: cb-014
+  category: cross-book
+  question: How do the sources narrate the year of the four emperors that followed Nero?
+  ideal_answer: >-
+    Tacitus gives the connected narrative, opening his Histories "with the time
+    when Servius Galba was consul for the second time with Titus Vinius for his
+    colleague" — the start of the convulsion that ran Galba to Otho to Vitellius
+    to Vespasian. Plutarch's surviving lives carry the same rapid turnover: the
+    senate, swearing in Otho's name the oath it had just sworn and broken to
+    Galba, "conferred on him the titles of Caesar and Augustus." Suetonius'
+    per-emperor lives record each fall in turn — Galba "perished in the
+    seventy-third year of his age, and the seventh month of his reign," cut down
+    in the Forum.
+  gold_spans:
+    - pg_id: 900002
+      quote: >-
+        I begin my work with the time when Servius Galba was consul for the
+        second time with Titus Vinius for his colleague.
+      note: Tacitus, Histories I.1 — the connected narrative begins
+    - pg_id: 674
+      quote: >-
+        took that oath in Otho's name which he himself had taken in Galba's and
+        had broken; and withal conferred on him the titles of Caesar and Augustus
+      note: Plutarch, Galba — Otho proclaimed
+    - pg_id: 6400
+      quote: >-
+        He perished in the seventy-third year of his age, and the seventh month
+        of his reign
+      note: Suetonius, Galba XXIII — the death of Galba
+  status: reviewed
+
+- id: cb-015
+  category: cross-book
+  question: How do the sources assess the character and generalship of Hannibal?
+  ideal_answer: >-
+    The sources agree on his extraordinary gifts while dividing on his vices.
+    Livy's introductory sketch grants him a genius equally fit to command and
+    obey, fearless and tireless, "by far the first of the cavalry and infantry"
+    — but balances it with "inhuman cruelty, more than Punic perfidy." Polybius
+    marvels at the generalship that held a polyglot army together "for sixteen
+    continuous years" in Italy. Appian preserves the famous conversation in
+    which Scipio asked Hannibal whom he thought the greatest general, ranking
+    himself only behind Alexander and Pyrrhus. Mommsen, the modern judge, notes
+    that "the Romans charged him with cruelty, the Carthaginians with
+    covetousness," yet finds the noble image of the commander unmarred.
+  gold_spans:
+    - pg_id: 10907
+      quote: >-
+        Excessive vices counterbalanced these high virtues of the hero; inhuman
+        cruelty, more than Punic perfidy, no truth, no reverence for things
+        sacred, no fear of the gods, no respect for oaths, no sense of religion.
+      note: Livy XXI.4 — the character sketch at Hannibal's introduction
+    - pg_id: 44126
+      quote: >-
+        For sixteen continuous years Hannibal maintained the war with Rome in
+        Italy, without once releasing his army from service in the field
+      note: Polybius IX.3 — admiration for his generalship
+    - pg_id: 900003
+      quote: >-
+        Scipio asked Hannibal whom he considered the greatest general, to which
+        the latter replied
+      note: Appian, Syrian Wars 10 — the Scipio–Hannibal conversation on generalship
+    - pg_id: 10706
+      quote: >-
+        His contemporaries tried to cast stains of various sorts on his
+        character; the Romans charged him with cruelty, the Carthaginians with
+        covetousness
+      note: Mommsen, Book III — the modern verdict
+  status: reviewed
+
+- id: cb-016
+  category: cross-book
+  question: How do the sources describe the final destruction of Carthage?
+  ideal_answer: >-
+    Appian gives the fullest narrative of 146 BC: as the city of 700 years came
+    to its end, Scipio "is said to have shed tears and publicly lamented the
+    fortune of the enemy," reflecting on the mutability that would one day
+    overtake Rome itself. Polybius, his tutor and an eyewitness, records the same
+    reflection on the fall of "the once mighty empires of the Assyrians, Medes,
+    Persians" and Macedon, with Scipio quoting Homer on the doom of Troy. The
+    epitome of Livy registers the bare outcome — Scipio "at length took the city
+    by storm, in the seven hundredth year after its foundation."
+  gold_spans:
+    - pg_id: 900003
+      quote: >-
+        is said to have shed tears and publicly lamented the fortune of the
+        enemy
+      note: Appian, Punic Wars 132 — Scipio weeps over Carthage
+    - pg_id: 44126
+      quote: >-
+        once a powerful city, and the once mighty empires of the Assyrians,
+        Medes, Persians, and that of Macedonia lately so splendid
+      note: Polybius XXXVIII.22 — Scipio's reflection, quoting Homer on Troy
+    - pg_id: 44318
+      quote: >-
+        who at length took the city by storm, in the seven hundredth year after
+        its foundation
+      note: Livy, Periochae LI — the storming and destruction
+  status: reviewed
+
+- id: cb-017
+  category: cross-book
+  question: How do the sources recount Rome's long wars against Mithridates of Pontus?
+  ideal_answer: >-
+    Appian's dedicated narrative traces the whole struggle to its end, when
+    Pompey brought the king's dominions "and the adjoining territory as far as
+    the river Euphrates, under the pretext and impetus of the Mithridatic war,
+    under Roman sway." Plutarch follows the commanders: the people "unanimously
+    voted [Lucullus] to the Mithridatic war," which Pompey later took over.
+    Livy's epitome records the war's terrible opening — Mithridates seized Asia,
+    chained the proconsul and the general, "and ordered all the Romans in Asia
+    to be massacred on the same day."
+  gold_spans:
+    - pg_id: 900003
+      quote: >-
+        under the pretext and impetus of the Mithridatic war, were brought under
+        Roman sway
+      note: Appian, Mithridatic Wars 69 — Pompey's settlement of the East
+    - pg_id: 674
+      quote: >-
+        all unanimously voted him to the Mithridatic war, by no hands likely to
+        be so successfully managed as his
+      note: Plutarch, Lucullus — the command against Mithridates
+    - pg_id: 44318
+      quote: >-
+        Mithridates possessed himself of Asia; threw into chains Quintus Oppius,
+        the proconsul, and Aquilius, the general; and ordered all the Romans in
+        Asia to be massacred on the same day
+      note: Livy, Periochae LXXVIII — the Asiatic Vespers
+  status: reviewed
+
+- id: cb-018
+  category: cross-book
+  question: How do the sources treat the reforms and deaths of the Gracchi brothers?
+  ideal_answer: >-
+    Plutarch preserves the moral force of the cause in Tiberius Gracchus's
+    speech on the landless soldiers of Italy, who though they fought for Rome
+    had no "houses of their own, or hearths of their ancestors to defend."
+    Appian narrates the legislative struggle, ending when a substitute tribune
+    was chosen "and the agrarian law was enacted." Livy's epitome summarizes the
+    reform itself — Gracchus's agrarian law that "no person should hold more than
+    five hundred acres of the public lands" — and the violence its passage
+    unleashed.
+  gold_spans:
+    - pg_id: 674
+      quote: >-
+        when not any amongst so many Romans is possessed of either altar or
+        monument, neither have they any houses of their own, or hearths of their
+        ancestors to defend
+      note: Plutarch, Tiberius Gracchus 9 — the speech on the landless
+    - pg_id: 900004
+      quote: >-
+        Quintus Mummius was chosen tribune in his place, and the agrarian law
+        was enacted
+      note: Appian, Civil Wars I.13 — the law enacted
+    - pg_id: 44318
+      quote: >-
+        having proposed an Agrarian law, (contrary to the sense of the senate,
+        and the equestrian order,) to the effect that no person should hold more
+        than five hundred acres of the public lands
+      note: Livy, Periochae LVIII — the agrarian law
+  status: reviewed
+
+- id: cb-019
+  category: cross-book
+  question: How do the sources describe the war against Jugurtha of Numidia?
+  ideal_answer: >-
+    The sources frame the war as much by Roman corruption as by arms. Appian
+    preserves Jugurtha's famous verdict on the venal city — that "the whole city
+    of Rome could be bought if a purchaser could be found for it." Plutarch
+    follows the endgame through the Numidian kings: after Jugurtha fled and "in
+    his distress came to [Bocchus] as his last hope," he was received as a
+    suppliant and then betrayed. Livy's epitome records the capture plainly —
+    Bocchus, beaten and unwilling to fight on, "delivered up Jugurtha in chains
+    to Marius."
+  gold_spans:
+    - pg_id: 900003
+      quote: >-
+        the whole city of Rome could be bought if a purchaser could be found for
+        it
+      note: Appian, Numidian War (fragments) — Jugurtha on Roman bribery
+    - pg_id: 674
+      quote: >-
+        after Jugurtha fled, and in his distress came to him as his last hope,
+        he received him as a suppliant
+      note: Plutarch, Sulla 3 — Jugurtha flees to Bocchus
+    - pg_id: 44318
+      quote: >-
+        Bocchus, having lost a battle, and being unwilling to carry on the war
+        any longer, delivered up Jugurtha in chains to Marius
+      note: Livy, Periochae LXVI — the capture of Jugurtha
+  status: reviewed
+
+- id: cb-020
+  category: cross-book
+  question: How do the sources tell the rise and fall of Theban supremacy under Epaminondas?
+  ideal_answer: >-
+    The sources trace Theban hegemony as the personal achievement of
+    Epaminondas — and its collapse with his death. Xenophon, contemporary and
+    cool toward Thebes, ends his history on the inconclusive note that after
+    Mantinea "the effective result of these achievements was the very opposite of
+    that which the world at large anticipated." Diodorus makes the dependence
+    explicit: while Epaminondas lived "he gained the sovereign power for his
+    country; but, by his death they lost it again" — "and this was the end of
+    Epaminondas, a man honoured and esteemed of all." Pausanias records his
+    monument, whose elegiac lines tell "how he restored Messene, and how the
+    Greeks got their freedom through him." Plutarch supplies the Theban view of
+    the bond with Pelopidas, for whom Epaminondas "singly fought a multitude,
+    resolving rather to die than forsake his helpless" friend.
+  gold_spans:
+    - pg_id: 1174
+      quote: >-
+        The effective result of these achievements was the very opposite of that
+        which the world at large anticipated.
+      note: Xenophon, Hellenica VII.5 — the inconclusive aftermath of Mantinea
+    - pg_id: 900005
+      quote: >-
+        And this was the end of Epaminondas, a man honoured and esteemed of all.
+      note: Diodorus XV.88 — the death of Epaminondas and decline of Thebes
+    - pg_id: 68680
+      quote: >-
+        On the statue of Epaminondas are four elegiac lines about him, that tell
+        how he restored Messene, and how the Greeks got their freedom through him.
+      note: Pausanias IX.15 — the monument of Epaminondas
+    - pg_id: 674
+      quote: >-
+        but Epaminondas, though he thought him past recovery, advanced to defend
+        his arms and body, and singly fought a multitude, resolving rather to die
+        than forsake his helpless Pelopidas
+      note: Plutarch, Pelopidas — the Theban bond of Epaminondas and Pelopidas
+  status: reviewed
+
+- id: cb-021
+  category: cross-book
+  question: How do the sources narrate the Athenian expedition to Sicily and its destruction?
+  ideal_answer: >-
+    Thucydides gives the canonical narrative of the catastrophe, ending with the
+    survivors crammed into the Syracusan quarries, "each man during eight months
+    having only half a pint of water and a pint of corn given him daily."
+    Plutarch's life of the commander follows Nicias to his end, noting the
+    dispute in the sources over how he died — that "Demosthenes and Nicias did
+    not die, as Thucydides and Philistus have written, by the order of the
+    Syracusans," but perhaps by their own hand.
+  gold_spans:
+    - pg_id: 7142
+      quote: >-
+        each man during eight months having only half a pint of water and a pint
+        of corn given him daily
+      note: Thucydides VII.87 — the prisoners in the quarries
+    - pg_id: 674
+      quote: >-
+        Demosthenes and Nicias did not die, as Thucydides and Philistus have
+        written, by the order of the Syracusans
+      note: Plutarch, Nicias 28 — the death of the commanders
+  notes: >-
+    Diodorus XIII (#900005) also narrates this expedition but does not surface
+    cleanly via dense retrieval (the known bad-OCR volume); Diodorus coverage is
+    carried instead by cb-020. Thucydides + Plutarch (2 works) satisfy cross-book.
+  status: reviewed
+
+- id: cb-022
+  category: cross-book
+  question: How do the sources describe the Spartan system of government attributed to Lycurgus?
+  ideal_answer: >-
+    The sources credit Lycurgus with a mixed, balanced constitution. Plutarch
+    singles out the central institution: "the first and of greatest importance
+    was the establishment of the senate," a council of twenty-eight elders whose
+    power, equal to the kings', acted "like ballast in a ship" between monarchy
+    and democracy. Herodotus gives the early Greek account of the same
+    transformation — once Lycurgus had reformed their institutions "the Spartans
+    had good laws," and after his death "they erected a temple" to him and paid
+    him great worship.
+  gold_spans:
+    - pg_id: 674
+      quote: >-
+        the first and of greatest importance was the establishment of the senate,
+        which, having a power equal to the kings' in matters of great consequence
+      note: Plutarch, Lycurgus 5 — the senate (gerousia) as the central institution
+    - pg_id: 2707
+      quote: >-
+        Having changed thus, the Spartans had good laws; and to Lycurgos after he
+        was dead they erected a temple, and they pay him great worship.
+      note: Herodotus I.65–66 — Lycurgus's reforms and his cult
+  notes: >-
+    Polybius VI's analysis of the Spartan constitution (in Vol. II #44126) does
+    not surface via dense retrieval (Book VI's constitution chapters resist the
+    query; volume is heavily Greek/sidenoted). Polybius Vol. II coverage is
+    carried by cb-015 and cb-016. Plutarch + Herodotus (2 works) satisfy cross-book.
+  status: reviewed
+
+- id: cb-023
+  category: cross-book
+  question: What do the sources report about the oracle at Delphi — its setting, procedure, and authority?
+  ideal_answer: >-
+    The sources present Delphi as the most authoritative and richest of Greek
+    shrines. Strabo records its divine charter — that "Apollo, by the aid of
+    Themis, established this oracle with a view to benefit the human race."
+    Pausanias preserves its ancient history, that "in the most ancient times it
+    was the oracle of Earth" before it passed to Apollo. Diodorus shows the other
+    side of its fame, the immense treasure that made it a target: in the Sacred
+    War the Phocian leader's "brother and successor Onomarchus converted much of
+    those treasures" to pay his troops, the sacrilege that defined the conflict.
+  gold_spans:
+    - pg_id: 44885
+      quote: >-
+        Apollo, by the aid of Themis, established this oracle with a view to
+        benefit the human race
+      note: Strabo IX.3 — the oracle's divine charter and authority
+    - pg_id: 68680
+      quote: >-
+        For they say that in the most ancient times it was the oracle of Earth
+      note: Pausanias X.5 — the oracle's most ancient history
+    - pg_id: 900005
+      quote: >-
+        his brother and successor Onomarchus converted much of those treasures
+      note: Diodorus XVI — the Sacred War and the temple's plundered wealth
+  notes: >-
+    Strabo's famous cavern/vapour/tripod description (IX.3.5) is not present in
+    this Falconer translation, which treats Delphi via its treasuries, the Sacred
+    War, and Ephorus's rationalist account — so the spans cover the oracle's
+    authority, history, and wealth rather than the Pythia's physical procedure.
+  status: reviewed
+
+- id: cb-024
+  category: cross-book
+  question: How do the sources explain the fall of Nineveh and the end of the Assyrian empire?
+  ideal_answer: >-
+    The modern reconstruction and the ancient notice agree that Nineveh fell to
+    a coalition led by the Medes. Rawlinson's Assyria judges that the empire
+    "fell, not so much from any inherent weakness, or from the effect of gradual
+    decay, as by an unfortunate combination of circumstances" — a barbarian
+    inroad coinciding with the rise of a warlike neighbour. His Media traces that
+    neighbour's role: after the siege "the fall of the city was followed by a
+    division of the spoil between the two principal conquerors," Cyaxares the
+    Mede taking Assyria proper. Herodotus gives the early Greek account — the
+    Medes "had rule over the same nations as before; and they also took Nineveh"
+    and made the Assyrians subject, except Babylon.
+  gold_spans:
+    - pg_id: 16162
+      quote: >-
+        The empire of the Assyrians thus fell, not so much from any inherent
+        weakness, or from the effect of gradual decay, as by an unfortunate
+        combination of circumstances
+      note: Rawlinson, Assyria — the causes of the empire's fall
+    - pg_id: 16163
+      quote: >-
+        The fall of the city was followed by a division of the spoil between the
+        two principal conquerors
+      note: Rawlinson, Media — the Median role in destroying Nineveh
+    - pg_id: 2707
+      quote: >-
+        the Medes recovered their power, and had rule over the same nations as
+        before; and they also took Nineveh
+      note: Herodotus I.106 — the Medes capture Nineveh
+  status: reviewed
+
+- id: cb-025
+  category: cross-book
+  question: What do the sources say about the walls, size, and wonders of Babylon?
+  ideal_answer: >-
+    The sources concur on Babylon's vast scale. Rawlinson's modern survey calls
+    it "probably the largest and most magnificent city of the ancient world."
+    Herodotus describes its plan — "there are two divisions of the city; for a
+    river whose name is Euphrates parts it in the middle" — within its enormous
+    square of wall. Strabo gives the measurements: the wall was 385 "stadia in
+    circumference, and 32 feet in thickness," with towers rising to 60 cubits —
+    the defenses that, with the hanging garden, made the city one of the wonders
+    of the world.
+  gold_spans:
+    - pg_id: 16164
+      quote: >-
+        Babylon, the capital of the Fourth Monarchy, was probably the largest and
+        most magnificent city of the ancient world.
+      note: Rawlinson, Babylon — the city's scale and magnificence
+    - pg_id: 2707
+      quote: >-
+        Babylon then was walled in this manner; and there are two divisions of
+        the city; for a river whose name is Euphrates parts it in the middle.
+      note: Herodotus I.180 — the city plan and the Euphrates
+    - pg_id: 44886
+      quote: >-
+        stadia in circumference, and 32 feet in thickness. The height of the
+        space between the towers is 50, and of the towers 60 cubits.
+      note: Strabo XVI.1.5 — the wall's dimensions
+  status: reviewed
+
+- id: cb-026
+  category: cross-book
+  question: How do the sources describe Rome's wars against the Sassanid Persian empire?
+  ideal_answer: >-
+    The sources mark the Sassanid dynasty as a renewed and formidable threat to
+    Rome on the eastern frontier. Cassius Dio records its alarming birth —
+    "Artaxerxes, a Persian, having conquered the Parthians in three battles and
+    killed their king," then menaced the Roman provinces of Mesopotamia.
+    Rawlinson's Sassanian volume traces the long struggle over the frontier
+    fortresses, noting how Sapor "rightly conceived from the first the importance
+    of Nisibis." Ammianus, the eyewitness of Julian's invasion, shows the
+    Persians' method against the retreating Romans — having "learnt by their
+    frequent defeats to shun pitched battles," they "laid secret ambuscades on
+    our road."
+  gold_spans:
+    - pg_id: 12061
+      quote: >-
+        Artaxerxes, a Persian, having conquered the Parthians in three battles
+        and killed their king
+      note: Cassius Dio LXXX — the rise of Ardashir against Rome
+    - pg_id: 16167
+      quote: >-
+        He rightly conceived from the first the importance of Nisibis, and
+        resolutely persisted in his determination to acquire possession of it
+      note: Rawlinson, The Sassanian Empire — the frontier struggle over Nisibis
+    - pg_id: 28587
+      quote: >-
+        the Persians, who had learnt by their frequent defeats to shun pitched
+        battles, laid secret ambuscades on our road
+      note: Ammianus XXIV — Julian's Persian campaign, eyewitness
+  status: reviewed
+
+- id: cb-027
+  category: cross-book
+  question: How do the sources describe Rome's catastrophic defeat by the Parthians at Carrhae?
+  ideal_answer: >-
+    Plutarch's life of Crassus gives the fullest narrative of the disaster — the
+    Romans, after the battle, had "a sad night of it," unable to bury their dead
+    or tend their wounded, "everyone bewailed his own fate." Cassius Dio supplies
+    the end at the parley: lured to a conference by Surena, Crassus "fell among
+    the rest, whether he was slain by one of his own men to prevent his capture
+    alive, or whether by the enemy." Rawlinson's Parthia explains the military
+    cause from the victors' side — to attack a cavalry power "with a body of
+    foot-soldiers, supported by an insignificant number of horse, must be at all
+    times rash and dangerous."
+  gold_spans:
+    - pg_id: 674
+      quote: >-
+        But the Romans had a sad night of it; for neither taking care for the
+        burial of their dead, nor the cure of the wounded, nor the groans of the
+        expiring, everyone bewailed his own fate.
+      note: Plutarch, Crassus — the night after the disaster
+    - pg_id: 11607
+      quote: >-
+        Crassus fell among the rest, whether he was slain by one of his own men
+        to prevent his capture alive, or whether by the enemy because he was
+        wounded anyway.
+      note: Cassius Dio XL — the parley and Crassus's death
+    - pg_id: 16166
+      quote: >-
+        To attack an enemy whose main arm is the cavalry with a body of
+        foot-soldiers, supported by an insignificant number of horse, must be at
+        all times rash and dangerous.
+      note: Rawlinson, Parthia — Surenas's tactics and the Roman blunder
+  status: reviewed
+
+- id: cb-028
+  category: cross-book
+  question: What do the sources reveal about Roman dining, banquets, and table luxury?
+  ideal_answer: >-
+    The sources show both the ordinary custom and its imperial excess. Fowler
+    describes the shape of the Roman day around its chief meal — "the dinner,
+    cena, was in fact the principal private event of the day," coming when all
+    business was over. Suetonius supplies the extreme of imperial gluttony, the
+    emperor Vitellius who "always made three meals a day, sometimes four:
+    breakfast, dinner, and supper, and a drunken revel after all," sustained by
+    habitual vomiting. Dill, the modern voice, weighs the moralists' charges,
+    noting that "modern criticism has laboured hard to correct some of the
+    harsher judgments on the luxury and self-indulgence of the period of the
+    early Empire."
+  gold_spans:
+    - pg_id: 11256
+      quote: >-
+        The dinner, _cena_, was in fact the principal private event of the day;
+        it came when all business was over
+      note: Fowler, Social Life at Rome — the cena as the day's chief meal
+    - pg_id: 6400
+      quote: >-
+        He always made three meals a day, sometimes four: breakfast, dinner, and
+        supper, and a drunken revel after all.
+      note: Suetonius, Vitellius XIII — imperial gluttony
+    - pg_id: 34122
+      quote: >-
+        Modern criticism has laboured hard to correct some of the harsher
+        judgments on the luxury and self-indulgence of the period of the early
+        Empire.
+      note: Dill, Roman Society from Nero to Marcus Aurelius — luxury and its critics
+  status: reviewed

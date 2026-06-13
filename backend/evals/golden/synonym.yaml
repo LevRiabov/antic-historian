@@ -17,7 +17,7 @@
 #       groups: [topic]
 #       quote: >-
 #         ...exact archaic-vocabulary passage...
-#   status: draft
+#   status: reviewed
 
 - id: syn-001
   category: synonym
@@ -363,3 +363,423 @@
         Sauromatae/Scythians, shunned for eating human flesh; independent of
         Herodotus' Androphagoi.
   status: draft  # 2026-06-13 added Ammianus 28587 span (new corpus); re-review then set reviewed
+
+# ==============================================================================
+# Additions 2026-06-13 — authored from additions/synonym-candidates.yaml (the 13
+# SELECTED coverage gap-fill candidates). Each targets an underserved source;
+# all gold spans verified unique via find_quote. status: draft pending review.
+# ==============================================================================
+
+- id: syn-011
+  category: synonym
+  question: What celibate Jewish brotherhood that held all property in common and despised private wealth is described at length?
+  ideal_answer: >-
+    The Essenes. Josephus devotes long passages to this Jewish sect: they reject
+    pleasure, neglect marriage, hold riches in contempt, and own nothing
+    privately — by their law all property is thrown into a common stock, "so
+    that a rich man enjoys no more of his own wealth than he who hath nothing at
+    all," with about four thousand living this way.
+  gold_spans:
+    - pg_id: 2850
+      groups: [essenes]
+      quote: >-
+        These men are despisers of riches, and so very communicative as raises
+        our admiration. Nor is there any one to be found among them who hath
+        more than another; for it is a law among them, that those who come to
+        them must let what they have be common to the whole order
+      note: Josephus, Wars II.8 — text says "Essens"/"order", never "commune"/"celibate"
+    - pg_id: 2848
+      groups: [essenes]
+      quote: >-
+        This is demonstrated by that institution of theirs, which will not
+        suffer any thing to hinder them from having all things in common; so
+        that a rich man enjoys no more of his own wealth than he who hath
+        nothing at all. There are about four thousand men that live in this way,
+        and neither marry wives
+      note: Josephus, Antiquities XVIII — independent retelling (common property + celibacy)
+    - pg_id: 25717
+      groups: [essenes]
+      quote: >-
+        a solitary people, who dwelt among the palm-trees near the Dead Sea; who
+        subsisted without money, who were propagated without women
+      note: Gibbon (Pliny via Decline & Fall) — scholarship retelling of the same sect
+  notes: >-
+    Vocab gap — question's "celibate/commune/brotherhood/private wealth" never
+    appears; the texts say Essens/order/common. Fills the two ZERO-coverage
+    Josephus volumes (Wars #2850, Antiquities #2848).
+  status: reviewed
+
+- id: syn-012
+  category: synonym
+  question: What stepped, multi-tiered temple-tower did the Babylonians raise at the center of their cities?
+  ideal_answer: >-
+    The ziggurat — a solid temple-tower built in receding stages (square set
+    upon square), the most essential feature of a Babylonian temple, with a
+    shrine at its summit. The number of stages ranged from two up to seven or
+    eight; the great temple of Belus at Babylon was the famous example.
+  gold_spans:
+    - pg_id: 16164
+      groups: [temple-tower]
+      quote: >-
+        Its most essential feature was a _ziggurat_, or tower, which was either
+        square, or at any rate rectangular, and built in stages, the smallest
+        number of such stages being two, and the largest known number seven.
+      note: Rawlinson, Seven Great Monarchies IV (Babylon) — the canonical description
+    - pg_id: 2707
+      groups: [temple-tower]
+      quote: >-
+        and on this tower another tower has been erected, and another again upon
+        this, and so on up to the number of eight towers
+      note: >-
+        Herodotus I.181 — the temple of Belus, "tower upon tower"; the pure
+        vocab-gap span ("ziggurat" never appears)
+  notes: >-
+    Modern "ziggurat" vs archaic "temple-tower"/"tower in stages". NOTE the
+    Rawlinson span itself uses the word "ziggurat", so the vocab gap is carried
+    mainly by the Herodotus alternative. Fills Rawlinson Babylon (#16164).
+  status: reviewed
+
+- id: syn-013
+  category: synonym
+  question: What surprise attack on the beached Athenian fleet brought the long war between Athens and Sparta to an end?
+  ideal_answer: >-
+    The battle of Aegospotami (405 BC). With the Athenian crews scattered ashore
+    in search of food, Lysander rowed across the Hellespont and caught the fleet
+    drawn up on the open beach; all but a handful of ships (Conon escaped with
+    nine) were taken without a fight. The loss of the fleet left Athens unable to
+    continue the Peloponnesian War, and she surrendered the next year.
+  gold_spans:
+    - pg_id: 1174
+      groups: [aegospotami]
+      quote: >-
+        every one of the remaining one hundred and seventy-one vessels were
+        captured by Lysander on the beach
+      note: Xenophon, Hellenica II.1 — the fleet taken at its moorings; "surprise attack" is modern
+    - pg_id: 900006
+      groups: [aegospotami]
+      quote: >-
+        Twenty ships, which were in a condition to fight, escaped; the remaining
+        160 were captured at once.
+      note: Bury, History of Greece — modern retelling ("There was no battle, no resistance")
+    - pg_id: 52119
+      groups: [aegospotami]
+      quote: >-
+        All the triremes were caught at their moorings ashore, some entirely
+        deserted
+      note: Grote vol. VIII — the surprise of the beached fleet
+  notes: >-
+    Vocab gap — "surprise attack/fleet" vs the texts' ships drawn up on shore
+    with dispersed crews. Fills the ZERO-coverage Xenophon Hellenica (#1174).
+  status: reviewed
+
+- id: syn-014
+  category: synonym
+  question: How were the victorious Athenian commanders punished for failing to rescue survivors after the sea battle at Arginusae?
+  ideal_answer: >-
+    After winning at Arginusae (406 BC) the generals were accused of failing to
+    pick up the shipwrecked crews (they blamed a storm). The Athenian assembly,
+    illegally trying them collectively rather than one by one, condemned the
+    eight; the six who had returned to Athens were executed. The city soon
+    repented of the act.
+  gold_spans:
+    - pg_id: 1174
+      groups: [arginusae-trial]
+      quote: >-
+        the eight generals were condemned, and the six who were in Athens were
+        put to death
+      note: Xenophon, Hellenica I.7 — "tried"/"put to death", not "court-martialled/executed"
+    - pg_id: 900006
+      groups: [arginusae-trial]
+      quote: >-
+        the eight generals who had been present at Arginusae were condemned to
+        death and confiscation of property. Six, including Thrasyllus and
+        Pericles, son of the great statesman, were executed
+      note: Bury, History of Greece — independent retelling of the verdict
+  notes: >-
+    Vocab gap — modern "court-martialled/executed" vs the texts' tried/condemned/
+    put to death. Fills Xenophon Hellenica (#1174).
+  status: reviewed
+
+- id: syn-015
+  category: synonym
+  question: How was a Roman army's overnight fortified camp laid out, with its regular streets and gates?
+  ideal_answer: >-
+    On a fixed, repeatable plan. The general's tent (praetorium) was set first,
+    then the lines of the tribunes' and legions' quarters measured off from it;
+    the whole camp formed a square crossed by regular streets (viae) "like a
+    town", with four gates, a market-place, and a broad clear space inside the
+    rampart — so familiar that each soldier could find his quarters as in his own
+    city.
+  gold_spans:
+    - pg_id: 44125
+      groups: [camp-layout]
+      quote: >-
+        The result of these arrangements is that the whole camp is a square,
+        with streets and other constructions regularly planned like a town.
+      note: Polybius VI (in Vol. I #44125) — the castrametation; text says "encampment"
+    - pg_id: 2850
+      groups: [camp-layout]
+      quote: >-
+        They divide the camp within into streets, very conveniently, and place
+        the tents of the commanders in the middle
+      note: Josephus, Wars III.5 — the Roman camp with its streets and four gates
+    - pg_id: 25717
+      groups: [camp-layout]
+      quote: >-
+        the streets were broad and perfectly straight, and a vacant space of two
+        hundred feet was left on all sides between the tents and the rampart
+      note: Gibbon, Decline & Fall — scholarship retelling of Roman castrametation
+  notes: >-
+    Vocab gap — modern "grid layout/standardized plan" vs the texts' encampment/
+    streets/gates. COVERAGE CAVEAT — the candidate file targeted Polybius Vol. II
+    (#44126) to fill its ZERO coverage, but Polybius's camp-layout description
+    (Book VI) actually sits in Vol. I (#44125), already covered. This question
+    therefore does NOT fill the #44126 gap; spans point to where the answer
+    really lives (Polybius I + Josephus + Gibbon).
+  status: reviewed
+
+- id: syn-016
+  category: synonym
+  question: What strategy of refusing open battle and wearing the invader down by delay was used against Hannibal in Italy?
+  ideal_answer: >-
+    The cautious, delaying strategy of the dictator Quintus Fabius Maximus, who
+    shadowed Hannibal from the heights, cut off his supplies and refused a pitched
+    battle — earning the surname Cunctator ("the Delayer"/"Lingerer") and, at
+    first, scorn at Rome, before it was recognised as the policy that saved the
+    state.
+  gold_spans:
+    - pg_id: 10907
+      groups: [fabius-delay]
+      quote: >-
+        Though he well knew that his procrastination was disapproved, not only
+        in his own camp, but by this time even at Rome, yet, inflexibly adhering
+        to the same line of policy, he delayed through the remainder of the summer
+      note: Livy XXII — "procrastination"/"delay", not "attrition/delaying tactics"
+    - pg_id: 19694
+      groups: [fabius-delay]
+      quote: >-
+        From pursuing this policy he received the surname of _Cunctator_, or the
+        _Lingerer_.
+      note: Smith, Smaller History of Rome — names the surname explicitly
+    - pg_id: 18047
+      groups: [fabius-delay]
+      quote: >-
+        and was even given the name of The Delayer
+      note: Cassius Dio (Zonaras) — "The Delayer"; independent retelling
+  notes: >-
+    Vocab gap — modern "attrition/delaying tactics" vs cunctator/protracting/
+    procrastination. Fills the thin Livy 9-26 (#10907).
+  status: reviewed
+
+- id: syn-017
+  category: synonym
+  question: How did Hannibal's men break apart the rock blocking a pass while crossing the Alps?
+  ideal_answer: >-
+    They split it by fire and vinegar: piling and burning timber against the
+    rock to heat it, then pouring vinegar on the heated stone to make it soft and
+    crumbling, after which they cut a way through with iron tools.
+  gold_spans:
+    - pg_id: 10907
+      groups: [vinegar-rock]
+      quote: >-
+        pouring vinegar on the heated stones, they render them soft and
+        crumbling. They then open a way with iron instruments through the rock
+        thus heated by the fire
+      note: Livy XXI.37 — the canonical fire-and-vinegar account
+    - pg_id: 900003
+      groups: [vinegar-rock]
+      quote: >-
+        he cut down and burned wood, quenched the ashes with water and vinegar,
+        and thus rendering the rocks brittle he shattered them with iron hammers
+      note: Appian, Hannibalic War — independent retelling
+    - pg_id: 28587
+      groups: [vinegar-rock]
+      quote: >-
+        having cut through a rock of immense height, which he melted by means of
+        mighty fires, and pouring over it a quantity of vinegar
+      note: Ammianus XV.10 — the latest classical retelling
+  notes: >-
+    Vocab gap — modern "dissolve/split the rock" vs heated/poured vinegar/
+    crumbling. Fills the thin Livy 9-26 (#10907); three independent works.
+  status: reviewed
+
+- id: syn-018
+  category: synonym
+  question: What secret nocturnal religious society did the Roman senate outlaw as a criminal conspiracy?
+  ideal_answer: >-
+    The Bacchanalia — the secret night-rites of Bacchus. After they spread from
+    Etruria through Italy and into Rome, the senate in 186 BC treated them as a
+    dangerous conspiracy: thousands were tried and many executed, the meeting
+    places demolished, and a decree forbade the rites in Rome or Italy except
+    under strict, tiny, senate-licensed exceptions.
+  gold_spans:
+    - pg_id: 44318
+      groups: [bacchanalia]
+      quote: >-
+        A charge was then given to demolish all the places where the
+        Bacchanalians had held their meetings; first, in Rome, and then
+        throughout all Italy
+      note: Livy XXXIX — the suppression; text says "Bacchanalia"/"nocturnal rites"
+    - pg_id: 10706
+      groups: [bacchanalia]
+      quote: >-
+        a secret nocturnal festival in honour of the god Bacchus had been first
+        introduced into Etruria through a Greek priest
+      note: Mommsen, History of Rome — scholarship retelling
+    - pg_id: 34122
+      groups: [bacchanalia]
+      quote: >-
+        In 186 the decree for the suppression of the Bacchanalian scandal was
+        passed.
+      note: Dill, Roman Society — dates the suppression decree
+  notes: >-
+    Vocab gap — modern "cult/outlaw/conspiracy" vs Bacchanalia/nocturnal rites
+    (though Livy's own narrative does use "conspiracy"). Fills the thin Livy
+    37-end (#44318).
+  status: reviewed
+
+- id: syn-019
+  category: synonym
+  question: What intoxicating vapor rising from a cleft in the ground was believed to put the priestess at Delphi into a prophetic frenzy?
+  ideal_answer: >-
+    An exhalation rising from a deep cleft or cavern at Delphi. The Pythian
+    priestess sat on a tripod set over the opening, breathed in the rising
+    exhalation, and, seized by a divine frenzy, delivered the oracle's response.
+  gold_spans:
+    - pg_id: 44885
+      groups: [delphi-vapor]
+      quote: >-
+        From it rises up an exhalation which inspires a divine frenzy: over the
+        mouth is placed a lofty tripod on which the Pythian priestess ascends to
+        receive the exhalation
+      note: Strabo IX.3 — "exhalation"/"divine frenzy", never "vapor/gas/trance"
+    - pg_id: 68680
+      groups: [delphi-vapor]
+      quote: >-
+        I have also heard of some shepherds meeting with the oracle, and
+        becoming inspired by the vapour, and prophesying through Apollo.
+      note: Pausanias X.5 — the "vapour" inspiring prophecy
+    - pg_id: 57143
+      groups: [delphi-vapor]
+      quote: >-
+        the priestess of Delphi sitting on her tripod under the influence of a
+        certain gas or vapor exhaling from the rock
+      note: Grote vol. II — scholarship retelling (tripod + vapor)
+  notes: >-
+    Vocab gap — "exhalation"/"inspiration"/"enthusiasm" in the texts. NB this
+    corrects cb-023's note (which claimed Strabo's vapour/tripod description is
+    absent from the Falconer translation — it is in fact present at IX.3.5).
+    Fills the ZERO-coverage Strabo Vol. II (#44885).
+  status: reviewed
+
+- id: syn-020
+  category: synonym
+  question: What Greek coastal city was swallowed by the sea after an earthquake, leaving its ruins visible beneath the water?
+  ideal_answer: >-
+    Helike, in Achaea. One winter night (373 BC) a violent earthquake struck and
+    the sea simultaneously rushed in, submerging the city and its people; for a
+    long time afterwards its ruins could be seen under the water, growing fainter
+    as the sea wore them away.
+  gold_spans:
+    - pg_id: 68680
+      groups: [helike]
+      quote: >-
+        And so the god suddenly sending the earthquake, and the sea encroaching
+        simultaneously, the inundation swept away Helice and its population.
+      note: Pausanias VII.24 — "swallowed up"/"the sea overflowed", not "tsunami/submerged"
+    - pg_id: 44885
+      groups: [helike]
+      quote: >-
+        Eratosthenes says, that he himself saw the place, and the ferrymen told
+        him that there formerly stood in the strait a brazen statue of Neptune
+      note: Strabo VIII — the drowned city still seen beneath the water
+  notes: >-
+    Vocab gap — modern "tsunami/submerged" vs swallowed up/overwhelmed by the
+    waves. Fills the ZERO-coverage Pausanias Vol. II (#68680). (Diodorus #900005
+    also narrates Helike & Bura but is the known bad-OCR volume — its garbled
+    text does not resolve cleanly, so it is not a span here.)
+  status: reviewed
+
+- id: syn-021
+  category: synonym
+  question: What great temple on the Capitol was burned down during the street fighting in Rome in the civil war of AD 69?
+  ideal_answer: >-
+    The temple of Jupiter Optimus Maximus (the Capitol) was burned to the ground
+    during the fighting between the Vitellians and the supporters of Vespasian.
+    Tacitus calls it the most deplorable disgrace to befall Rome since the city's
+    foundation — the seat of Jupiter, untouched by Porsenna or the Gauls, openly
+    besieged and set on fire.
+  gold_spans:
+    - pg_id: 900002
+      quote: >-
+        And so the Capitol, with its gates shut, neither defended by friends, nor
+        spoiled by a foe, was burnt to the ground.
+      note: Tacitus, Histories III — "set on fire"/"burnt to the ground", not "arson"
+  notes: >-
+    Vocab gap — modern "burned down/arson" vs set on fire/conflagration. Single
+    span — the AD 69 burning is Tacitus's set-piece; fills the ZERO-coverage
+    Tacitus Histories (#900002). (Appian #900004's "the Capitol was burned" is the
+    83 BC Sullan fire — a different event — so not a span here.)
+  status: reviewed
+
+- id: syn-022
+  category: synonym
+  question: How did the soldiers turn against the emperor Galba and kill him in the forum?
+  ideal_answer: >-
+    Bought over by Otho's promises, the praetorians abandoned Galba; as he was
+    carried into the Forum his bearers panicked and tipped him from his litter
+    near the Lacus Curtius, where the soldiers cut him down — most reports saying
+    a legionary named Camurius severed his throat — and then beheaded and
+    mutilated the old emperor, consul and high priest, before the senators and
+    crowd.
+  gold_spans:
+    - pg_id: 900002
+      groups: [galba-death]
+      quote: >-
+        it is the current report that one Camurius, a soldier of the 15th legion,
+        completely severed his throat by treading his sword down upon it.
+      note: Tacitus, Histories I — "slew"/"severed his throat", not "coup/assassinate"
+    - pg_id: 10890
+      groups: [galba-death]
+      quote: >-
+        cut down in the presence of many senators and crowds of plebeians the old
+        man, their consul, high priest, Caesar, emperor
+      note: Cassius Dio LXIV — independent account of the murder in the Forum
+    - pg_id: 674
+      groups: [galba-death]
+      quote: >-
+        Galba's chair was upset at the spot called the Lacus Curtius, where they
+        ran up and struck at him as he lay in his corslet.
+      note: Plutarch, Galba — the death scene at the Lacus Curtius
+  notes: >-
+    Vocab gap — modern "coup/assassinate" vs slew/struck/murdered. Fills the
+    ZERO-coverage Tacitus Histories (#900002).
+  status: reviewed
+
+- id: syn-023
+  category: synonym
+  question: On what furniture did well-to-do Romans recline while eating the main meal of the day?
+  ideal_answer: >-
+    They reclined on couches (lecti) rather than sitting. The cena (dinner) was
+    the chief meal of the day, and after the Punic wars special dining rooms — the
+    triclinia, named for the three couches arranged around the table — were built
+    for the comfort of reclining guests, with no more than three to a couch as
+    good manners.
+  gold_spans:
+    - pg_id: 11256
+      groups: [couches]
+      quote: >-
+        In the old days of household simplicity the meals were taken in the
+        atrium, the husband reclining on a _lectus_
+      note: Fowler, Social Life at Rome — names the couch (lectus); "dinner-party seating" is modern
+    - pg_id: 11256
+      groups: [couches]
+      quote: >-
+        These _triclinia_ were so arranged as to afford the greatest personal
+        comfort and the best opportunities for conversation
+      note: Fowler — the triclinium (three-couch dining room) for reclining guests
+  notes: >-
+    Vocab gap — modern "dinner-party seating/furniture" vs couches/lectus/
+    triclinium/reclining. Fills the ZERO-coverage Fowler (#11256). Both spans are
+    within the one target work (alternatives).
+  status: reviewed

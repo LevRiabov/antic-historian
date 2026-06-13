@@ -328,3 +328,233 @@
       quote: Qualis artifex pereo
       note: Dill, Roman Society from Nero to Marcus Aurelius — quotes Nero's words
   status: reviewed
+
+# --- v2.1 additions (coverage gap-fill, drafted 2026-06-13) ---
+# Authored against underserved/zero-coverage works (see additions/literal-
+# candidates.yaml). Spans verified via the corpus quote resolver; human-
+# reviewed 2026-06-13.
+
+- id: lit-012
+  category: literal
+  question: How many Jews perished and how many were taken captive during the whole siege of Jerusalem in the Jewish War?
+  ideal_answer: >-
+    Josephus reports that the number carried captive during the whole war was
+    ninety-seven thousand, and the number who perished during the whole siege
+    was eleven hundred thousand (1,100,000) — most of them Jews who had come up
+    from the country to Jerusalem for the feast of unleavened bread and were
+    then shut in by the Roman army, destroyed by pestilence and famine.
+  gold_spans:
+    - pg_id: 2850
+      quote: >-
+        Now the number 32 of those that were carried captive during this whole
+        war was collected to be ninety-seven thousand; as was the number of
+        those that perished during the whole siege eleven hundred thousand
+      note: >-
+        Josephus, Wars VI.9.3 ("32" is a footnote marker in the canonical text,
+        as with "94" in lit-005). The precise figures are unique to Josephus.
+  status: reviewed
+
+- id: lit-013
+  category: literal
+  question: What did Eleazar urge the defenders of Masada to do rather than fall into Roman hands?
+  ideal_answer: >-
+    Eleazar urged the defenders to die free by their own hands rather than be
+    taken — to slay their own wives and children and then one another, having
+    first burned their possessions and the fortress, so as to preserve their
+    freedom and deny the Romans the pleasure of capturing them. They carried
+    out the mass suicide, sparing only their stores of food.
+  gold_spans:
+    - pg_id: 2850
+      quote: >-
+        Let our wives die before they are abused, and our children before they
+        have tasted of slavery; and after we have slain them, let us bestow
+        that glorious benefit upon one another mutually, and preserve ourselves
+        in freedom
+      note: Josephus, Wars VII.8 — Eleazar's exhortation at Masada
+  status: reviewed
+
+- id: lit-014
+  category: literal
+  question: What act of a starving mother during the famine in Jerusalem does Josephus describe in the Wars of the Jews?
+  ideal_answer: >-
+    Josephus describes Mary of Bethezuba, a once-wealthy woman driven to
+    madness by the famine, who killed her infant son, roasted him, ate one half
+    and kept the other half concealed — an atrocity he says had no parallel in
+    Greek or barbarian history.
+  gold_spans:
+    - pg_id: 2850
+      quote: >-
+        she slew her son, and then roasted him, and eat the one half of him,
+        and kept the other half by her concealed
+      note: Josephus, Wars VI.3 — Mary of Bethezuba
+  status: reviewed
+
+- id: lit-015
+  category: literal
+  question: By what act could a man become the priest of Diana's grove at Nemi, and what was the priest called?
+  ideal_answer: >-
+    A man could win the priesthood only by breaking off a bough of a certain
+    sacred tree in the grove and then slaying the reigning priest in single
+    combat; having killed him, he succeeded to the office and held it until he
+    in turn was slain by a stronger or craftier challenger. The priest bore the
+    title King of the Wood (Rex Nemorensis).
+  gold_spans:
+    - pg_id: 3623
+      quote: >-
+        Success in the attempt entitled him to fight the priest in single
+        combat, and if he slew him he reigned in his stead with the title of
+        King of the Wood
+      note: Frazer, The Golden Bough, ch. I (The King of the Wood)
+  status: reviewed
+
+- id: lit-016
+  category: literal
+  question: What was the supreme or national god of the Assyrians?
+  ideal_answer: >-
+    The supreme, distinctively national god of the Assyrians was Asshur — head
+    of the Assyrian pantheon, styled "the great Lord" and "King of all the
+    Gods," the tutelary deity of the kings and of the country, whose name was
+    identical with that of Assyria itself.
+  gold_spans:
+    - pg_id: 16162
+      quote: >-
+        Asshur came to be viewed simply as a celestial being--the first and
+        highest of all the divine agents who ruled over heaven and earth
+      note: Rawlinson, Seven Great Monarchies, Vol. 2 (Assyria), ch. VIII (Religion)
+  status: reviewed
+
+- id: lit-017
+  category: literal
+  question: What was the principal building material of Chaldaea, and why was stone so little used?
+  ideal_answer: >-
+    The principal building material of Chaldaea was brick, made from the
+    abundant clay of the alluvial plain (sun-dried, or kiln-baked for greater
+    hardness). Stone was scarcely used because the alluvium was destitute of
+    it — any stone had to be imported from adjacent countries — so the
+    Chaldaeans built with clay brick in its default.
+  gold_spans:
+    - pg_id: 16161
+      quote: >-
+        The Chaldaeans found, in default of stone, a very tolerable material in
+        their own country; which produced an inexhaustible supply of excellent
+        clay, easily moulded into bricks
+      note: Rawlinson, Seven Great Monarchies, Vol. 1 (Chaldaea) — mineral products
+  status: reviewed
+
+- id: lit-018
+  category: literal
+  question: How many men were appointed to draw up the laws at Athens and became known as the Thirty?
+  ideal_answer: >-
+    Thirty men were chosen — the body that became known as the Thirty (later
+    the Thirty Tyrants) — appointed to draft a constitution based on the
+    ancestral laws of Athens, though they never published the laws and instead
+    seized power for themselves.
+  gold_spans:
+    - pg_id: 1174
+      quote: >-
+        the people passed a resolution to choose thirty men who were to draft a
+        constitution based on the ancestral laws of the State
+      note: Xenophon, Hellenica II.3
+  status: reviewed
+
+- id: lit-019
+  category: literal
+  question: What did Maharbal say to Hannibal after the battle of Cannae?
+  ideal_answer: >-
+    When Hannibal hesitated to march at once on Rome after Cannae, his cavalry
+    commander Maharbal — who had urged that within five days Hannibal might dine
+    in the Capitol — rebuked him: "You know how to conquer, Hannibal, but you do
+    not know how to make use of your victory." Livy adds that this day's delay
+    is believed to have saved the city and the empire.
+  gold_spans:
+    - pg_id: 10907
+      quote: "You know how to conquer, Hannibal; but you do not know how to make use of your victory."
+      note: Livy, History of Rome XXII.51
+  status: reviewed
+
+- id: lit-020
+  category: literal
+  question: What trophy of gold rings was poured out before the Carthaginian senate to show the scale of the victory at Cannae?
+  ideal_answer: >-
+    To prove the scale of the victory, Mago had the gold rings stripped from
+    the Roman knights slain at Cannae poured out in the vestibule of the
+    Carthaginian senate-house — a heap that, by report, filled about a peck
+    (some claimed three and a half pecks) — explaining that only knights, and
+    of these the principal only, wore such rings.
+  gold_spans:
+    - pg_id: 10907
+      quote: >-
+        he ordered the golden rings to be poured out in the vestibule of the
+        senate-house, of which there was such a heap that some have taken upon
+        themselves to say that on being measured they filled three pecks and a
+        half
+      note: Livy, History of Rome XXIII.12
+  status: reviewed
+
+- id: lit-021
+  category: literal
+  question: What did Scipio Africanus say to the crowd on the anniversary of his victory when prosecuted, before leading them to the Capitol?
+  ideal_answer: >-
+    Brought to trial on the very anniversary of the battle, Scipio reminded the
+    assembly that on that day he had fought and beaten Hannibal and the
+    Carthaginians in Africa (at Zama); declaring it unfit to spend such a day in
+    litigation, he went up to the Capitol to thank the gods — and the whole
+    assembly left the tribunes and followed him.
+  gold_spans:
+    - pg_id: 44318
+      quote: >-
+        on the anniversary of this day I fought a pitched battle in Africa,
+        with Hannibal and the Carthaginians, with good fortune and success
+      note: Livy, History of Rome XXXVIII.51
+  status: reviewed
+
+- id: lit-022
+  category: literal
+  question: Which famous maxims of the sages were inscribed in the forecourt of the temple of Apollo at Delphi?
+  ideal_answer: >-
+    The two famous maxims inscribed by the Seven Wise Men in the vestibule
+    (forecourt) of the temple of Apollo at Delphi were "Know thyself" and
+    "Nothing in excess" — the latter rendered by Pausanias as "Not too much of
+    anything."
+  gold_spans:
+    - pg_id: 68680
+      quote: >-
+        offered to Apollo those famous sayings, _Know thyself_ and _Not too much
+        of anything_. And they inscribed those sayings in the vestibule of the
+        temple
+      note: >-
+        Pausanias X.24 (underscores are italics markers in the canonical text).
+        The clean "inscribed in the vestibule" attestation is unique to
+        Pausanias in the corpus.
+  status: reviewed
+
+- id: lit-023
+  category: literal
+  question: How did a Roman patron's clients begin his day, in the morning ceremony at his house?
+  ideal_answer: >-
+    A patron's clients began his day with the salutatio — the morning
+    reception. In the early hours after daybreak, clients and callers gathered
+    at his house to greet him and pay their respects before he went down to the
+    Forum, often escorting him there in a train; under the Empire they thronged
+    the reception hoping for an invitation to dinner or a dole (the sportula).
+  gold_spans:
+    - pg_id: 11256
+      groups: [salutatio]
+      quote: >-
+        As a rule it was during the first two hours (_mane_) that callers
+        collected. In the old times it had been the custom to open your house
+        and begin your business at daybreak, and after saluting your familia
+        and asking a blessing of the household gods, to attend to your own
+        affairs and those of your clients.
+      note: Fowler, Social Life at Rome in the Age of Cicero — the Republican morning reception
+    - pg_id: 34122
+      groups: [salutatio]
+      quote: >-
+        the many private patrons whose morning receptions were thronged by a
+        hungry crowd, eager for an invitation to dinner, or its equivalent in
+        the sportula
+      note: Dill, Roman Society from Nero to Marcus Aurelius — the Imperial salutatio
+  notes: >-
+    Two attestations of the morning reception (salutatio) — Fowler for the
+    Republic, Dill for the Empire — are alternatives; either fully answers.
+  status: reviewed

@@ -138,7 +138,7 @@
         a manner as to depress another; and men, by their very precautions
         against fear, cause themselves to become objects of dread
       note: Livy's own moral (III.65, Bohn/Spillan tr.)
-  status: draft  # migrated 10828->19725 (Bohn tr.) 2026-06-12; re-review then set reviewed
+  status: reviewed
 
 - id: synth-004
   category: synthesis
@@ -436,4 +436,336 @@
         indiscriminate fury. Neither age nor sex afforded any exemption from
         his insatiable thirst for blood.
       note: The cruelty summation (translator's disquisition)
+  status: reviewed
+
+# === v2.1 additions (drafted 2026-06-13, coverage gap-fill) — status: draft ===
+# Sourced via `ahx search` / _author_helper.py; every span find_quote-verified.
+# NB volume correction: synth-016/017 target Polybius Vol. I (#44125), where
+# Book VI actually lives — Vol. II (#44126) is Books X-XXXIX (its CONTENTS page
+# and the absence of any anacyclosis vocabulary in the text confirm this). The
+# draft candidate's "#44126 (confirm)" guess was wrong.
+
+- id: synth-011
+  category: synthesis
+  question: How does Josephus portray the factional strife among the Jews that doomed Jerusalem?
+  ideal_answer: >-
+    Josephus presents the fall of Jerusalem as a self-inflicted catastrophe of
+    civil war within the walls. The zealots fractured into rival factions —
+    Eleazar son of Simon making "the first separation of the zealots from the
+    people" and seizing the inner temple, against John of Gischala and, in the
+    city, Simon — until there were "three treacherous factions" fighting one
+    another even as Titus besieged them. In that warfare they burned the
+    storehouses, so that almost all the corn "which would have been sufficient
+    for a siege of many years" was destroyed and the people were "taken by the
+    means of the famine" their own leaders had prepared. The common people were
+    "their prey on both sides," and Josephus moralizes that no age ever bred "a
+    generation more fruitful in wickedness" — the Jews destroyed themselves.
+  gold_spans:
+    - pg_id: 2850
+      quote: >-
+        who made the first separation of the zealots from the people, and made
+        them retire into the temple
+      note: Wars V — Eleazar splits off a third faction; the rise of the factions
+    - pg_id: 2850
+      quote: >-
+        almost all that corn was burnt, which would have been sufficient for a
+        siege of many years. So they were taken by the means of the famine
+      note: Wars V — the factions burn the grain stores, bringing on the famine
+    - pg_id: 2850
+      quote: >-
+        Now, while these factions fought one against another, the people were
+        their prey on both sides, as we have said already
+      note: Wars V — the people caught between the warring factions during the siege
+    - pg_id: 2850
+      quote: >-
+        nor did any age ever breed a generation more fruitful in wickedness
+        than this was, from the beginning of the world
+      note: Wars V — Josephus's moral that the Jews destroyed themselves
+  status: reviewed
+
+- id: synth-012
+  category: synthesis
+  question: How does Josephus characterize the reign of Herod the Great?
+  ideal_answer: >-
+    Josephus draws Herod as a king of dazzling success abroad and monstrous
+    cruelty at home. He stood so high in Rome's favour that "he arrived at that
+    pitch of felicity" of being, after Agrippa, the man Caesar valued most, and
+    he crowned his reign with vast building works, "undertaking a very great
+    work, that is, to build of himself the temple of God," alongside Caesarea
+    and his fortresses. Yet the suspicion that secured his throne consumed his
+    own household: he had his beloved wife tried and executed — "thus was
+    Mariamne led to execution" — and later his sons. His end matched his
+    cruelty: a loathsome disease in which "his privy-member was putrefied, and
+    produced worms," which Josephus reads as divine punishment.
+  gold_spans:
+    - pg_id: 2848
+      quote: >-
+        he arrived at that pitch of felicity, that whereas there were but two
+        men that governed the vast Roman empire
+      note: Antiquities XV — the favour of Rome and the splendour of the reign
+    - pg_id: 2848
+      quote: >-
+        undertook a very great work, that is, to build of himself the temple of
+        God
+      note: Antiquities XV.11 — the great building works (the temple)
+    - pg_id: 2848
+      quote: and thus was Mariamne led to execution
+      note: Antiquities XV — the suspicion and murders within his own family
+    - pg_id: 2848
+      quote: >-
+        his privy-member was putrefied, and produced worms; and when he sat
+        upright
+      note: Antiquities XVII.6 — the disease-ridden death, read as divine judgement
+  status: reviewed
+
+- id: synth-013
+  category: synthesis
+  question: How does Tacitus portray the role of the armies in making and unmaking emperors in the civil war?
+  ideal_answer: >-
+    Tacitus makes the legions the true power in the state. The convulsion of 69
+    laid bare "that secret of the empire, that emperors could be made elsewhere
+    than at Rome" — sovereignty now belonged to whichever army would proclaim
+    its general. That loyalty was bought: the city soldiery turned on Nero and
+    were inclined to change "when they found that the donative promised in
+    Galba's name was withheld," and under each claimant discipline dissolved —
+    "Much however as Vitellius indulged his generals, his soldiers enjoyed yet
+    greater licence." The praetorians embodied the menace, bursting in arms upon
+    Otho's banquet and threatening the Senate. Throughout, emperors are made and
+    unmade by the greed, licence, and violence of the soldiery.
+  gold_spans:
+    - pg_id: 900002
+      quote: >-
+        now had been divulged that secret of the empire, that emperors could be
+        made elsewhere than at Rome
+      note: Histories I.4 — the "secret of empire" revealed
+    - pg_id: 900002
+      quote: the donative promised in Galba's name was withheld
+      note: Histories I.5 — loyalty bought and sold; the withheld donative
+    - pg_id: 900002
+      quote: >-
+        Much however as Vitellius indulged his generals, his soldiers enjoyed
+        yet greater licence
+      note: Histories II — the licence and indiscipline of the soldiery
+    - pg_id: 900002
+      quote: They burst in upon the banquet with loud demands that Otho should shew himself
+      note: Histories I — the praetorians' menace over the throne
+  status: reviewed
+
+- id: synth-014
+  category: synthesis
+  question: How does Xenophon portray the rule and downfall of the Thirty Tyrants at Athens?
+  ideal_answer: >-
+    Xenophon shows the Thirty beginning with popular approval and ending in
+    bloody tyranny and overthrow. At first they prosecuted the informers and
+    base men of the democracy, and "the new senate gladly recorded its vote of
+    condemnation against them"; but they soon turned to plunder and murder,
+    passing a resolution "empowering each of the committee to seize on one of
+    the resident aliens apiece, to put his victim to death, and to confiscate
+    his property." Their rule grew so murderous that in eight months they had
+    "slain almost more men than the Peloponnesians together in ten years of
+    warfare." When Theramenes resisted Critias he was struck off the roll and
+    "dragged through the Agora" to his death. Finally Thrasybulus and the exiles
+    from Phyle prevailed, and the Athenians "reappointed the several
+    magistrates; the constitution began to work afresh, and civic life was
+    recommenced."
+  gold_spans:
+    - pg_id: 1174
+      quote: >-
+        These they laid hold on and prosecuted on the capital charge. The new
+        senate gladly recorded its vote of condemnation against them
+      note: Hellenica II.3 — the early, popular executions of the informers
+    - pg_id: 1174
+      quote: >-
+        a resolution was passed empowering each of the committee to seize on one
+        of the resident aliens apiece, to put his victim to death, and to
+        confiscate his property
+      note: Hellenica II.3 — the purge of the metics for plunder
+    - pg_id: 1174
+      quote: >-
+        who for the sake of private gain have in eight months slain almost more
+        men than the Peloponnesians together in ten years of warfare
+      note: Hellenica II.4 — Thrasybulus characterizes the Thirty's bloody rule
+    - pg_id: 1174
+      quote: >-
+        And so Theramenes was dragged through the Agora, in vehement and loud
+        tones proclaiming the wrongs that he was suffering
+      note: Hellenica II.3 — the quarrel with Theramenes and his death
+    - pg_id: 1174
+      quote: >-
+        they reappointed the several magistrates; the constitution began to work
+        afresh, and civic life was recommenced
+      note: Hellenica II.4 — Thrasybulus, Phyle, and the restoration of the democracy
+  status: reviewed
+
+- id: synth-015
+  category: synthesis
+  question: How does Strabo portray the decayed condition of the once-great cities of Greece in his own day?
+  ideal_answer: >-
+    Strabo repeatedly registers how the once-great cities of Greece had dwindled
+    or vanished by his own day. In the Argolid "some of the cities mentioned in
+    the Catalogue of the Ships, and said to be subject to Argos, have
+    disappeared." In Arcadia the famous cities — Mantinea, Orchomenus, Heraea,
+    Cleitor, Pheneus, Stymphalus and the rest — "either exist no longer, or
+    traces and signs only of their existence are visible," the country sunk into
+    a deserted condition. Lesser towns such as Dyspontium "was razed, and the
+    greatest part of the inhabitants removed" abroad. Even Corinth had been
+    sacked, Strabo recalling Polybius's eyewitness account of the soldiers'
+    indifference to its art and sacred offerings. The recurring note is
+    depopulation and ruin set against a glorious past.
+  gold_spans:
+    - pg_id: 44885
+      quote: >-
+        some of the cities mentioned in the Catalogue of the Ships, and said to
+        be subject to Argos, have disappeared
+      note: Geography VIII.6 — Homeric cities of the Argolid now vanished
+    - pg_id: 44885
+      quote: either exist no longer, or traces and signs only of their existence are visible
+      note: Geography VIII.8 — the decayed cities of Arcadia (Mantinea, Orchomenus, etc.)
+    - pg_id: 44885
+      quote: >-
+        But it was razed, and the greatest part of the inhabitants removed to
+        Epidamnus and Apollonia
+      note: Geography VIII.3 — Dyspontium razed and depopulated
+    - pg_id: 44885
+      quote: >-
+        Polybius relates with regret what occurred at the capture of the city,
+        and speaks of the indifference the soldiers showed for works of art
+      note: Geography VIII.6 — the Roman sack of Corinth
+  status: reviewed
+
+- id: synth-016
+  category: synthesis
+  question: How does Polybius explain the natural cycle by which forms of government rise and degenerate?
+  ideal_answer: >-
+    In Book VI Polybius lays out the natural cycle (anacyclosis) by which
+    constitutions rise and decay. Society begins under the rule of the
+    strongest, but once a leader rewards merit and protects the weak, men "no
+    longer obey him and support his rule from fear of violence, but rather from
+    conviction of its utility" — force matures into legitimate kingship. Each
+    good form then breeds its corrupt twin: kingship into tyranny, aristocracy
+    into oligarchy, and democracy into mob-violence, where "tumultuous
+    assemblies, massacres, banishments, redivisions of land" reduce the state
+    until "it has once more found a master and a despot." "This is the regular
+    cycle of constitutional revolutions." The escape is the mixed constitution:
+    "Lycurgus... combined together all the excellences and distinctive features
+    of the best constitutions, that no part should become unduly predominant" —
+    the balance Polybius finds perfected at Rome.
+  gold_spans:
+    - pg_id: 44125
+      quote: >-
+        they no longer obey him and support his rule from fear of violence, but
+        rather from conviction of its utility
+      note: Histories VI.6 — force matures into legitimate kingship
+    - pg_id: 44125
+      quote: >-
+        Then come tumultuous assemblies, massacres, banishments, redivisions of
+        land; until, after losing all trace of civilisation, it has once more
+        found a master and a despot
+      note: Histories VI.9 — democracy degenerates into mob-rule and back to despotism
+    - pg_id: 44125
+      quote: >-
+        This is the regular cycle of constitutional revolutions, and the natural
+        order in which constitutions change, are transformed
+      note: Histories VI.9 — the thesis statement of the cycle (anacyclosis)
+    - pg_id: 44125
+      quote: >-
+        Lycurgus, I say, saw all this, and accordingly combined together all the
+        excellences and distinctive features of the best constitutions, that no
+        part should become unduly predominant
+      note: Histories VI.10 — the mixed constitution as the escape from the cycle
+  notes: >-
+    Book VI is in Polybius Vol. I (#44125), NOT Vol. II (#44126) as the draft
+    candidate guessed — Vol. II is Books X-XXXIX. The anacyclosis text resolves
+    only in #44125 (the cycle vocabulary is wholly absent from #44126).
+  status: reviewed
+
+- id: synth-017
+  category: synthesis
+  question: How does Polybius describe the organization and discipline of the Roman army?
+  ideal_answer: >-
+    Polybius's Book VI admires the Roman army as a machine of organization and
+    discipline. At the levy the military tribunes "muster their men" and bind
+    each with an oath "that he will obey his officers," before sorting them into
+    velites, hastati, principes and triarii. On campaign they entrench a
+    standardized camp on one fixed plan, the general's Praetorium sited first
+    and the streets laid out around it. Discipline is enforced by fear: a cohort
+    that flees is decimated, the tribune selecting by lot "about a tenth of
+    those who have been guilty of the act of cowardice" for the fustuarium;
+    valour, by contrast, is so publicly rewarded that brave men become "marked
+    men in all solemn festivals." Polybius caps the account by contrast — in
+    land service "the Romans train themselves to a much higher pitch than the
+    Carthaginians," who "wholly neglect their infantry."
+  gold_spans:
+    - pg_id: 44125
+      quote: >-
+        the tribunes belonging to the several legions muster their men; and
+        selecting one of the whole body that they think most suitable for the
+        purpose, they cause him to take an oath that he will obey his officers
+      note: Histories VI.21 — the levy and the soldier's oath
+    - pg_id: 44125
+      quote: >-
+        Their method of laying out a camp is as follows. The place for the camp
+        having been selected, the spot in it best calculated to give a view of
+        the whole, and most convenient for issuing orders
+      note: Histories VI.27 — the standardized marching camp
+    - pg_id: 44125
+      quote: >-
+        selects five or eight or twenty out of them by lot, so that those
+        selected should be about a tenth of those who have been guilty of the
+        act of cowardice
+      note: Histories VI.38 — decimation and the fustuarium
+    - pg_id: 44125
+      quote: >-
+        the recipients of such rewards not only enjoy great glory among their
+        comrades in the army, and an immediate reputation at home
+      note: Histories VI.39 — the rewards for valour
+    - pg_id: 44125
+      quote: >-
+        the Romans train themselves to a much higher pitch than the
+        Carthaginians. The former bestow their whole attention upon this
+        department: whereas the Carthaginians wholly neglect their infantry
+      note: Histories VI.52 — the contrast Polybius draws with other military systems
+  notes: Same volume correction as synth-016 — Book VI lives in Vol. I (#44125).
+  status: reviewed
+
+- id: synth-018
+  category: synthesis
+  question: How does Livy portray Hannibal as Rome's great antagonist across the Second Punic War?
+  ideal_answer: >-
+    Livy makes Hannibal Rome's supreme antagonist, drawn double-edged from the
+    first: matchless "high virtues of the hero" shadowed by "inhuman cruelty,
+    more than Punic perfidy, no truth... no fear of the gods, no respect for
+    oaths." He proves the virtues at once, bringing his army into Italy "in the
+    fifth month... having crossed the Alps in fifteen days" through appalling
+    loss. Yet Livy fixes the fatal flaw after Cannae, when Maharbal urges an
+    instant march on Rome and, refused, retorts "You know how to conquer,
+    Hannibal; but you do not know how to make use of your victory" — a delay
+    "believed to have been the preservation of the city and the empire." The
+    long Italian war winds to its end at Zama, where Hannibal, "after performing
+    this as it were his last work of valour, fled to Adrumetum," and confessed
+    in the senate "that he was defeated, not only in the battle, but in the war."
+  gold_spans:
+    - pg_id: 10907
+      quote: >-
+        Excessive vices counterbalanced these high virtues of the hero; inhuman
+        cruelty, more than Punic perfidy, no truth, no reverence for things
+        sacred, no fear of the gods, no respect for oaths, no sense of religion
+      note: Livy XXI.4 — the double-edged character sketch at Hannibal's introduction
+    - pg_id: 10907
+      quote: >-
+        they came to Italy in the fifth month (as some authors relate) after
+        leaving New Carthage, having crossed the Alps in fifteen days
+      note: Livy XXI.38 — the crossing of the Alps
+    - pg_id: 10907
+      quote: You know how to conquer, Hannibal; but you do not know how to make use of your victory
+      note: >-
+        Livy XXII.51 — Maharbal: the failure to exploit the victory at Cannae
+    - pg_id: 12582
+      quote: >-
+        Hannibal, after performing this as it were his last work of valour, fled
+        to Adrumetum
+      note: Livy XXX.35 — the final defeat at Zama and Hannibal's flight
+  notes: >-
+    Single work, but its text is split across two manifest files — #10907 (Livy
+    Books 9-26: introduction, Alps, Cannae) and #12582 (Books 27-36: Zama).
   status: reviewed

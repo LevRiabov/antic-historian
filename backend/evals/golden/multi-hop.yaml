@@ -581,3 +581,529 @@
         the hateful invaders from their several settlements.
       note: "Hop 2 alternate: Suetonius, Nero LVII (the Life proper, not the footnote)"
   status: draft
+
+# ==============================================================================
+# mh-011..mh-024 — from additions/multi-hop-candidates.yaml, authored 2026-06-13
+# (CLI source-gathering pass, all quotes find_quote-verified). Of the 16 multi-hop
+# candidates, 2 were DROPPED:
+#   - fow-01 (clients' salutatio / sportula): the only in-corpus source, Fowler
+#     #11256, EXPLICITLY states the daily morning salutatio and the sportula were
+#     an Empire development NOT attested for the Republic his book covers ("we do
+#     not hear of his pressing himself on the attention of his patron every
+#     morning, or receiving any 'sportula'"). The candidate's expected answer is
+#     contradicted by the source; Fowler #11256 stays ZERO. (Salvageable only by
+#     reframing to "clients in Cicero's day" — flagged, not authored.)
+#   - dio-02 (Carthage in Sicily / Dionysius the Elder tyrant): the intended
+#     source, Diodorus XIII #900005, covers 409-405 BC but its OCR for Books
+#     XIII-XIV is too garbled to extract reliable verbatim gold spans, and clean
+#     cross-source support (Plutarch) for hop1 (Carthage's invasion) did not
+#     surface. Diodorus #900005 is already routed by mh-014, mh-015, con-018.
+# ==============================================================================
+
+- id: mh-011
+  category: multi-hop
+  question: How did the brother of Hannibal who marched an army into Italy to reinforce him meet his end?
+  ideal_answer: >-
+    Hasdrubal, Hannibal's brother, crossed the Alps into Italy to reinforce him
+    but was defeated and killed by the consuls Marcus Livius and Claudius Nero at
+    the river Metaurus (207 BC); his severed head, carried south, was thrown
+    before the outposts of Hannibal's camp.
+  gold_spans:
+    - pg_id: 12582
+      groups: [hop1]
+      quote: >-
+        Hasdrubal had quitted his winter quarters, and was now crossing the Alps
+      note: "Hop 1: Hasdrubal crosses the Alps to reinforce Hannibal (Livy XXVII)"
+    - pg_id: 12582
+      groups: [hop2]
+      quote: >-
+        ordered the head of Hasdrubal, which he had carefully kept and brought
+        with him, to be thrown before the advanced guards of the enemy
+      note: "Hop 2: his head thrown into Hannibal's camp after the Metaurus (Livy XXVII)"
+    - pg_id: 12582
+      groups: [hop1, hop2]
+      quote: >-
+        Hasdrubal, who had crossed the Alps with a reinforcement for Hannibal,
+        defeated by the consuls, Marcus Livius and Claudius Nero, and slain
+      note: "Hops 1+2: Livy's Book XXVII argument-summary states both the crossing and the death"
+  notes: >-
+    All spans in Livy Books 27-36 (#12582), which was ZERO. The combined span is
+    Livy's book-argument header (legitimate canonical text, like the Periochae
+    spans elsewhere) and covers both hops at once.
+  status: draft
+
+- id: mh-012
+  category: multi-hop
+  question: How did the Carthaginian commander who led elephants across the Alps eventually die, long after his war with Rome?
+  ideal_answer: >-
+    Hannibal, who led his army with its elephants across the Alps into Italy in
+    the Second Punic War, died decades later in exile: cornered at the court of
+    king Prusias by a Roman demand for his surrender, he drank the poison he had
+    long kept ready.
+  gold_spans:
+    - pg_id: 10907
+      groups: [hop1]
+      quote: >-
+        they came to Italy in the fifth month (as some authors relate) after
+        leaving New Carthage, having crossed the Alps in fifteen days.
+      note: "Hop 1: Hannibal's army crosses the Alps into Italy (Livy XXI)"
+    - pg_id: 44318
+      groups: [hop2]
+      quote: >-
+        he called for poison, which he had long kept in readiness to meet such an
+        event
+      note: "Hop 2: Hannibal takes poison in exile at Prusias's court (Livy XXXIX)"
+    - pg_id: 900003
+      groups: [hop2]
+      quote: he caused Prusias to put him to death by poison
+      note: "Hop 2 alternate: Appian, Syrian Wars (poison, at Rome's instance)"
+  notes: >-
+    hop2 spans overlap con-014 (which frames the manner-of-death as a
+    contradiction); here the question is identify-then-fate. Routes Livy 37-end
+    #44318 (thin) and Appian #900003.
+  status: draft
+
+- id: mh-013
+  category: multi-hop
+  question: Who commanded the Roman army that razed Carthage to the ground, and what did he reportedly weep over as the city burned?
+  ideal_answer: >-
+    Scipio Aemilianus (Scipio the Younger), who destroyed Carthage in the Third
+    Punic War (146 BC). As the city burned he shed tears and, asked by Polybius
+    what he meant, admitted he frankly named his own country — fearing that one
+    day the same fate would befall Rome.
+  gold_spans:
+    - pg_id: 900003
+      groups: [hop1]
+      quote: >-
+        the Romans under Scipio the younger razed Carthage to the ground and
+        forbade the rebuilding of it
+      note: "Hop 1: Scipio Aemilianus destroys Carthage (Appian, Punic Wars)"
+    - pg_id: 44318
+      groups: [hop1]
+      quote: >-
+        was cut off by Scipio; who at length took the city by storm, in the seven
+        hundredth year after its foundation
+      note: "Hop 1 alternate: Livy Periochae (Book LI), Scipio storms Carthage"
+    - pg_id: 900003
+      groups: [hop2]
+      quote: >-
+        Scipio, beholding this spectacle, is said to have shed tears and publicly
+        lamented the fortune of the enemy.
+      note: "Hop 2: Scipio weeps as Carthage falls (Appian)"
+    - pg_id: 900003
+      groups: [hop2]
+      quote: >-
+        he did not hesitate frankly to name his own country, for whose fate he
+        feared when he considered the mutability of human affairs.
+      note: "Hop 2: he feared Rome would one day share Carthage's fate (Appian, same chunk)"
+  notes: >-
+    The famous Homeric verse Scipio is said to have quoted is a LACUNA in our
+    Appian text (it jumps from "splendid Macedonian" straight to "Being asked by
+    Polybius"), so the ideal answer claims only what the corpus attests — the
+    weeping and his fear for Rome — not the Homer quotation. Both hop2 spans sit
+    in one Appian chunk. Routes Appian #900003 + Livy epitomes #44318.
+  status: draft
+
+- id: mh-014
+  category: multi-hop
+  question: Which Theban general broke Spartan power in a great pitched battle, and where did he fall in his last victory?
+  ideal_answer: >-
+    Epaminondas of Thebes, who shattered Spartan supremacy at Leuctra (371 BC)
+    and fell mortally wounded at Mantinea (362 BC), dying in the very hour of his
+    victory.
+  gold_spans:
+    - pg_id: 68680
+      groups: [hop1]
+      quote: >-
+        This victory of the Thebans was the most notable of all victories won by
+        Greeks over Greeks
+      note: "Hop 1: the Theban victory at Leuctra (Pausanias IX)"
+    - pg_id: 1174
+      groups: [hop1]
+      quote: >-
+        seeing that nearly a thousand men of the total Lacedaemonian troops were
+        slain; seeing also that of the seven hundred Spartans themselves who were
+        on the field something like four hundred lay dead
+      note: "Hop 1 alternate: the Spartan losses at Leuctra (Xenophon, Hellenica VI.4)"
+    - pg_id: 900005
+      groups: [hop2]
+      quote: >-
+        being killed at the battle at Mantenea, (where he obtained a famous
+        victory for his country by his own fall)
+      note: "Hop 2: Epaminondas dies winning at Mantinea (Diodorus XV; 'Mantenea' is the OCR spelling)"
+    - pg_id: 68680
+      groups: [hop2]
+      quote: he was killed in the moment of victory by an Athenian
+      note: "Hop 2 alternate: Pausanias (death at Mantinea in the moment of victory)"
+  notes: >-
+    Fills Xenophon Hellenica #1174 (Leuctra) and Pausanias Vol. II #68680;
+    routes Diodorus #900005.
+  status: draft
+
+- id: mh-015
+  category: multi-hop
+  question: Which Achaean coastal city was swallowed by the sea in a single night, and what was blamed for the catastrophe?
+  ideal_answer: >-
+    Helike (Helice) in Achaea, which an earthquake and an inundation of the sea
+    overwhelmed in a single night (373 BC). The catastrophe was blamed on the
+    wrath of Poseidon, whose suppliants the people of Helike had dragged from his
+    temple and slain.
+  gold_spans:
+    - pg_id: 68680
+      groups: [hop1]
+      quote: the inundation swept away Helice and its population
+      note: "Hop 1: Helike submerged by the sea (Pausanias VII.24)"
+    - pg_id: 900005
+      groups: [hop1]
+      quote: Two cities of Achaia, one called Helice, and the other Bura
+      note: "Hop 1 alternate: Diodorus XV (clean fragment; surrounding OCR is garbled)"
+    - pg_id: 68680
+      groups: [hop2]
+      quote: >-
+        met with quick vengeance from Poseidon, for an earthquake coming over the
+        place rapidly overthrew all the buildings
+      note: "Hop 2: the cause — Poseidon's vengeance, earthquake (Pausanias VII.24)"
+  notes: >-
+    The two Pausanias spans sit in adjacent/overlapping chunks (submersion vs.
+    divine cause); the Diodorus alternate adds genuine cross-source distance for
+    hop1. Fills Pausanias Vol. II #68680, routes Diodorus #900005.
+  status: draft
+
+- id: mh-016
+  category: multi-hop
+  question: How did the Spartan regent who led the Greeks to victory at Plataea fall from power and die?
+  ideal_answer: >-
+    Pausanias the regent, who commanded the victorious Greeks at Plataea (479
+    BC), afterwards intrigued with Persia to make himself master of Greece;
+    detected, he fled to the temple of Athena of the Brazen House, where the
+    ephors roofed him in, barricaded the doors and starved him, bringing him out
+    only as he was about to expire.
+  gold_spans:
+    - pg_id: 2456
+      groups: [hop1]
+      quote: >-
+        the most famous victory of all those about which we have knowledge was
+        gained by Pausanias the son of Cleombrotos
+      note: "Hop 1: Pausanias commands the Greeks at Plataea (Herodotus IX)"
+    - pg_id: 7142
+      groups: [hop1]
+      quote: Before held in high honour by the Hellenes as the hero of Plataea
+      note: "Hop 1 alternate: Thucydides I (Pausanias the hero of Plataea)"
+    - pg_id: 7142
+      groups: [hop2]
+      quote: >-
+        shut him in, barricaded the doors, and staying before the place, reduced
+        him by starvation
+      note: "Hop 2: starved in the temple of the Brazen House (Thucydides I.134)"
+    - pg_id: 68946
+      groups: [hop2]
+      quote: >-
+        Pausanias was detected plotting, and was the only one of those that took
+        sanctuary
+      note: "Hop 2 alternate: Pausanias the geographer III (treason + sanctuary)"
+  notes: >-
+    hop1 overlaps mh-007 (Pausanias as the Plataea commander) — a different
+    question (here his downfall). The candidate listed Diodorus XI (#900005) for
+    hop2, but #900005 contains only the unrelated Pausanias who murdered Philip
+    (Book XVI), not the regent's death — so Diodorus was dropped here.
+  status: draft
+
+- id: mh-017
+  category: multi-hop
+  question: The empire whose supreme god was Asshur fell when its great capital was stormed — who destroyed that capital?
+  ideal_answer: >-
+    Assyria — whose national god was Asshur and whose capital was Nineveh — fell
+    when Nineveh was stormed by the Medes under Cyaxares allied with the
+    Babylonians under Nabopolassar; the last Assyrian king, his means of
+    resistance exhausted, burned himself in his palace.
+  gold_spans:
+    - pg_id: 16162
+      groups: [hop1]
+      quote: >-
+        The tutelage of Asshur over Assyria is strongly marked by the identity of
+        his name with that of the country, which in the original is complete.
+      note: "Hop 1: Asshur the national god of Assyria (Rawlinson, Assyria)"
+    - pg_id: 16162
+      groups: [hop1]
+      quote: >-
+        The site of the great capital of Assyria had generally been regarded as
+        fixed with sufficient certainty to the tract immediately opposite Mosul
+      note: "Hop 1 alternate: Nineveh = Assyria's great capital (Rawlinson, Assyria)"
+    - pg_id: 16162
+      groups: [hop2]
+      quote: >-
+        Cyaxares and Nabopolassar then joined their efforts against Nineveh; and
+        Saracus, unable to resist them, took counsel of his despair, and, after
+        all means of resistance were exhausted, burned himself in his palace.
+      note: "Hop 2: Medes + Babylonians take Nineveh (Rawlinson, Assyria)"
+    - pg_id: 2707
+      groups: [hop2]
+      quote: >-
+        the Medes recovered their power, and had rule over the same nations as
+        before; and they also took Nineveh
+      note: "Hop 2 alternate: Herodotus I.106 (the Medes take Nineveh)"
+  notes: >-
+    The two hop1 spans are complementary attestations (Asshur = Assyria's god;
+    Nineveh = its capital) grouped as alternatives — either one bridges the riddle
+    to Assyria/Nineveh. hop2 spans reused from con-012. Routes Rawlinson Assyria
+    #16162 (mostly ZERO).
+  status: draft
+
+- id: mh-018
+  category: multi-hop
+  question: How did the founder of the Persian empire meet his death on campaign?
+  ideal_answer: >-
+    Cyrus the Great, founder of the Persian empire, was killed on campaign beyond
+    the Araxes against the Massagetae and their queen Tomyris; the greater part of
+    his army was destroyed and Cyrus himself fell there, after a reign of
+    twenty-nine years.
+  gold_spans:
+    - pg_id: 16165
+      groups: [hop1]
+      quote: >-
+        he had been led on to the destruction of the Median power, and to the
+        establishment of a Persian Empire in its stead.
+      note: "Hop 1: Cyrus founds the Persian empire (Rawlinson, Persia)"
+    - pg_id: 16163
+      groups: [hop1]
+      quote: >-
+        established the supremacy of his nation, before the unhappy effects of
+        Astyages' peace policy could be removed
+      note: "Hop 1 alternate: Rawlinson, Media (Cyrus establishes Persian supremacy)"
+    - pg_id: 2707
+      groups: [hop2]
+      quote: >-
+        the greater part of the Persian army was destroyed there on the spot, and
+        Cyrus himself brought his life to an end there, after he had reigned in
+        all thirty years wanting one.
+      note: "Hop 2: Cyrus killed fighting Tomyris and the Massagetae (Herodotus I.214)"
+  notes: >-
+    Routes Rawlinson Persia #16165 / Media #16163 on hop1. Rawlinson's narrative
+    of Cyrus's death by the Massagetae did not surface cleanly, so hop2 rests on
+    Herodotus I.214.
+  status: draft
+
+- id: mh-019
+  category: multi-hop
+  question: Which Jewish prisoner predicted that his Roman captor would become emperor, and did the prophecy come true?
+  ideal_answer: >-
+    Josephus, captured at Jotapata, predicted to Vespasian that he would become
+    Caesar and emperor. The prophecy came true when the eastern legions
+    proclaimed Vespasian emperor (AD 69) — Tiberius Alexander first swearing the
+    legions of Egypt to him on 1 July — and Vespasian, recalling the prophecy,
+    freed Josephus.
+  gold_spans:
+    - pg_id: 2850
+      groups: [hop1]
+      quote: "Thou, O Vespasian, art Caesar and emperor, thou, and this thy son."
+      note: "Hop 1: Josephus's prophecy to Vespasian (Wars III)"
+    - pg_id: 2850
+      groups: [hop2]
+      quote: >-
+        they got together in a great body, and, encouraging one another, they
+        declared Vespasian emperor
+      note: "Hop 2: the army proclaims Vespasian emperor (Wars IV)"
+    - pg_id: 6400
+      groups: [hop2]
+      quote: >-
+        Tiberius Alexander, governor of Egypt, first obliged the legions under his
+        command to swear obedience to Vespasian as their emperor, on the calends
+        [the 1st] of July, which was observed ever after as the day of his
+        accession to the empire
+      note: "Hop 2 alternate: Suetonius, Vespasian (the accession, 1 July)"
+    - pg_id: 900002
+      groups: [hop2]
+      quote: >-
+        The initiative in transferring the Empire to Vespasian was taken at
+        Alexandria under the prompt direction of Tiberius Alexander, who on the
+        1st of July made the legions swear allegiance to him. That day was ever
+        after celebrated as the first of his reign
+      note: "Hop 2 alternate: Tacitus, Histories II"
+  notes: >-
+    Fills Josephus Wars #2850 and Tacitus Histories #900002.
+  status: draft
+
+- id: mh-020
+  category: multi-hop
+  question: Which king rebuilt the Jerusalem temple on a grand scale, and how did he die?
+  ideal_answer: >-
+    Herod the Great, who rebuilt the Temple at Jerusalem on a magnificent scale,
+    died of a loathsome wasting disease — fever, ulcerated entrails, dropsy, and
+    putrefying flesh that bred worms — shortly after putting his son Antipater to
+    death.
+  gold_spans:
+    - pg_id: 2848
+      groups: [hop1]
+      quote: >-
+        And now Herod, in the eighteenth year of his reign, and after the acts
+        already mentioned, undertook a very great work, that is, to build of
+        himself the temple of God
+      note: "Hop 1: Herod rebuilds the Temple (Antiquities XV)"
+    - pg_id: 2850
+      groups: [hop1]
+      quote: >-
+        in the fifteenth year of his reign, Herod rebuilt the temple, and
+        encompassed a piece of land about it with a wall
+      note: "Hop 1 alternate: Wars I (regnal year differs from Antiquities)"
+    - pg_id: 2850
+      groups: [hop2]
+      quote: >-
+        there was a gentle fever upon him, and an intolerable itching over all the
+        surface of his body, and continual pains in his colon, and dropsical
+        turnouts about his feet, and an inflammation of the abdomen, and a
+        putrefaction of his privy member, that produced worms.
+      note: "Hop 2: Herod's wasting disease (Wars I)"
+    - pg_id: 2848
+      groups: [hop2]
+      quote: >-
+        his privy-member was putrefied, and produced worms; and when he sat
+        upright, he had a difficulty of breathing, which was very loathsome, on
+        account of the stench of his breath
+      note: "Hop 2 alternate: Antiquities XVII (the same loathsome disease)"
+  notes: >-
+    Fills Josephus Antiquities #2848 (rebuild + death) and routes Wars #2850.
+    Antiquities ("eighteenth year") and Wars ("fifteenth year") differ on the
+    regnal year — both attest the rebuild.
+  status: draft
+
+- id: mh-021
+  category: multi-hop
+  question: How did the reign of the emperor Vitellius come to its end?
+  ideal_answer: >-
+    Vitellius's army was crushed by the Flavian forces at the second battle of
+    Cremona (Bedriacum); when Rome fell, Vitellius was dragged from hiding through
+    the streets to the Gemonian stairs, tortured and killed, and his body cast
+    into the Tiber.
+  gold_spans:
+    - pg_id: 900002
+      groups: [hop1]
+      quote: >-
+        the troops of Vitellius were seized with panic, and threw themselves from
+        the rampart. The entire space between the camp and the walls of Cremona
+        was filled with slain.
+      note: "Hop 1: the Vitellian army crushed at Cremona (Tacitus, Histories III)"
+    - pg_id: 900002
+      groups: [hop2]
+      quote: >-
+        Then he fell under a shower of blows, and the mob reviled the dead man
+        with the same heartlessness with which they had flattered him when he was
+        alive.
+      note: "Hop 2: Vitellius killed at the Gemoniae (Tacitus, Histories III)"
+    - pg_id: 6400
+      groups: [hop2]
+      quote: >-
+        At length, upon the Scalae Gemoniae, he was tormented and put to death in
+        lingering tortures, and then dragged by a hook into the Tiber.
+      note: "Hop 2 alternate: Suetonius, Vitellius (dragged, killed, into the Tiber)"
+    - pg_id: 10890
+      groups: [hop2]
+      quote: >-
+        the soldiers flew into a rage and took him to the top of the Scalae
+        Gemoniae, where they struck him down. His head was cut off and carried
+        about all over the city.
+      note: "Hop 2 alternate: Cassius Dio LXV"
+  notes: >-
+    Fills Tacitus Histories #900002.
+  status: draft
+
+- id: mh-022
+  category: multi-hop
+  question: After the catastrophe at Cannae, what feature of Rome's system of government was credited with explaining her swift recovery?
+  ideal_answer: >-
+    Rome's mixed, balanced constitution — the three elements of consuls
+    (monarchic), senate (aristocratic) and people (democratic), each checking the
+    others — which Polybius describes precisely at the epoch of Cannae as the
+    source of Roman stability and resilience.
+  gold_spans:
+    - pg_id: 10907
+      groups: [hop1]
+      quote: >-
+        it was not one wound upon another which was announced, but a multiplied
+        disaster, the loss of two consular armies, together with the two consuls
+      note: "Hop 1: the scale of the disaster at Cannae (Livy XXII)"
+    - pg_id: 44125
+      groups: [hop2]
+      quote: >-
+        if we confine our observation to the power of the Consuls we should be
+        inclined to regard it as despotic; if on that of the Senate, as
+        aristocratic; and if finally one looks at the power possessed by the
+        people it would seem a clear case of a democracy.
+      note: "Hop 2: the mixed constitution — consuls, senate, people (Polybius VI)"
+    - pg_id: 44125
+      groups: [hop2]
+      quote: >-
+        I will now endeavour to describe that of Rome at the period of their
+        disastrous defeat at Cannae.
+      note: "Hop 2: Polybius frames the constitution at the Cannae moment (Book VI)"
+  notes: >-
+    CORRECTION to the candidate: Polybius Book VI sits in Shuckburgh Vol. I
+    (#44125), NOT Vol. II (#44126). So this question routes #44125 (already
+    non-ZERO) and does NOT fill the #44126 ZERO gap the candidate assumed; the
+    later/fragmentary books in #44126 remain uncovered by these additions.
+  status: draft
+
+- id: mh-023
+  category: multi-hop
+  question: Which oracle did Croesus famously test before his war with Persia, and what natural phenomenon there was later said to produce its prophecies?
+  ideal_answer: >-
+    The oracle at Delphi, which Croesus tested (by the secret boiled-tortoise
+    riddle) and judged the only true oracle before consulting it about war with
+    Persia. Its prophecies were later attributed to an exhalation rising from a
+    cleft in the earth, which inspired the Pythian priestess to her divine frenzy.
+  gold_spans:
+    - pg_id: 2707
+      groups: [hop1]
+      quote: >-
+        judging that the Oracle at Delphi was the only true one, because it had
+        found out what he himself had done.
+      note: "Hop 1: Croesus tests the oracles and trusts Delphi (Herodotus I.47-48)"
+    - pg_id: 44885
+      groups: [hop2]
+      quote: >-
+        From it rises up an exhalation which inspires a divine frenzy: over the
+        mouth is placed a lofty tripod on which the Pythian priestess ascends to
+        receive the exhalation, after which she gives the prophetic response in
+        verse or prose.
+      note: "Hop 2: the vapour from the chasm inspires the priestess (Strabo IX)"
+  notes: >-
+    Fills Strabo Vol. II #44885 (vol-split caveat confirmed: Strabo Book IX is in
+    Vol. II). Overlaps syn-str-01 on the vapour fact; here it is a multi-hop
+    crossed with Herodotus's account of Croesus testing the oracle.
+  status: draft
+
+- id: mh-024
+  category: multi-hop
+  question: What naval catastrophe destroyed the great Athenian expedition to Sicily, and what became of its captured general?
+  ideal_answer: >-
+    The Athenian armament was annihilated at Syracuse — beaten decisively in the
+    Great Harbour and then destroyed "with a total destruction" in the retreat
+    (413 BC). The captured general Nicias was put to death by the Syracusans
+    (Thucydides), though Plutarch preserves a variant that he and Demosthenes were
+    instead allowed to take their own lives.
+  gold_spans:
+    - pg_id: 7142
+      groups: [hop1]
+      quote: >-
+        they were destroyed, as the saying is, with a total destruction, their
+        fleet, their army, everything was destroyed, and few out of many returned
+        home.
+      note: "Hop 1: the total destruction of the expedition (Thucydides VII)"
+    - pg_id: 7142
+      groups: [hop2]
+      quote: >-
+        Nicias and Demosthenes were butchered, against the will of Gylippus, who
+        thought that it would be the crown of his triumph
+      note: "Hop 2: Nicias put to death by the Syracusans (Thucydides VII.86)"
+    - pg_id: 674
+      groups: [hop2]
+      quote: >-
+        that Demosthenes and Nicias did not die, as Thucydides and Philistus have
+        written, by the order of the Syracusans, but that upon a message sent them
+        from Hermocrates
+      note: "Hop 2 alternate: Plutarch, Nicias (Timaeus's suicide variant)"
+  notes: >-
+    Overlaps con-019 on Nicias's fate (hop2 spans shared); here it is
+    identify-then-fate. The Diodorus XIII narrative of the Sicilian disaster is
+    too OCR-garbled in #900005 to quote reliably, so this routes Thucydides #7142
+    + Plutarch #674 rather than Diodorus.
+  status: draft

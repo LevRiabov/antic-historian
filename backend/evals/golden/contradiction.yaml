@@ -427,3 +427,286 @@
         should bring matters to a speedy decision by battle
       note: Appian, Hannibalic War — blames Varro the demagogue personally (independent of Polybius)
   status: draft  # +Livy/Appian spans 2026-06-13 (was reviewed); re-review then set reviewed
+
+# ==============================================================================
+# con-012..con-019 — from additions/contradiction-candidates.yaml, authored
+# 2026-06-13 (CLI source-gathering pass). Of the 11 candidates, 3 were DROPPED
+# as soft/unsubstantiated (no rival account actually in the corpus):
+#   - babylon-capture: Rawlinson only echoes Herodotus; the one divergence
+#     (Xenophon's Cyropaedia) is reported secondhand by Grote, not in-corpus.
+#   - temple-fire: Tacitus Hist. #900002 breaks off before the temple's
+#     destruction; Dio #10890/#12061 never assert deliberate intent — so the
+#     "deliberate" version has no in-corpus attestation.
+#   - zama-losses: Polybius #44126 and Livy #12582 AGREE (~20k Carthaginian dead,
+#     ~1.5k Roman); no divergent in-corpus figure → not a contradiction.
+# con-015 is a REFRAME of the alpine-pass candidate (see its notes).
+# ==============================================================================
+
+- id: con-012
+  category: contradiction
+  question: How was the city of Nineveh captured and the Assyrian empire brought to an end?
+  ideal_answer: >-
+    The accounts disagree on how Nineveh fell. In the version Herodotus and
+    Rawlinson follow, it was taken by a Median assault: Cyaxares, allied with
+    the Babylonian Nabopolassar, pressed the siege until the Assyrian king's
+    means of resistance were exhausted and he burned himself in his palace. A
+    rival tradition, reported from Ctesias, has the walls breached not by storm
+    but by nature — an unusually wet season swelled the Tigris until it burst
+    in and swept away more than two miles of wall, after which the king set
+    fire to himself. Both traditions end with the king's self-immolation, but
+    differ on whether the city fell to siege or to flood.
+  gold_spans:
+    - pg_id: 2707
+      groups: [median-siege]
+      quote: >-
+        the Medes recovered their power, and had rule over the same nations as
+        before; and they also took Nineveh
+      note: Herodotus I.106 — Medes under Cyaxares take Nineveh (manner deferred)
+    - pg_id: 16162
+      groups: [median-siege]
+      quote: >-
+        Cyaxares and Nabopolassar then joined their efforts against Nineveh;
+        and Saracus, unable to resist them, took counsel of his despair, and,
+        after all means of resistance were exhausted, burned himself in his
+        palace.
+      note: Rawlinson, Assyria — the historical Median-siege account, no flood
+    - pg_id: 16163
+      groups: [river-flood]
+      quote: >-
+        an unusually rainy season so swelled the waters of the Tigris that they
+        burst into the city, sweeping away more than two miles of the wall. This
+        vast breach it was impossible to repair; and the Assyrian monarch,
+        seeing that further resistance was vain, brought the struggle to an end
+        by burning himself, with his concubines and eunuchs and all his chief
+        wealth, in his palace.
+      note: Rawlinson, Media — narrates the Ctesias river-flood version
+  notes: >-
+    Genuine ancient dispute: the standard Median-siege account vs the
+    Ctesias/Diodorus river-flood legend. Rawlinson relays the flood version as
+    Ctesias's while doubting it; its primary source (Diodorus Bk II) is outside
+    the corpus, so Rawlinson Media #16163 is the in-corpus attestation. Fills
+    Rawlinson Assyria #16162 / Media #16163 (were ZERO).
+  status: reviewed
+
+- id: con-013
+  category: contradiction
+  question: How large was the army that Xerxes led against Greece?
+  ideal_answer: >-
+    Herodotus gives an enormous figure: the land army alone amounted to one
+    hundred and seventy myriads (1,700,000), a total he says was reached by
+    herding the troops in ten-thousand-man batches into a walled enclosure and
+    counting how many times it filled. Rawlinson rejects the number as
+    untestable and almost certainly grossly exaggerated — armies, he notes, are
+    never really counted, and so crude a method invited inflation — though he
+    allows the host probably did exceed a million.
+  gold_spans:
+    - pg_id: 2456
+      groups: [vast]
+      quote: >-
+        but of the whole land-army taken together the number proved to be one
+        hundred and seventy myriads
+      note: Herodotus VII.60 — the 1,700,000 figure counted by enclosure
+    - pg_id: 16165
+      groups: [skeptical]
+      quote: >-
+        There are no sufficient means of testing these numbers. Figures in the
+        mouth of an Oriental are vague and almost unmeaning; armies are never
+        really counted
+      note: Rawlinson, Persia — rejects the same enclosure-counted figure
+  notes: >-
+    The ancient total vs the standard critical rejection; both describe the same
+    enclosure-counting method. Routes Rawlinson Persia #16165.
+  status: reviewed
+
+- id: con-014
+  category: contradiction
+  question: How did Hannibal die when he was cornered at the court of King Prusias?
+  ideal_answer: >-
+    The common account is that Hannibal, finding the house surrounded by
+    Prusias's soldiers (sent at the demand of the Roman envoy Flamininus), took
+    poison he had long kept ready and drank it; Livy and Appian both give this
+    poison version. Plutarch, however, records rival traditions about the manner
+    of his death: some said he strangled himself by twisting his cloak about his
+    neck with a servant's help, and others that he drank bull's blood.
+  gold_spans:
+    - pg_id: 44318
+      groups: [poison]
+      quote: >-
+        he called for poison, which he had long kept in readiness to meet such
+        an event
+      note: Livy XXXIX — Hannibal drinks the poison he kept ready
+    - pg_id: 900003
+      groups: [poison]
+      quote: >-
+        he caused Prusias to put him to death by poison
+      note: Appian, Syrian Wars — poison, at Flamininus/Rome's instance
+    - pg_id: 674
+      groups: [other-manner]
+      quote: >-
+        Some say that wrapping his upper garment about his neck, he commanded
+        his servant to set his knee against his back, and not to cease twisting
+        and pulling it, till he had completely strangled him. Others say, he
+        drank bull's blood
+      note: Plutarch, Flamininus — rival manners of death (strangling / bull's blood)
+  notes: >-
+    Sources agree Rome (Flamininus) cornered him; they disagree on the manner of
+    death — poison (Livy, Appian) vs Plutarch's strangling / bull's-blood
+    variants. Fills Livy 37-end #44318 + Appian #900003.
+  status: reviewed
+
+- id: con-015
+  category: contradiction
+  question: How large was Hannibal's army when he descended into Italy after crossing the Alps?
+  ideal_answer: >-
+    The sources do not agree. Polybius gives a precise, low figure — twelve
+    thousand Libyan and eight thousand Iberian infantry and not more than six
+    thousand cavalry — and says he took it from a bronze tablet Hannibal himself
+    set up at the Lacinian promontory. Livy reports that the number is by no
+    means agreed upon by authors: the highest estimates run to a hundred
+    thousand foot and twenty thousand horse, the lowest to twenty thousand foot
+    and six thousand horse (this last agreeing with Polybius).
+  gold_spans:
+    - pg_id: 44125
+      groups: [polybius-low]
+      quote: >-
+        twelve thousand Libyans and eight thousand Iberians, and not more than
+        six thousand cavalry in all, as he himself distinctly states on the
+        column erected on the promontory of Lacinium to record the numbers
+      note: Polybius III — the figure from Hannibal's own Lacinian inscription
+    - pg_id: 10907
+      groups: [larger-tradition]
+      quote: >-
+        What number of forces Hannibal had when he had passed into Italy is by
+        no means agreed upon by authors. Those who state them at the highest,
+        make mention of a hundred thousand foot and twenty thousand horse; those
+        who state them at the lowest, of twenty thousand foot and six thousand
+        horse.
+      note: Livy XXI — reports the figures are disputed, up to 100,000 foot
+  notes: >-
+    REFRAMED from the candidate's "by which route did Hannibal cross the Alps."
+    The route disagreement is a modern geographic reconstruction — the ancient
+    texts state no rival routes, and Polybius's polemic (III.47-48) targets
+    unnamed writers not in the corpus. The army-size figures ARE a genuine
+    in-corpus contradiction (Polybius's Lacinian-inscription count vs the wide
+    disagreement Livy documents). FLAG FOR REVIEW: accept the reframe or drop.
+  status: reviewed
+
+- id: con-016
+  category: contradiction
+  question: How many Romans were killed at the battle of Cannae?
+  ideal_answer: >-
+    Polybius puts the Roman dead at about seventy thousand — nearly the whole
+    army, since of the infantry actually engaged only some three thousand
+    escaped. Livy gives a smaller toll: forty thousand foot and two thousand
+    seven hundred horse slain, with an equal number of allies among them.
+  gold_spans:
+    - pg_id: 44125
+      groups: [polybius-70k]
+      quote: >-
+        all the rest died nobly, to the number of seventy thousand
+      note: Polybius III.117 — ~70,000 Roman dead
+    - pg_id: 10907
+      groups: [livy-40k]
+      quote: >-
+        Forty thousand foot, two thousand seven hundred horse, there being an
+        equal number of citizens and allies, are said to have been slain.
+      note: Livy XXII.49 — 40,000 foot + 2,700 horse
+  notes: >-
+    Genuine divergence in the casualty figures (~70,000 vs ~40,000). Deepens
+    Livy 9-26 #10907.
+  status: reviewed
+
+- id: con-017
+  category: contradiction
+  question: What was the real cause of the Second Punic War?
+  ideal_answer: >-
+    The sources frame the war's origin differently. Polybius insists that the
+    siege of Saguntum and the crossing of the Ebro were only the first acts of
+    the war, not its causes, and faults the historians who stop there; the true
+    causes, he argues, lay deeper. Livy grounds the war in Saguntum and in
+    Hannibal's inherited enmity — the boy's altar-oath to be an enemy of Rome,
+    and Hamilcar's lasting grievance over the loss of Sicily and Sardinia.
+  gold_spans:
+    - pg_id: 44125
+      groups: [polybius-deeper-cause]
+      quote: >-
+        Some historians of the Hannibalian war, when they wish to point out to
+        us the causes of this contest between Rome and Carthage, allege first
+        the siege of Saguntum by the Carthaginians, and, secondly, their breach
+        of treaty by crossing the river called by the natives the Iber. But
+        though I should call these the first actions in the war, I cannot admit
+        them to be its causes.
+      note: Polybius III.6 — distinguishes causes from first actions, faults others
+    - pg_id: 10907
+      groups: [livy-saguntum-oath]
+      quote: >-
+        having laid his hand on the offerings, was bound by an oath to prove
+        himself, as soon as he could, an enemy to the Roman people
+      note: Livy XXI.1 — the war framed around Hannibal's oath and inherited wrath
+  notes: >-
+    Polybius explicitly disputes other historians' causal account (cause vs
+    first-action/pretext), the very framing Livy's narrative exemplifies. Leans
+    analytical but qualifies as a contradiction because Polybius names and
+    rejects the rival view. Deepens Livy 9-26 #10907.
+  status: reviewed
+
+- id: con-018
+  category: contradiction
+  question: Who won the battle of Mantinea, and what did it settle?
+  ideal_answer: >-
+    The verdict is disputed. Xenophon ends his history on a deliberately bleak
+    note: both sides set up trophies and claimed victory, yet neither gained any
+    territory or advantage, and uncertainty and confusion in Greece were tenfold
+    greater after the battle than before — it settled nothing. Diodorus, by
+    contrast, counts it a victory for the Boeotians (Thebans), the verdict the
+    dying Epaminondas is given before he allows the spear to be drawn from his
+    body.
+  gold_spans:
+    - pg_id: 1174
+      groups: [indecisive]
+      quote: >-
+        Uncertainty and confusion, indeed, had gained ground, being tenfold
+        greater throughout the length and breadth of Hellas after the battle
+        than before.
+      note: Xenophon, Hellenica VII.5 — the famous downbeat close; nothing settled
+    - pg_id: 900005
+      groups: [theban-victory]
+      quote: >-
+        that the Boeotians were victors
+      note: Diodorus XV — the dying Epaminondas is told the Boeotians had won
+  notes: >-
+    Genuine historiographical contradiction — Xenophon's downbeat close (both
+    claimed victory, nothing gained) vs the victory tradition (Diodorus). Fills
+    Xenophon Hellenica #1174 + Diodorus #900005.
+  status: reviewed
+
+- id: con-019
+  category: contradiction
+  question: What happened to the captured Athenian generals Nicias and Demosthenes after the Sicilian disaster?
+  ideal_answer: >-
+    Thucydides says the Syracusans put Nicias and Demosthenes to death —
+    butchered against the wishes of the Spartan Gylippus, who had hoped to carry
+    the captured enemy generals home to Sparta. Plutarch preserves a rival
+    account, which he credits to Timaeus: that they were not executed by the
+    Syracusans at all, but, warned by a message from Hermocrates and with the
+    connivance of their guards, were allowed to put an end to themselves.
+  gold_spans:
+    - pg_id: 7142
+      groups: [executed]
+      quote: >-
+        Nicias and Demosthenes were butchered, against the will of Gylippus, who
+        thought that it would be the crown of his triumph
+      note: Thucydides VII.86 — executed by the Syracusans, against Gylippus
+    - pg_id: 674
+      groups: [suicide]
+      quote: >-
+        that Demosthenes and Nicias did not die, as Thucydides and Philistus
+        have written, by the order of the Syracusans, but that upon a message
+        sent them from Hermocrates, whilst yet the assembly were sitting, by the
+        connivance of some of their guards, they were enabled to put an end to
+        themselves.
+      note: Plutarch, Nicias — Timaeus's variant; they took their own lives
+  notes: >-
+    Plutarch (Nicias) explicitly frames the dispute (Thucydides/Philistus:
+    executed by the Syracusans; Timaeus: suicide). Fills Thucydides #7142.
+  status: reviewed

@@ -81,3 +81,189 @@
     politically, never materially (closest: Gibbon on marble burnt to lime —
     different fact).
   status: reviewed
+
+# === FALSE-PREMISE (never happened; system must refuse or correct, not invent) ===
+# Added 2026-06-13 (promoted from additions/out-of-scope-candidates.yaml). Each
+# reuses real corpus entities so retrieval WILL fire — that is the trap.
+
+- id: oos-011
+  category: out-of-scope
+  question: Describe King Leonidas's naval victory at the battle of Salamis.
+  notes: >-
+    FALSE PREMISE. Leonidas died on land at Thermopylae (480 BC); Salamis was a
+    sea battle won under Themistocles. Adversarial: both Leonidas/Thermopylae
+    and Salamis/Themistocles are richly covered (Herodotus, Grote, Bury) — the
+    system must not stitch them into a fictional Leonidas-at-Salamis. Verified
+    2026-06-13 (CLI): top hits are Plutarch/Herodotus/Grote on Thermopylae and
+    Salamis separately — no combined answer exists.
+  status: reviewed
+
+- id: oos-012
+  category: out-of-scope
+  question: What tactics did Hannibal use against Julius Caesar at the battle of Cannae?
+  notes: >-
+    FALSE PREMISE / anachronism. Cannae (216 BC) was Hannibal against the
+    consuls Varro and Paullus; Caesar lived 100-44 BC. Adversarial: Cannae is
+    one of the best-covered battles in the corpus (Polybius, Livy, Appian) —
+    must not graft Caesar onto it. Verified 2026-06-13 (CLI): top hits are
+    Dio/Mommsen/Polybius on Cannae; Caesar never enters the engagement.
+  status: reviewed
+
+- id: oos-013
+  category: out-of-scope
+  question: Which Persian king did Julius Caesar defeat at the battle of Gaugamela?
+  notes: >-
+    FALSE PREMISE. Gaugamela (331 BC) was Alexander's victory over Darius III;
+    Caesar was never there. Adversarial: Gaugamela/Arbela is covered (Arrian,
+    Diodorus, Plutarch) — the answer is Alexander-vs-Darius, not Caesar.
+    Verified 2026-06-13 (CLI): retrieval surfaces Alexander material
+    (Plutarch, Appian, Gibbon); Caesar is not the victor.
+  status: reviewed
+
+- id: oos-014
+  category: out-of-scope
+  question: How did the emperor Augustus react when he was assassinated in the Senate?
+  notes: >-
+    FALSE PREMISE. Augustus was not assassinated; he died of illness in AD 14
+    (the Senate assassination conflates him with Julius Caesar). Adversarial:
+    Caesar's assassination is exhaustively covered (Suetonius, Plutarch, Appian,
+    Dio) — the system must not transfer it to Augustus. Verified 2026-06-13
+    (CLI): retrieval surfaces Augustus's reign/death (Dill, Dio, Smith), not a
+    Senate murder of him.
+  status: reviewed
+
+- id: oos-015
+  category: out-of-scope
+  question: What did the philosopher Aristotle teach his pupil, the emperor Nero?
+  notes: >-
+    FALSE PREMISE / anachronism. Aristotle (d. 322 BC) tutored Alexander; Nero's
+    tutor was Seneca. Adversarial: the Aristotle-tutors-Alexander fact is in the
+    corpus (Plutarch, Arrian, Grote) — must not redirect it to Nero. Verified
+    2026-06-13 (CLI): retrieval surfaces Nero (Suetonius) and Aristotle/Alexander
+    (Bury, Arrian) as separate threads.
+  status: reviewed
+
+- id: oos-016
+  category: out-of-scope
+  question: How many war elephants did Leonidas command at the battle of Thermopylae?
+  notes: >-
+    FALSE PREMISE / fabricated detail. There were no elephants at Thermopylae.
+    Adversarial: Thermopylae is covered in detail (Herodotus VII) and elephants
+    appear elsewhere (Polybius, Livy on the Punic Wars) — must not invent a count.
+    Verified 2026-06-13 (CLI): top hits are Grote/Herodotus on Thermopylae; no
+    elephants in the engagement.
+  status: reviewed
+
+- id: oos-017
+  category: out-of-scope
+  question: Which gladiator did the emperor Pericles fight in the Colosseum?
+  notes: >-
+    FALSE PREMISE / multiple category errors. Pericles was a 5th-c. BC Athenian
+    statesman, never a Roman emperor or gladiator; the Colosseum dates to c. AD 80.
+    Adversarial: Pericles (Thucydides, Plutarch) and Roman games (Suetonius, Dio)
+    both appear — the conjunction is nonsense. Verified 2026-06-13 (CLI):
+    retrieval surfaces Roman emperors/games (Suetonius, Dio, Gibbon); the premise
+    is unsupported.
+  status: reviewed
+
+- id: oos-018
+  category: out-of-scope
+  question: What were the terms of the peace treaty between Sparta and Carthage after the battle of Marathon?
+  notes: >-
+    FALSE PREMISE. Marathon (490 BC) was Athens (with Plataea) against Persia;
+    there was no Sparta-Carthage treaty connected to it. Adversarial: Marathon
+    (Herodotus VI) and Sparta and Carthage all appear separately — the combination
+    is invented. Verified 2026-06-13 (CLI): retrieval surfaces Grote/Plutarch on
+    Greek affairs; no such treaty exists.
+  status: reviewed
+
+# === GENUINE ANTIQUITY, SOURCE ABSENT (refuse; don't substitute adjacent material) ===
+# Same pattern as oos-005 (Rosetta) / oos-007 (Linear B). Added 2026-06-13.
+
+- id: oos-019
+  category: out-of-scope
+  question: What does Plato's Republic propose for the ideal state and its philosopher-kings?
+  notes: >-
+    Genuine antiquity, source absent. No Plato in the corpus. Adversarial:
+    constitutional theory is present (Polybius VI on the cycle of constitutions;
+    Spartan/Athenian government across Herodotus, Thucydides, Grote) — the system
+    must not pass that off as Plato's Republic. Verified 2026-06-13 (CLI):
+    retrieval surfaces Bury's "ideal state" and Grote/Plutarch discussing Plato
+    as a figure — but no text of the Republic.
+  status: reviewed
+
+- id: oos-020
+  category: out-of-scope
+  question: How does Homer's Iliad narrate the duel between Achilles and Hector?
+  notes: >-
+    Genuine antiquity, source absent. Homer's poems are not corpus texts.
+    Adversarial: Grote and Bury discuss the Trojan legend and the Homeric
+    question at length — they analyze the legend, they do not contain the Iliad's
+    narrative of the duel. Verified 2026-06-13 (CLI): top hits are Grote
+    "Grecian Epic / Legend of Troy" — analysis of the legend, not the poem.
+  status: reviewed
+
+- id: oos-021
+  category: out-of-scope
+  question: What deeds of Darius the Great are recorded on the Behistun inscription?
+  notes: >-
+    Genuine antiquity, source absent. The Behistun inscription was deciphered in
+    the 19th century and is in none of these works. Adversarial: Darius is richly
+    covered (Herodotus, Rawlinson's Persia) — but not via the inscription itself.
+    Same pattern as oos-005 (Rosetta) / oos-007 (Linear B). Verified 2026-06-13
+    (CLI): retrieval surfaces Rawlinson (Persia) and Strabo on Darius; the
+    inscription's text is absent.
+  status: reviewed
+
+- id: oos-022
+  category: out-of-scope
+  question: What does Galen teach about the four humors and the functioning of the body?
+  notes: >-
+    Genuine antiquity, source absent. No medical author (Galen, Hippocrates) is
+    in the corpus. Adversarial: disease is described once, clinically, in
+    Thucydides' plague of Athens — that is symptom narrative, not humoral theory.
+    Verified 2026-06-13 (CLI): only weak hits (Dill, Grote, ≤0.57) — no humoral
+    theory anywhere in the corpus.
+  status: reviewed
+
+- id: oos-023
+  category: out-of-scope
+  question: What does Sappho's poetry express about love and longing?
+  notes: >-
+    Genuine antiquity, source absent. No Greek lyric poetry is in the corpus.
+    Adversarial: minimal — Lesbos may appear in Strabo's geography, but none of
+    Sappho's verse is present. Verified 2026-06-13 (CLI): a single thin Grote hit
+    (0.57) and nothing else — confirms near-total absence.
+  status: reviewed
+
+- id: oos-024
+  category: out-of-scope
+  question: What natural wonders does Pliny the Elder describe in his Natural History?
+  notes: >-
+    Genuine antiquity, source absent. Pliny's Natural History is not in the
+    corpus. Adversarial: Strabo (Geography) and Herodotus describe marvels and
+    natural features — the system must not present those as Pliny. Verified
+    2026-06-13 (CLI): retrieval surfaces Suetonius on Pliny's death under Titus
+    and Smith on Roman literature — the man, not the Natural History's content.
+  status: reviewed
+
+- id: oos-025
+  category: out-of-scope
+  question: What Stoic reflections does Marcus Aurelius set down in his Meditations?
+  notes: >-
+    Genuine antiquity, source absent. The Meditations are not a corpus text.
+    Adversarial: Dill's "Roman Society from Nero to Marcus Aurelius" covers the
+    period and milieu, and Marcus appears as a figure — but his own work is absent.
+    Verified 2026-06-13 (CLI): top hits are Gibbon and Dill on the period; the
+    Meditations themselves are absent.
+  status: reviewed
+
+- id: oos-026
+  category: out-of-scope
+  question: What does Euclid's Elements prove about the properties of triangles?
+  notes: >-
+    Genuine antiquity, source absent. No mathematical works are in the corpus.
+    Adversarial: minimal — Strabo gives distances and Eratosthenes-style
+    measurements, but no geometric demonstration appears. Verified 2026-06-13
+    (CLI): only weak Strabo/Pausanias distance hits (≤0.46) — no geometry.
+  status: reviewed
