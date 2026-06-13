@@ -2,7 +2,7 @@
   "mcpServers": {
     "ahx-corpus": {
       "command": "uv",
-      "args": ["run", "--project", "backend", "ahx", "mcp", "serve"]
+      "args": ["run", "--project", "backend", "python", "-m", "ahx.mcp_server"]
     }
   }
 }
