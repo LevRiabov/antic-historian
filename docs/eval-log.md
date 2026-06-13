@@ -383,3 +383,143 @@ reverses that and re-bases the floor.
 · recall@20 78.1% · MRR 0.608. The old per-span dense-8b row (53.2%) is superseded — it
 measured a different set with a metric that mismodeled redundancy. Records carry per-span
 `groups` so a future per-span vs per-group reading can't be silently confused.
+
+---
+
+## 2026-06-13 — Retrieval re-baseline on the full golden set (dense-v1, 135 in-scope)
+
+**Why:** the golden set reached its final size (161 questions / 440 gold spans, all spans
+resolving) — re-measure the naive-dense floor on the complete set before any Phase 4
+technique lands, so the comparison row reflects the corpus and questions Phase 4 will
+actually be judged on. Same retrieval config as the D2 gate-final row; only the question
+set grew (62 → 135 in-scope; out-of-scope excluded from the retrieval tier by design).
+**Config:** qwen3-embedding-8b · Nebius-pinned · 1024d · structural-v1 · naive dense top-20,
+no rerank · per-requirement-group recall. Run cost ≈ $0.00 (135 short query embeds).
+**Run record:** `backend/evals/runs/2026-06-13T18-31-18Z-dense-v1.json`
+
+| category | n | recall@1 | recall@5 | recall@10 | recall@20 | MRR |
+|---|---|---|---|---|---|---|
+| literal | 23 | 65.2% | 87.0% | 95.7% | 95.7% | 0.757 |
+| synonym | 23 | 52.2% | 91.3% | 95.7% | 95.7% | 0.665 |
+| multi-hop | 24 | 16.7% | 31.2% | 45.8% | 52.1% | 0.415 |
+| synthesis | 18 | 2.8% | 13.4% | 16.2% | 30.1% | 0.223 |
+| cross-book | 28 | 5.3% | 34.4% | 47.6% | 62.2% | 0.460 |
+| contradiction | 19 | 15.8% | 72.4% | 80.3% | 86.8% | 0.548 |
+| **overall** | **135** | **26.7%** | **55.0%** | **64.1%** | **71.0%** | **0.519** |
+
+**Findings:**
+
+1. **The floor held at scale.** Overall recall@20 is unchanged from the 62-question
+   per-group row (78.1% → here 71.0% — the drop is the harder, larger synthesis/cross-book
+   tails, now 18+28 questions vs 10+10) and recall@5 stayed in band (61.4% → 55.0% as the
+   weak categories doubled in weight). Doubling the question count introduced no broken
+   questions and did not move the architecture's signature — the baseline is stable.
+2. **The split is the same story, sharper:** single-fact lookup is strong (literal/synonym
+   ~87–91% @5, plateauing by @10), distributed answers are the floor (synthesis 13.4% @5,
+   multi-hop 31.2%, cross-book 34.4%). cross-book stays rerank-bait (34.4% @5 → 62.2% @20).
+3. **literal/synonym misses triaged (5 total), all real, three distinct classes** —
+   the residue behind the 87–91%:
+   - **lit-004** (Tacitus, "greatest disgrace… abandoned their shields"): lexical gap,
+     *not retrieved at all* (rank None @20). The answer passage's signal is
+     "shields"/"reproach and infamy", the query says "greatest disgrace" — dense can't
+     bridge it. → hybrid BM25 + rerank.
+   - **lit-018 / lit-021 / syn-018** (rank 7–10, recovered @20): correct chunk in the pool
+     but outranked by same-book passages on the same topic. → cross-encoder rerank.
+   - **syn-006** (Cambyses "sacred disease"): chunk-boundary split. The identifying subject
+     ("Cambyses had from his birth") and the keyword ("sacred disease") landed in adjacent
+     chunks at the 535217 boundary; the keyword chunk (277) retrieved at rank 1 but *lacks
+     the subject*, the full-answer chunk (276) missed top-20. → chunk overlap / boundary
+     tuning. (Same syn-006 first surfaced in the 06-13 recall-redesign entry; mechanism now
+     pinned to the chunk wall, not just the synonym gap.)
+
+**Phase 4 retrieval ablations measure against THIS row** (full 135-question set, per-group):
+recall@5 **55.0%** · recall@20 71.0% · MRR 0.519.
+
+---
+
+## 2026-06-13 — Generation re-baseline on the full set, judged (gen-baseline-v2-judge-v3.1)
+
+**Config:** full ask pipeline — dense-8b-1024-nebius retrieval (top-5) → prompt
+**baseline-v2** (instructs the model to surface disagreement / attribute multi-source
+synthesis) → gemma-12b-16k (local llama-swap, temp 0) → structured citations · judge =
+deepseek/deepseek-v4-flash via OpenRouter, **rubric judge-v3.1** (faithfulness +
+completeness + attribution, 1-5; semantic-refusal yes/no). Golden set: all **161 questions**
+(135 in-scope + 26 out-of-scope). First judged generation row on the full set and on the
+baseline-v2 prompt + judge-v3.1 rubric — supersedes the 72-question judged rows above as the
+Phase 4 generation floor. Run ≈ 33 min; judge cost ≈ $0.08 (⚠ estimate — deepseek-v4-flash
+$0.098/M in · $0.196/M out verified 2026-06-12; judge token counts not stored in the record).
+**Run record:** `backend/evals/runs/2026-06-13T19-52-16Z-gen-baseline-v2-judge-v3.1-full.json`
+
+| category | n | refused | refusal-OK | cit recall | cit prec | faith | compl | attrib |
+|---|---|---|---|---|---|---|---|---|
+| literal | 23 | 2 | 91.3% | 74.9% | 63.8% | 5.00 | 4.90 | 5.00 |
+| synonym | 23 | 4 | 82.6% | 58.0% | 65.5% | 5.00 | 4.89 | 4.26 |
+| multi-hop | 24 | 12 | 50.0% | 11.0% | 25.0% | 4.92 | 4.67 | 5.00 |
+| synthesis | 18 | 3 | 83.3% | 13.4% | 18.0% | 4.87 | 3.53 | 3.67 |
+| cross-book | 28 | 0 | 100.0% | 33.5% | 27.6% | 4.93 | 4.21 | 3.93 |
+| contradiction | 19 | 0 | 100.0% | 58.5% | 46.8% | 4.58 | 4.42 | 4.05 |
+| out-of-scope | 26 | 22 | 84.6% | — | — | — | — | — |
+| **overall** | **161** | | **84.6%** oos / **15.6%** false-refusal | **41.6%** | **42.3%** | **4.89** | **4.45** | **4.28** |
+
+refusal-OK = `refusal_correct` (in-scope: correctly answered; oos: correctly refused, semantic
+judge). false refusal rate (in-scope) **15.6%** · mean completion **204 tokens** · mean
+latency **6.2s**.
+
+**Findings:**
+
+1. **Faithful at baseline, before any optimization: 4.89 overall, ≥4.87 in every in-scope
+   category.** The generator passes retrieval through honestly — it does not invent. This is
+   the headline trust number and it is already strong with naive retrieval and a local 12B.
+2. **Quality is retrieval-bound, measured a third time.** Citation span recall (41.6%) tracks
+   the retrieval ceiling, and completeness moves with it cell-by-cell: literal (cit-recall
+   74.9%) → compl 4.90; synthesis (cit-recall 13.4%) → compl 3.53. Generation adds no new
+   loss beyond what retrieval withheld. Phase 4 retrieval gains should convert ~1:1 into
+   completeness, as the prior re-baseline showed for citation recall.
+3. **Attribution is the one generation-side lever** (overall 4.28; weak exactly on the
+   multi-source categories — synthesis 3.67, cross-book 3.93, contradiction 4.05; perfect
+   where one source suffices — literal 5.00, multi-hop 5.00). baseline-v2 asks for
+   disagreement-surfacing and per-source attribution; the model under-delivers when it must
+   weave several sources. Partly independent of retrieval — a prompt/generation target.
+4. **False refusals are honest refusals, concentrated where retrieval starves.** multi-hop
+   refused 12/24 (cit-recall 11%) — when the chain isn't co-located the model abstains
+   rather than guess. The 15.6% in-scope false-refusal rate is a retrieval-coverage symptom,
+   not a generation defect; fix retrieval (decomposition / multi-query) and these convert to
+   cited answers.
+5. **The abstention contract holds — except on the hardest source-absent traps.** Refusal
+   behavior, by OOS subtype: far-from-corpus 10/10, false-premise 8/8 (the semantic judge
+   correctly credits premise-corrections-with-citations as refusals — e.g. oos-014 cites
+   markers yet scores refusal-correct because the answer corrects "Augustus was assassinated"),
+   but **source-absent only 4/8**. The 4 misfires (oos-019/021/023/024, the
+   "GENUINE ANTIQUITY, SOURCE ABSENT" group) re-audited as **correctly authored, model
+   failures** — see below.
+
+**OOS re-audit — the 4 source-absent misfires (no golden-set change):**
+
+The trap these questions are built for ("the named primary source is absent, but a
+*secondary* source discusses it — must refuse, not substitute") caught a real abstention
+gap. Cited-chunk forensics:
+
+- **oos-024 (Pliny's Natural History)** — worst: the answer lists the NH's structure
+  ("the heavens, the elements, the stars, planets and their orbital periods") but that text
+  is *not in any cited chunk* (Smith on Seneca; Suetonius on "natural knowledge"). The run's
+  one genuine faithfulness breach — parametric knowledge with irrelevant markers attached.
+- **oos-019 (Plato's Republic)** / **oos-023 (Sappho)** — substitution: Bury's account of
+  Plato's failed political venture *in Syracuse* dressed up as "the Republic's ideal state";
+  a one-line Grote Greek footnote ("impassioned love-songs") dressed up as "what Sappho's
+  poetry expresses." Adjacent material about the figure, presented as the absent work.
+- **oos-021 (Behistun inscription)** — borderline, flagged for review: the cited Rawlinson
+  passage genuinely reports the exact deeds the inscription records (Gobryas/Susiana, the
+  Sacae) — Rawlinson decoded Behistun. Only the "via the inscription itself" framing makes
+  it out-of-scope; the content overlap may make this question too subtle.
+
+**The precise gap:** on source-attributed questions ("what does X's *work* say…") the model
+does not distinguish "the corpus contains X's text" from "the corpus mentions X." A
+refusal-policy clause (refuse unless the named work is itself among the retrieved passages)
+is a clean Phase 4 generation lever. Authoring verdict: keep all four; review oos-021.
+
+**Phase 4 generation ablations measure against THIS row** (161 questions, baseline-v2 prompt,
+judge-v3.1): faithfulness **4.89** · completeness **4.45** · attribution **4.28** ·
+citation recall 41.6% · citation precision 42.3% · OOS refusal accuracy 84.6% · in-scope
+false-refusal 15.6%. The 72-question judged rows are superseded (different set, pre-baseline-v2
+prompt, pre-v3.1 rubric); records carry `prompt_version` + `judge_rubric` so they can't be
+silently compared.
