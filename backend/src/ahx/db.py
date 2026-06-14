@@ -11,8 +11,8 @@ enter once the schema stabilizes (pre-Phase-3).
 from typing import Any
 
 from pgvector.sqlalchemy import Vector  # pyright: ignore[reportMissingTypeStubs]
-from sqlalchemy import ForeignKey, Index, Text, UniqueConstraint, create_engine, text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Computed, ForeignKey, Index, Text, UniqueConstraint, create_engine, text
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -64,6 +64,12 @@ class ChunkRow(Base):
     entities: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     dates: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     embedding: Mapped[Any] = mapped_column(Vector(EMBED_DIM))
+    # Phase 4.3 hybrid: BM25-class lexical index over the verbatim `text` (NOT
+    # retrieval_text — keyword match is on the real passage words). A STORED
+    # generated column so it auto-maintains and backfills on ADD (no re-embed).
+    text_tsv: Mapped[Any] = mapped_column(
+        TSVECTOR, Computed("to_tsvector('english', text)", persisted=True), nullable=True
+    )
 
     __table_args__ = (
         UniqueConstraint("pg_id", "chunking_version", "chunk_index"),
@@ -73,6 +79,7 @@ class ChunkRow(Base):
             postgresql_using="hnsw",
             postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
+        Index("ix_chunks_text_tsv_gin", "text_tsv", postgresql_using="gin"),
     )
 
 
@@ -97,6 +104,26 @@ def init_db(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(engine)
+
+
+def ensure_fts(engine: Engine) -> None:
+    """Add the BM25/FTS tsvector column + GIN index IN PLACE (Phase 4.3 hybrid).
+
+    Idempotent. The column is STORED-generated from `text`, so Postgres backfills
+    all existing rows on ADD — no reload, no re-embed. `create_all` (fresh DB)
+    already produces the same column/index from the model; this path upgrades a
+    DB that was loaded before the column existed. Same names both ways.
+    """
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE chunks ADD COLUMN IF NOT EXISTS text_tsv tsvector "
+                "GENERATED ALWAYS AS (to_tsvector('english', text)) STORED"
+            )
+        )
+        connection.execute(
+            text("CREATE INDEX IF NOT EXISTS ix_chunks_text_tsv_gin ON chunks USING gin (text_tsv)")
+        )
 
 
 def reset_chunks(engine: Engine) -> None:

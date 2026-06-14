@@ -113,21 +113,92 @@ which war).
 
 ## Workstream 4.2 — Cross-encoder rerank (representation-aligned)
 
-The precision engine (**[proven]**), with the hard-won law baked in: **the reranker
-scores the contextualized text** — bare-text rerank UNDID contextual gains in
-rag-historian (47.9% vs 51.6%).
+> **Build settled 2026-06-14.** The precision engine (**[proven]**), with the hard-won
+> law baked in: **the reranker scores the contextualized text** — bare-text rerank UNDID
+> contextual gains in rag-historian (47.9% vs 51.6%).
 
-- Pipeline shape: dense top-50 → rerank → top-5..8. Implemented as a new `Retriever`
-  (the 3.3 protocol pays off: the ask pipeline doesn't change).
-- **Local candidates already sitting on llama-swap:** `qwen3-reranker-0.6b`,
-  `bge-reranker-v2-m3`. Hosted candidates (Voyage/Cohere/Jina rerank free tiers —
-  verify prices/limits at implementation, same D2-style serving constraint).
-- Free riders in the same arm, per the menu: **lost-in-the-middle reordering**
-  (one line, unmeasured by design) and **near-duplicate dedup** (matters: 500/50
-  overlap means adjacent chunks both covering one span).
-- Measure: recall@5 of the reranked list vs `dense-ctx-v1`; cross-book is the
-  rerank-bait category (52.5% @20 vs 29.2% @5 at baseline — the pool has the answers,
-  the ranking doesn't).
+### The pre-registered bet — recover the 4.1 tax, preserve the 4.1 win
+
+4.1 landed a **provisional KEEP with a coupled, recoverable tax** (eval-log 2026-06-14).
+The rerank arm is precisely what targets that tax. The 4.1 diagnosis was explicit — *the
+pool keeps the answers, the top-5 rank slips* (recall@1 and recall@20 rose for the
+regressed categories; only @5 ordering fell) — which is exactly a cross-encoder's job, and
+the pool is now rich (overall recall@20 74.5%, contradiction @20 86.8%, cross-book @20 60.5%).
+
+| 4.1 result vs dense-v1 floor | 4.2 target |
+|---|---|
+| cross-book **−9.0** @5 (an ordering loss; @20 held) | recover to ≥ dense-v1 floor |
+| contradiction **−5.3** @5 (an ordering loss; @1 rose, @20 held) | recover |
+| attribution **−0.30** (source-conflation from a richer top-5) | recover toward 4.28 |
+| synthesis **+18.2** @5 (the historic-worst category, transformed) | **preserve** |
+
+Highest-confidence arm in Phase 4. If rerank recovers cross-book/contradiction @5 and
+attribution while preserving synthesis, **contextual + rerank ship together**.
+
+### Pipeline shape & architecture
+
+- `dense top-50 → near-dup dedup → rerank on retrieval_text → top-5..8`. **Pool depth
+  N=50**, with a one-off **N=100 sensitivity check** on cross-book/synthesis (their answers
+  sit deep) before locking N.
+- **Alignment law (rule #4):** the reranker scores **`retrieval_text`**
+  (`context_note + heading_path + chunk_text`) — the exact text that was embedded, never
+  bare `text` (11 unenriched chunks fall back to `text`). Generation still reads verbatim
+  `text` + locator. We **re-prove the law on this corpus** as one cheap extra run (rerank
+  bare `text` vs `retrieval_text`) — a clean before/after row + case-study content.
+- **The 3.3 `Retriever` protocol pays off:** the ask pipeline doesn't change. Code seams:
+  1. `RetrievedChunk` += `retrieval_text` + `rerank_score` (keep dense cosine `score` too,
+     for forensics); propagate in `dense.py`.
+  2. `ahx/retrieval/rerank.py` — **THE rerank module** (same single-module discipline as
+     embeddings): provider abstraction (local llama.cpp `/v1/rerank` vs OpenRouter
+     `/api/v1/rerank` — different shapes) + per-family formatting policy (qwen3-reranker
+     takes an instruction prefix; bge/cohere don't). Unknown model = hard error.
+  3. `rerank_retrieve` sync + `_async` (mirror dense's split).
+  4. `build_retriever(label, …)` dispatch wired into `run_retrieval_eval` (today it
+     hardcodes `dense_retrieve` and ignores the label). No framework types (D1 interface rule).
+  5. Config: `rerank_base_url`, `rerank_model`, `rerank_provider`, `rerank_api_key`,
+     `rerank_pool_n`.
+- **Tests:** parse both API shapes (MockTransport), alignment (scores `retrieval_text`),
+  dedup, dispatch. **Verify `/v1/rerank` is live** on both llama-swap profiles
+  (`--reranking`); qwen3-reranker's yes/no-token scoring via llama.cpp is the riskier one.
+
+### Free riders in the same arm (per the menu)
+
+- **Near-duplicate dedup** — 500/50 overlap means adjacent chunks both cover one span; drop
+  overlapping lower-ranked chunks (same `pg_id`, char-range overlap) before the top-k cut.
+  **Measured** (can move recall).
+- **Lost-in-the-middle reordering** — best chunks at prompt head/tail. Generation-only, one
+  line, **unmeasured by design**.
+
+### Shortlist + serving (decided 2026-06-14)
+
+| candidate | host | query cost | role |
+|---|---|---|---|
+| **qwen3-reranker-0.6b** | local llama-swap | $0 | incumbent-class, embedder-family-aligned |
+| **bge-reranker-v2-m3** | local llama-swap | $0 | proven classic cross-encoder |
+| **cohere/rerank-v3.5** | OpenRouter `/api/v1/rerank` | ~$0.001/search ⚠ | hosted ceiling ref (4K ctx — fine at ~600 tok/doc) |
+| **cohere/rerank-4-pro** | OpenRouter `/api/v1/rerank` | ~$0.0025/search ⚠ | hosted ceiling ref (SOTA, 32K ctx) |
+
+The OpenRouter rerank endpoint reuses our existing embedding wiring (same base URL + key) —
+no separate Cohere-native client (verified 2026-06-14). Full 135-question eval = 135
+searches ⇒ v3.5 ≈ $0.14, Pro ≈ $0.34 (⚠ per-search from Cohere native; verify OpenRouter's
+page at integration). **Cost ledger:** hosted rerank is a *query-time* cost forever (the
+expensive ledger) — so local rerankers ($0) are the default and the hosted models are
+**ceiling references** (like voyage-4-lite in D2). Thin margin (≤ noise) → local wins on ops.
+
+### Measurement & decision criteria (written before results)
+
+1. `ahx eval run --retriever rerank-v1` per model vs **dense-ctx-v1 (56.7% @5)** and the
+   **dense-v1 floor (55.0%)**; rerank the pool to depth ≥20 so recall@1/5/10/20 all read.
+2. Best retrieval model → `ahx eval generate --label rerank-v1 --judge` vs **gen-ctx-v1 /
+   gen-baseline-v2** — does attribution recover (toward 4.28), completeness hold?
+3. Alignment proof run (bare `text` vs `retrieval_text`) on the chosen model.
+4. N=100 sensitivity check on cross-book/synthesis.
+5. eval-log entry per model + keep/reject; ablation-table row; the contextual KEEP is
+   confirmed-or-not here.
+
+**Criteria:** primary = recall@5/MRR recovering cross-book & contradiction @5 to ≥ floor
+*while preserving synthesis*; secondary = attribution recovery (generation tier); ops =
+latency (local CPU vs OpenRouter roundtrip) + $/query. Winner feeds 4.3 (hybrid → rerank).
 
 ## Workstream 4.3 — Hybrid BM25 + RRF (the headline re-test at scale)
 
@@ -186,9 +257,14 @@ parallel arms would confound attribution. The 4.4 conditional arms can interleav
 
 - [ ] ADR-002 (D2) written; corpus on the winning embedder, parity fixture updated
 - [ ] Contextual/metadata pass: measured keep/reject vs dense-v1, enrichment versioned
-- [ ] Rerank arm: measured on contextualized text, reranker choice justified
-      (local vs hosted, latency on target hardware)
-- [ ] Hybrid arm: measured incl. pool-recall@50; D3 confirmed or challenged
+- [x] Rerank arm: measured on contextualized text, reranker choice justified — KEEP
+      cohere/rerank-4-pro (eval-log 2026-06-14). Local rerankers regress; cross-book
+      un-rerankable; gen-tier recovers attribution+completeness. v3.5 gen-check is the
+      open cost-ledger follow-up.
+- [x] Hybrid arm: measured incl. pool-recall@50 — **REJECTED** (eval-log 2026-06-14):
+      pool-recall@50 byte-identical to dense, slight top-rank/MRR regression; the 8B
+      embedder subsumes BM25, falsifying the "flip at scale" prediction. FTS machinery
+      stays in-schema (idle) for a future self-query arm. D3 (Postgres) holds.
 - [ ] Production single-shot pipeline = measured winners, behind the same `Retriever`
       protocol, served by `POST /ask` unchanged
 - [ ] eval-log ablation table: one row per arm, baseline → final, per category

@@ -20,7 +20,6 @@ import json
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime
-from functools import partial
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -39,7 +38,6 @@ from ahx.generation.citations import Citation
 from ahx.generation.pipeline import DoneEvent, SourcesEvent, ask, collect
 from ahx.generation.prompt import PROMPT_VERSION
 from ahx.llm import ChatMessage, ChatModel, chat_model_from_settings
-from ahx.retrieval.dense import dense_retrieve_async
 from ahx.retrieval.embedding import EmbeddingClient
 
 
@@ -104,6 +102,9 @@ class GenerationRun(BaseModel):
     chunking_version: str
     prompt_version: str
     top_k: int
+    retriever: str = "dense"  # which retrieval path fed the prompt (Phase 4.2)
+    rerank_model: str | None = None  # set only for rerank-* retrievers
+    rerank_pool_n: int | None = None
     judge_model: str | None
     judge_rubric: str | None = None  # None on pre-judge-v2 records
     aggregates: GenAggregates
@@ -466,11 +467,13 @@ async def run_generation_eval(
     top_k: int = 5,
     judge: ChatModel | None = None,
     on_result: Callable[[GenQuestionResult], None] | None = None,
+    retriever_name: str = "dense",
 ) -> GenerationRun:
     from ahx.ingest.chunker import CHUNKING_VERSION
+    from ahx.retrieval.factory import build_async_retriever, is_rerank_label
 
     engine = create_async_db_engine(settings.database_url)
-    retriever = partial(dense_retrieve_async, engine, EmbeddingClient(settings))
+    retriever = build_async_retriever(settings, engine, EmbeddingClient(settings), retriever_name)
     chat = chat_model_from_settings(settings)
 
     results: list[GenQuestionResult] = []
@@ -508,6 +511,9 @@ async def run_generation_eval(
         chunking_version=CHUNKING_VERSION,
         prompt_version=PROMPT_VERSION,
         top_k=top_k,
+        retriever=retriever_name,
+        rerank_model=settings.rerank_model if is_rerank_label(retriever_name) else None,
+        rerank_pool_n=settings.rerank_pool_n if is_rerank_label(retriever_name) else None,
         judge_model=judge.model_name if judge else None,
         judge_rubric=JUDGE_RUBRIC_VERSION if judge else None,
         aggregates=compute_gen_aggregates(results),

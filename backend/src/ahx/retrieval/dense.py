@@ -32,11 +32,16 @@ class RetrievedChunk(BaseModel):
     author: str
     work_title: str
     locator: list[str]
-    text: str
+    text: str  # verbatim passage — what generation + citations show
     score: float  # cosine similarity, 1.0 = identical direction
     char_start: int
     char_end: int
-    rank: int  # 1-based
+    rank: int  # 1-based (reassigned post-rerank in the 4.2 arm)
+    # The contextualized text that was EMBEDDED (context_note + heading_path +
+    # chunk_text). The reranker scores THIS, not `text` — alignment law (rule
+    # #4). None for the ~11 unenriched chunks; rerank falls back to `text`.
+    retrieval_text: str | None = None
+    rerank_score: float | None = None  # set only when a reranker reordered the list
 
 
 def _statement(vector: list[float], top_k: int) -> Select[tuple[ChunkRow, str, str, Any]]:
@@ -62,6 +67,7 @@ def _to_chunks(rows: Sequence[Row[tuple[ChunkRow, str, str, Any]]]) -> list[Retr
             char_start=chunk.char_start,
             char_end=chunk.char_end,
             rank=rank,
+            retrieval_text=chunk.retrieval_text,
         )
         for rank, (chunk, author, title, distance) in enumerate(rows, start=1)
     ]

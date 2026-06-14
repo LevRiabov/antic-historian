@@ -58,6 +58,16 @@ def db_reset_chunks(
     )
 
 
+@db_app.command(name="ensure-fts")
+def db_ensure_fts() -> None:
+    """Add the BM25 full-text (tsvector + GIN) column in place — no re-embed (4.3 hybrid)."""
+    from ahx.config import get_settings
+    from ahx.db import create_sync_engine, ensure_fts
+
+    ensure_fts(create_sync_engine(get_settings().database_url))
+    console.print("[green]FTS column + GIN index ensured (hybrid BM25 ready).[/green]")
+
+
 @ingest_app.command()
 def download(force: bool = typer.Option(False, help="Re-download even if cached.")) -> None:
     """Fetch every manifest entry into corpus/raw/ (idempotent)."""
@@ -457,6 +467,9 @@ def generate(
     label: str = typer.Option("gen-baseline-v1", help="Run label for the record filename."),
     top_k: int = typer.Option(5, help="Chunks stuffed into the prompt."),
     judge: bool = typer.Option(False, help="Run the LLM-judge layer (needs AHX_JUDGE_* set)."),
+    retriever: str = typer.Option(
+        "dense", help="Retrieval path: 'dense' or a 'rerank*' label (uses AHX_RERANK_* config)."
+    ),
 ) -> None:
     """Run the generation-tier eval (full ask pipeline over the golden set)."""
     import sys
@@ -496,7 +509,13 @@ def generate(
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     run = asyncio.run(
         run_generation_eval(
-            settings, questions, label=label, top_k=top_k, judge=judge_model, on_result=progress
+            settings,
+            questions,
+            label=label,
+            top_k=top_k,
+            judge=judge_model,
+            on_result=progress,
+            retriever_name=retriever,
         ),
         loop_factory=loop_factory,
     )

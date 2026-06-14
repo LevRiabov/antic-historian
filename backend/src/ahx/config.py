@@ -47,6 +47,27 @@ class Settings(BaseSettings):
     # embed_dim are truncated + L2-renormalized. Only for MRL-trained models.
     embed_mrl_truncate: bool = True
 
+    # Reranker (Phase 4.2 cross-encoder arm). Provider-agnostic over the
+    # Cohere-compatible POST /rerank shape — BOTH local llama.cpp and OpenRouter's
+    # /api/v1/rerank speak it, so swapping the local qwen3/bge reranker for a
+    # hosted Cohere ceiling reference (cohere/rerank-v3.5, cohere/rerank-4-pro,
+    # which ride the SAME OpenRouter base_url + key as embeddings) is three values,
+    # zero code. Default = local llama-swap reranker: rerank is a query-time cost
+    # forever (the expensive ledger), so $0-local is the default; hosted = ceiling.
+    rerank_base_url: str = "http://127.0.0.1:8080/v1"
+    rerank_model: str = "qwen3-reranker-0.6b"
+    rerank_api_key: str | None = None
+    rerank_provider: str | None = None
+    # Dense candidate-pool depth fed to the reranker. The rerank-bait categories'
+    # answers sit deep (cross-book recall@20 60.5%); N=50 default, with a one-off
+    # N=100 sensitivity check before locking (phase-4-plan.md §4.2).
+    rerank_pool_n: int = 50
+
+    # Hybrid BM25+dense (Phase 4.3): depth pulled from EACH of the dense and sparse
+    # lists before RRF fusion; rrf_k damps the long tail (1/(k+rank)). Standard k=60.
+    hybrid_pool_n: int = 50
+    rrf_k: int = 60
+
     # Chat LLM (gate D5 open — any OpenAI-compatible endpoint; provisional
     # default is local gemma via llama-swap, same server as embeddings).
     chat_base_url: str = "http://127.0.0.1:8080/v1"

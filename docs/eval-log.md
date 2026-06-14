@@ -606,3 +606,149 @@ cross-book @5 and attribution while preserving synthesis, contextual + rerank sh
 A later generation-side lever (prompt v3: per-claim author attribution discipline) and a D5
 model-strength arm (does a stronger generator attribute better across overlapping sources?)
 are the follow-ups if the tax survives rerank.
+
+---
+
+## 2026-06-14 — Phase 4.2 cross-encoder rerank: 5 rerankers measured (rerank-*-v1)
+
+**What changed (one variable):** a cross-encoder re-orders the dense candidate pool before
+top-k. Pipeline `dense top-50 → near-dup dedup → rerank on retrieval_text → top-k`, a new
+`Retriever` behind the same protocol (the ask pipeline/API unchanged). **Alignment law
+(rule #4) enforced:** the reranker scores the SAME contextualized text that was embedded
+(`retrieval_text` = context_note + heading_path + chunk_text), never bare `text`. Everything
+else identical to the dense-ctx-v1 / gen-ctx-v1 rows: qwen3-8b/Nebius/1024d, structural-v1,
+enrich-v1, per-group recall; generation = gemma-12b-16k, baseline-v2, top-5, judge
+deepseek-v4-flash v3.1. Candidate pool N=50, dedup on. Total arm spend ≈ $0.90 (local
+rerankers $0; cohere v3.5 retrieval ≈ $0.14, pro retrieval ≈ $0.34, pro judged generation
+≈ $0.42 — ⚠ estimates from Cohere per-search pricing via OpenRouter, 2026-06-14).
+**Run records:** `2026-06-14T17-53-56Z-rerank-qwen3-v1.json`,
+`…17-58-57Z-rerank-bge-v1.json`, `…18-12-33Z-rerank-cohere-v35-v1.json`,
+`…18-18-58Z-rerank-cohere-pro-v1.json`, `…19-45-36Z-gen-rerank-pro-v1.json`.
+
+### Retrieval — 135 in-scope, per-group, vs the dense-ctx-v1 (56.7% @5) and dense-v1 (55.0%) floors
+
+| candidate | host | r@1 | **r@5** | r@20 | MRR | cross-book @5 |
+|---|---|---|---|---|---|---|
+| dense-v1 (bare, floor) | — | 26.7 | 55.0 | 71.0 | 0.519 | **34.4** |
+| dense-ctx-v1 (no rerank) | — | 32.5 | 56.7 | 74.5 | 0.579 | 25.4 |
+| rerank qwen3-reranker-0.6b | local | 29.4 | 53.7 | 72.5 | 0.537 | 22.0 |
+| rerank bge-reranker-v2-m3 | local | 29.5 | 54.6 | 72.6 | 0.548 | 27.9 |
+| rerank cohere/rerank-v3.5 | OpenRouter | **34.5** | 56.7 | 71.3 | 0.585 | 26.4 |
+| rerank cohere/rerank-4-pro | OpenRouter | 34.1 | **58.4** | 74.0 | **0.594** | 26.0 |
+
+### Generation — 161 questions, baseline-v2, judge-v3.1, vs the two gen floors
+
+| metric | gen-baseline-v2 | gen-ctx-v1 | gen-rerank-pro-v1 |
+|---|---|---|---|
+| faithfulness | 4.89 | 4.81 | 4.82 |
+| completeness | 4.45 | 4.30 | **4.41** |
+| attribution | 4.28 | **3.98** | **4.18** |
+| citation recall | 41.6% | 43.8% | **46.8%** |
+| citation precision | 42.3% | 43.9% | 38.2% |
+| in-scope false-refusal | 15.6% | 7.4% | **3.0%** |
+| OOS refusal accuracy | 84.6% | 84.6% | 80.8% |
+
+**Findings:**
+
+1. **Reranker quality is the binding constraint — the inverse of D2.** Only SOTA Cohere Pro
+   beats the no-rerank contextual baseline (+1.7 @5, +0.015 MRR); both LOCAL rerankers
+   *regress* it (qwen3-0.6b −3.0, bge −2.1 @5, both above the ±0.7pp noise floor) and even
+   dip recall@20 — a 0.6b/m3 cross-encoder is weaker than the 8B embedder's own ranking and
+   adds noise. In D2 the embedder was the constraint; here the embedder is strong enough that
+   only a strong reranker helps. Shipping rerank therefore means a *paid hosted* dependency.
+2. **Cross-book is NOT rerankable — not even by Pro (26.0 vs floor 34.4).** The whole
+   provisional-KEEP rationale ("rerank recovers the 4.1 cross-book @5 tax") FAILS: every
+   reranker leaves cross-book below floor though the pool holds the answers (cross-book @20
+   50–58%). Cross-book is a candidate-*pool* problem, not an ordering one — a hybrid-BM25 /
+   agent target (4.3+), closed here with a receipt.
+3. **The generation tier is where rerank earns its keep.** Pro recovers ~⅔ of the −0.30
+   attribution tax (ctx 3.98 → 4.18; baseline 4.28), restores completeness to baseline
+   (4.30 → 4.41), posts the best citation recall measured (46.8%) and the lowest false-refusal
+   ever (15.6 → 7.4 → 3.0%). Faithfulness flat (4.82, noise). The attribution figure likely
+   *understates* recovery: rerank converted still more refusals into answers (the 4.1
+   Simpson's-paradox selection effect — newly-answered hard questions attribute worse and
+   drag the mean).
+4. **Costs of rerank-pro:** citation precision −5.7 (42.3/43.9 → 38.2 — more markers on the
+   richer reranked sets, a precision/recall trade the markers-audit already isolates) and OOS
+   refusal accuracy −3.8 (one question; the abstention contract essentially holds). Mean
+   completion 250 tokens (up from 204), mean latency 6.9s (hosted rerank roundtrip + longer
+   answers) — a real per-query cost, forever.
+5. **The "identical 82.6% literal" across qwen3-0.6b/bge/v3.5 was reranker strength, not a
+   dedup bug:** Pro recovered literal @5 to 91.3% from the same deduped pool the others scored
+   82.6% on — so dedup did not drop the covering chunk; the weak rerankers parked it at rank
+   6–10. Dedup exonerated (the dedup-off control stays available but is no longer indicated).
+6. **qwen3-reranker-8b ruled out (not measured):** the only local GGUF on hand (mradermacher
+   Q4_K_S) is a generic causal-LM conversion, not a rerank-purpose build like the ggml-org
+   0.6b — llama.cpp's `--reranking` can't read its yes/no logit (smoke test: degenerate
+   scores ~1e-27, wrong order). A strong-local 8B data point would need a rerank-purpose
+   conversion.
+
+**Verdict: KEEP — contextual + rerank (cohere/rerank-4-pro) ship together.** Net positive
+across the metrics that matter (attribution recovered, completeness restored, citation recall
++3.0, false-refusal 3.0%, retrieval +1.7 @5 / +MRR), at the price of a paid query-time
+dependency and minor citation-precision/OOS costs. The 4.1 provisional KEEP is now confirmed.
+
+**Phase 4 measures against THIS as the rerank floor.** Open follow-ups, not blockers:
+(a) **v3.5 generation check** — v3.5 tied Pro on retrieval @5-equivalents (56.7 @5, 34.5 @1,
+0.585 MRR) at ~2.5× lower per-query cost; if it captures most of Pro's generation gain it is
+the better production pick (the cost-ledger call). (b) **cross-book → 4.3 hybrid BM25/RRF**
+(widen the pool) and the Phase 5 agent. (c) prompt-v3 attribution discipline + a D5
+stronger-generator arm for the residual attribution gap (contradiction attribution still
+3.84). (d) dedup-off and N=100-pool sensitivity runs remain available but unindicated.
+
+---
+
+## 2026-06-14 — Phase 4.3 hybrid BM25/RRF: REJECTED — the 8B embedder subsumes BM25
+
+**What changed (one variable):** add a sparse (BM25-class) retriever next to dense and fuse
+by Reciprocal Rank Fusion. Postgres FTS — a `text_tsv` generated `tsvector` column (over the
+verbatim `text`, not retrieval_text) + GIN index, added IN PLACE (`ahx db ensure-fts`, no
+re-embed); scored with `ts_rank_cd`. `dense top-50 + BM25 top-50 → RRF (k=60) → top-k`, a new
+`hybrid` retriever label. Dense base = the existing `dense-ctx-v1` vectors; everything else
+identical. **New metric: recall@50 = pool-recall** (did the answer reach the candidate pool
+at all — distinguishes "BM25 widened the pool" from "fusion reordered"). Both arms run at
+`--top-k 50`. Run cost ≈ $0 (135 query embeds; BM25 is local Postgres).
+**Run records:** `2026-06-14T20-21-45Z-hybrid-v1.json`, `…20-24-19Z-dense-ctx-v1.json`.
+
+### Retrieval — hybrid-v1 vs dense-ctx-v1, both top-k 50 (135 in-scope, per-group)
+
+| metric | dense-ctx-v1 | hybrid-v1 | Δ |
+|---|---|---|---|
+| recall@1 | 32.5 | 30.7 | −1.8 |
+| recall@5 | 56.7 | 56.3 | −0.4 |
+| recall@10 | 67.2 | 67.0 | −0.2 |
+| recall@20 | 74.5 | 74.5 | 0.0 |
+| **recall@50 (pool)** | **82.4** | **82.4** | **0.0** |
+| MRR | 0.580 | 0.561 | −0.019 |
+| cross-book @50 | 76.1 | 76.1 | 0.0 |
+
+**Findings:**
+
+1. **BM25 adds ZERO pool coverage — recall@50 is byte-identical, category by category**
+   (overall 82.4, cross-book 76.1, literal 100, synonym 100, …). Every answer BM25 could
+   find by exact-token match, the 8B embedder already had in its top-50. The hypothesized
+   win (rare proper nouns, Victorian spellings, lit-004's lexical gap) does not materialize:
+   where dense@50 misses, the answer is *distributed* (synthesis/cross-book), not keyword-
+   findable — so BM25 can't reach it either.
+2. **Fusion slightly DEGRADES the top ranks** (@1 −1.8, MRR −0.019, contradiction @5
+   67.1→64.5): RRF injects keyword-noise chunks that displace well-ranked dense hits. Not a
+   no-op (the moved cells prove fusion ran) — just net-negative. BM25 works (smoke test
+   found Vercingetorix); it simply has nothing to add over a strong dense retriever here.
+3. **The pre-registered prediction is FALSIFIED** (rag-techniques.md / interaction #1:
+   "hybrid rejected at 950 chunks — *expected to flip to a win at 35k*"). It did NOT flip.
+   Same lesson as the 950-chunk reranker-subsumes-hybrid result, one layer up and at 46k
+   scale: **a SOTA embedder subsumes BM25.** The 2024-era hybrid-always-wins advice assumes
+   a weak/lexical first stage; with qwen3-8B that assumption is false on this corpus.
+4. **hybrid+rerank not worth running:** rerank cannot surface what is not in the pool, and
+   the pool is unchanged vs dense-ctx — so composing them adds only cost.
+
+**Verdict: REJECT hybrid BM25/RRF.** No pool-coverage gain, slight top-rank/MRR regression,
+$0 saved by not shipping it. The D3 Postgres-FTS machinery (tsvector + GIN) stays in the
+schema — cheap, idle, and reusable if a self-query/keyword-filter arm ever wants it — but it
+is not in the retrieval path. **This closes the core Phase-4 retrieval chain:** the binding
+constraint was the embedder (D2, +18 @5); contextual is marginal, rerank is marginal+paid,
+hybrid is null. The remaining headroom on the hard categories (synthesis/cross-book/multi-hop)
+is **architectural, not retrieval-ranking** — it belongs to the Phase 5 agent (multi-step
+search assembles distributed answers), not to more single-query retrieval technique. Optional
+unrun control: BM25-alone (`sparse-v1`) to quantify how far lexical trails dense — case-study
+color, not a decision input.

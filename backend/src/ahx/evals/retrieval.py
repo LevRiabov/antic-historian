@@ -45,10 +45,13 @@ from ahx.evals.golden import (
     ResolvedSpan,
     resolve_span,
 )
-from ahx.retrieval.dense import RetrievedChunk, dense_retrieve
+from ahx.retrieval.dense import RetrievedChunk
 from ahx.retrieval.embedding import EmbeddingClient
 
-K_VALUES = (1, 5, 10, 20)
+# @50 is the Phase 4.3 pool-recall lens: with --top-k 50 it answers "did the
+# answer reach the candidate pool at all?" (hybrid widened it vs fusion reordered).
+# At top-k<50 recall@50 collapses to recall@(top-k), harmlessly.
+K_VALUES = (1, 5, 10, 20, 50)
 
 
 class GoldSpanRef(BaseModel):
@@ -92,6 +95,14 @@ class RetrievalRun(BaseModel):
     embed_model: str
     chunking_version: str
     top_k: int
+    # Set only for rerank-* arms (None for plain dense): the reranker model and
+    # the dense candidate-pool depth fed to it — so the 4-model sweep is legible
+    # from the record alone.
+    rerank_model: str | None = None
+    rerank_pool_n: int | None = None
+    # Set only for hybrid-* arms: the per-list pool depth and RRF k.
+    hybrid_pool_n: int | None = None
+    rrf_k: int | None = None
     aggregates: Aggregates  # declared before results -> serialized on top
     results: list[QuestionResult]
 
@@ -206,9 +217,11 @@ def run_retrieval_eval(
 ) -> RetrievalRun:
     from ahx.db import create_sync_engine
     from ahx.ingest.chunker import CHUNKING_VERSION
+    from ahx.retrieval.factory import build_sync_retriever, is_hybrid_label, is_rerank_label
 
     engine = create_sync_engine(settings.database_url)
     embedder = EmbeddingClient(settings)
+    retriever = build_sync_retriever(settings, engine, embedder, retriever_name)
     results: list[QuestionResult] = []
     for question in questions:
         if question.category == "out-of-scope":
@@ -223,17 +236,23 @@ def run_retrieval_eval(
                 )
             spans.append(resolved)
         started = time.perf_counter()
-        retrieved = dense_retrieve(engine, embedder, question.question, top_k)
+        retrieved = retriever(question.question, top_k)
         latency_ms = round((time.perf_counter() - started) * 1000)
         gold_ids = _gold_chunk_ids(engine, spans, CHUNKING_VERSION)
         results.append(score_question(question, spans, retrieved, gold_ids, latency_ms))
 
+    is_rerank = is_rerank_label(retriever_name)
+    is_hybrid = is_hybrid_label(retriever_name)
     return RetrievalRun(
         created_at=datetime.now(UTC).isoformat(timespec="seconds"),
         retriever=retriever_name,
         embed_model=settings.embed_model,
         chunking_version=CHUNKING_VERSION,
         top_k=top_k,
+        rerank_model=settings.rerank_model if is_rerank else None,
+        rerank_pool_n=settings.rerank_pool_n if is_rerank else None,
+        hybrid_pool_n=settings.hybrid_pool_n if is_hybrid else None,
+        rrf_k=settings.rrf_k if is_hybrid else None,
         aggregates=compute_aggregates(results),
         results=results,
     )
