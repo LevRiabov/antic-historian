@@ -124,6 +124,13 @@ def load_one(
 
     from ahx.db import ChunkRow, SourceRow
     from ahx.ingest.chunker import CHUNKING_VERSION, Chunk
+    from ahx.ingest.enrich import (
+        ENRICHMENT_VERSION,
+        EnrichedChunk,
+        enriched_path,
+        heading_path,
+        retrieval_representation,
+    )
 
     jsonl_path = chunks_dir / f"pg{entry.pg_id}.jsonl"
     if not jsonl_path.exists():
@@ -139,6 +146,25 @@ def load_one(
         for line in jsonl_path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+
+    # Phase 4.1: if this work has been enriched at the current version, embed
+    # the contextual representation; otherwise fall back to bare text (dense-v1).
+    enriched: dict[int, EnrichedChunk] = {}
+    enr_path = enriched_path(chunks_dir.parent / "enriched", entry.pg_id)
+    if enr_path.exists():
+        for line in enr_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = EnrichedChunk.model_validate_json(line)
+            if record.enrichment_version == ENRICHMENT_VERSION:
+                enriched[record.chunk_index] = record
+
+    def representation(chunk: Chunk) -> tuple[str, EnrichedChunk | None]:
+        record = enriched.get(chunk.chunk_index)
+        if record is None:
+            return chunk.text, None
+        head = heading_path(entry.author, entry.title, chunk.locator, chunk.heading)
+        return retrieval_representation(record.context_note, head, chunk.text), record
 
     normalized_path = chunks_dir.parent / "normalized" / entry.normalized_filename
     work = NormalizedWork.model_validate_json(normalized_path.read_text(encoding="utf-8"))
@@ -173,7 +199,8 @@ def load_one(
         )
         for start in range(0, len(chunks), embedder.batch_size):
             batch = chunks[start : start + embedder.batch_size]
-            vectors = embedder.embed_documents([c.text for c in batch])
+            reps = [representation(c) for c in batch]
+            vectors = embedder.embed_documents([rep for rep, _ in reps])
             session.add_all(
                 ChunkRow(
                     pg_id=c.pg_id,
@@ -186,9 +213,14 @@ def load_one(
                     char_start=c.char_start,
                     char_end=c.char_end,
                     token_count=c.token_count,
+                    context_note=record.context_note if record else None,
+                    retrieval_text=rep if record else None,
+                    enrichment_version=record.enrichment_version if record else None,
+                    entities=record.entities if record else None,
+                    dates=record.dates if record else None,
                     embedding=vector,
                 )
-                for c, vector in zip(batch, vectors, strict=True)
+                for c, (rep, record), vector in zip(batch, reps, vectors, strict=True)
             )
         session.commit()
     return LoadReport(pg_id=entry.pg_id, title=entry.title, chunks=len(chunks), status="loaded")

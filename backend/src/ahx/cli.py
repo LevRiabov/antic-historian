@@ -246,6 +246,84 @@ def parity(
     )
 
 
+@ingest_app.command()
+def enrich(
+    sample: int = typer.Option(0, help="Cap NEW chunks this run (spike mode). 0 = whole corpus."),
+    concurrency: int = typer.Option(0, help="In-flight calls. 0 = config default (-np slots)."),
+    model: str = typer.Option("", help="Override enrich model name (else config)."),
+) -> None:
+    """Contextual-note + metadata pass -> corpus/enriched/ (Phase 4.1).
+
+    Resumable + idempotent: re-running skips chunks already enriched at the
+    current enrichment_version, so an interrupted overnight run just continues.
+    Writes only to disk (no DB) — the loader joins this cache at embed time.
+    """
+    import asyncio
+    import time
+
+    from ahx.config import get_settings
+    from ahx.ingest.enrich import ENRICHMENT_VERSION, EnrichProgress, enrich_corpus
+    from ahx.ingest.manifest import parse_manifest
+    from ahx.llm import OpenAICompatChat
+
+    settings = get_settings()
+    entries = parse_manifest(settings.manifest_path)
+    chunks_dir = settings.corpus_dir / "chunks"
+    enriched_dir = settings.corpus_dir / "enriched"
+    n_conc = concurrency or settings.enrich_concurrency
+    chat = OpenAICompatChat(
+        base_url=settings.enrich_base_url,
+        model=model or settings.enrich_model,
+        api_key=settings.enrich_api_key,
+        temperature=0.0,
+        max_tokens=settings.enrich_max_tokens,
+    )
+
+    console.print(
+        f"Enriching ({ENRICHMENT_VERSION}) via {chat.model_name} "
+        f"@ {settings.enrich_base_url}, concurrency {n_conc}"
+        + (f", sample {sample}" if sample else "")
+    )
+
+    started = time.perf_counter()
+    last = {"n": 0, "t": started}
+
+    def on_tick(p: EnrichProgress) -> None:
+        n = p.done + p.failed
+        if n - last["n"] >= 200:
+            now = time.perf_counter()
+            rate = (n - last["n"]) / max(now - last["t"], 1e-9)
+            console.print(
+                f"  {p.done:>6} done  {p.failed:>3} failed  {p.skipped:>6} cached  ({rate:.1f}/s)"
+            )
+            last["n"], last["t"] = n, now
+
+    progress = asyncio.run(
+        enrich_corpus(
+            entries,
+            chunks_dir,
+            enriched_dir,
+            chat,
+            concurrency=n_conc,
+            max_tokens=settings.enrich_max_tokens,
+            sample=sample or None,
+            on_tick=on_tick,
+        )
+    )
+    elapsed = time.perf_counter() - started
+    attempted = progress.done + progress.failed
+    rate = attempted / max(elapsed, 1e-9)
+    console.print(
+        f"\n{progress.done:,} enriched, {progress.failed} failed, "
+        f"{progress.skipped:,} already cached  in {elapsed:.0f}s ({rate:.1f}/s)"
+    )
+    if progress.failed:
+        console.print(
+            f"[yellow]{progress.failed} chunks failed (unparseable/errored) — "
+            f"re-run to retry just those.[/yellow]"
+        )
+
+
 @app.command()
 def search(query: str, top_k: int = 5) -> None:
     """Debug tool: dense similarity search against the loaded corpus."""

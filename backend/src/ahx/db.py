@@ -54,6 +54,15 @@ class ChunkRow(Base):
     char_start: Mapped[int]
     char_end: Mapped[int]
     token_count: Mapped[int]
+    # Phase 4.1 contextual enrichment (nullable: a pre-enrichment load leaves
+    # them empty and behaves exactly like dense-v1). `retrieval_text` is what
+    # gets embedded AND, in 4.2, reranked — alignment law (rule #4). `text`
+    # above stays the verbatim passage for generation + citations.
+    context_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retrieval_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    enrichment_version: Mapped[str | None] = mapped_column(nullable=True)
+    entities: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    dates: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     embedding: Mapped[Any] = mapped_column(Vector(EMBED_DIM))
 
     __table_args__ = (

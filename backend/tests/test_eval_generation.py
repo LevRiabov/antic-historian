@@ -171,7 +171,11 @@ class FakeJudge:
         yield TextDelta(text=self._reply)
         yield StreamEnd(usage=None)
 
-    async def complete(self, messages: Sequence[ChatMessage]) -> ChatResult:
+    async def complete(
+        self,
+        messages: Sequence[ChatMessage],
+        response_format: dict[str, object] | None = None,
+    ) -> ChatResult:
         self.calls += 1
         content = messages[-1].content
         self.prompts.append(content)

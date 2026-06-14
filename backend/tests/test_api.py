@@ -40,7 +40,11 @@ class FakeChat:
             yield TextDelta(text=delta)
         yield StreamEnd(usage=Usage(prompt_tokens=40, completion_tokens=7))
 
-    async def complete(self, messages: Sequence[ChatMessage]) -> ChatResult:
+    async def complete(
+        self,
+        messages: Sequence[ChatMessage],
+        response_format: dict[str, object] | None = None,
+    ) -> ChatResult:
         return ChatResult(text="".join(self._deltas), usage=None)
 
 

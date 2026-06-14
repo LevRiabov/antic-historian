@@ -58,7 +58,11 @@ class ChatModel(Protocol):
 
     def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]: ...
 
-    async def complete(self, messages: Sequence[ChatMessage]) -> ChatResult: ...
+    async def complete(
+        self,
+        messages: Sequence[ChatMessage],
+        response_format: dict[str, Any] | None = None,
+    ) -> ChatResult: ...
 
 
 class OpenAICompatChat:
@@ -93,7 +97,12 @@ class OpenAICompatChat:
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._api_key}"} if self._api_key else {}
 
-    def _payload(self, messages: Sequence[ChatMessage], stream: bool) -> dict[str, Any]:
+    def _payload(
+        self,
+        messages: Sequence[ChatMessage],
+        stream: bool,
+        response_format: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "model": self._model,
             "messages": [m.model_dump() for m in messages],
@@ -101,6 +110,10 @@ class OpenAICompatChat:
         }
         if self._max_tokens is not None:
             payload["max_tokens"] = self._max_tokens
+        if response_format is not None:
+            # llama.cpp converts a JSON schema to a GBNF grammar -> the model
+            # CANNOT emit malformed/extra tokens. Reliability for batch jobs.
+            payload["response_format"] = response_format
         if stream:
             payload["stream"] = True
             # Ask for a final usage chunk; servers without support ignore this.
@@ -117,11 +130,15 @@ class OpenAICompatChat:
             completion_tokens=int(data["completion_tokens"]),
         )
 
-    async def complete(self, messages: Sequence[ChatMessage]) -> ChatResult:
+    async def complete(
+        self,
+        messages: Sequence[ChatMessage],
+        response_format: dict[str, Any] | None = None,
+    ) -> ChatResult:
         async with httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client:
             response = await client.post(
                 f"{self._base_url}/chat/completions",
-                json=self._payload(messages, stream=False),
+                json=self._payload(messages, stream=False, response_format=response_format),
                 headers=self._headers(),
             )
             response.raise_for_status()

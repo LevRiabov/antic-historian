@@ -51,7 +51,11 @@ class FakeChat:
             yield TextDelta(text=delta)
         yield StreamEnd(usage=self._usage)
 
-    async def complete(self, messages: Sequence[ChatMessage]) -> ChatResult:
+    async def complete(
+        self,
+        messages: Sequence[ChatMessage],
+        response_format: dict[str, object] | None = None,
+    ) -> ChatResult:
         self.received = list(messages)
         return ChatResult(text="".join(self._deltas), usage=self._usage)
 

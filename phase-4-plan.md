@@ -73,23 +73,43 @@ The expected big lever (**[proven +16 recall@5]** at small scale; cross-book amb
 should make it matter *more* here — "he marched on the city" needs to know which book,
 which war).
 
-- One LLM pass over ~30k chunks producing: a 1–2 sentence **context note** (situates the
-  chunk: work, campaign, who "he" is), riding the same call: **entities/dates metadata**
-  (JSONB, powers Phase 5 source-isolation + self-query). **Heading-path prefix**
-  (`Work › Book › Chapter`) is free string assembly.
+> **Build settled 2026-06-13** (corpus is now **46,170 chunks / 62 works**, not 30k):
+> `ahx ingest enrich` (module `ahx/ingest/enrich.py`). Three decoupled passes —
+> **enrich → disk cache → embed** — so the expensive LLM pass is paid once and never
+> repeats on a re-embed. See the enrich-mechanics block below.
+
+- One LLM pass over the 46k chunks producing, in one grammar-constrained JSON reply: a
+  1–2 sentence **context note** (situates the chunk: work, campaign, who "he" is) +
+  **entities/dates metadata** (JSONB, powers Phase 5 source-isolation + self-query).
+  **Heading-path prefix** (`Work > Book > Chapter`) is free string assembly.
 - **What gets embedded and stored:** `context_note + heading_path + chunk_text` becomes
-  the chunk's *retrieval representation* — stored as its own column, because the
-  reranker (4.2) must score exactly this text (**alignment law, rule #4**). The
-  *generation* prompt and citations continue to show the original text + locator.
-- **Note-generation model:** local gemma first (free; ~30k calls is hours of GPU —
-  timebox it). Fallback if too slow: deepseek-v4-flash via OpenRouter (~20M input
-  tokens ≈ $2, verified pricing 2026-06-12). Note prompt is versioned
-  (`enrichment_version`), notes cached to `corpus/enriched/` so re-runs are idempotent.
-- Schema: new columns + `enrichment_version`; rebuild via `create_all` + full reload
-  (corpus regenerates from files; Alembic still deferred until there's data we can't
-  rebuild).
-- Measure: retrieval (`dense-ctx-v1`) + generation tier. Watch literal (vocabulary
-  misses were 30% of its failures) and cross-book.
+  the chunk's *retrieval representation* (`ChunkRow.retrieval_text`) — its own column,
+  because the reranker (4.2) must score exactly this text (**alignment law, rule #4**).
+  The *generation* prompt and citations continue to show the original `text` + locator.
+- **Note-generation model — DECIDED: local gemma-4-12B** (`gemma-12b-enrich` llama-swap
+  profile, `-np` parallel slots). Windowed context, NOT whole-document: local 16k ctx
+  can't hold a 290k-token book, and the heading path carries cross-book disambiguation
+  for free — each call sees work/section headers + the chunk + its immediate neighbors.
+  Cost $0, ~1.4 chunks/s warm on the 5070 Ti ⇒ ~9h, run unattended overnight (resumable).
+  **Rejected hosted deepseek-v4-flash** (~$5, ~1h): the whole-doc recipe that earned the
+  +16 would cost ~$390+ even *with* caching here (each book re-read once per chunk =
+  27.8B cache-read tokens), and windowed-local is free; receipt for the case study.
+- **Enrich mechanics (durability is the point — 46k chunks is too much to repeat):**
+  - **Cached to `corpus/enriched/pgNNNN.jsonl`**, keyed by `enrichment_version`
+    (`enrich-v1`). Every later re-embed (D2 follow-ups, dim changes, the 4.2 rerank arm)
+    reads this cache; the LLM runs **once per version, ever**.
+  - **Resumable + crash-safe:** results appended+flushed per chunk; a re-run skips chunks
+    already done at the current version. Writes only to disk (no DB) so a crash/power-cut
+    costs only the in-flight calls.
+  - **Robust unattended:** grammar-constrained JSON (no malformed-output failure mode);
+    bounded arrays + note length (no max-token truncation); retry-with-backoff on
+    transient 503s (model cold-load / ttl reload mid-run).
+- Schema: new nullable columns on `ChunkRow` (`context_note`, `retrieval_text`,
+  `enrichment_version`, `entities`, `dates`); rebuild via `db reset-chunks` + full reload
+  (the loader joins the enriched cache at embed time; bare-text fallback = dense-v1 when a
+  chunk isn't enriched). Alembic still deferred — corpus regenerates from files.
+- Measure: retrieval (`dense-ctx-v1`) vs the **55.0% recall@5** floor + generation tier vs
+  **4.45 completeness**. Watch literal (vocabulary misses, e.g. lit-004) and cross-book.
 
 ## Workstream 4.2 — Cross-encoder rerank (representation-aligned)
 

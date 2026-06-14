@@ -119,3 +119,16 @@ def test_openai_compat_satisfies_protocol() -> None:
     # Structural typing check — pyright verifies this assignment statically.
     model: ChatModel = make_model(FakeServer(COMPLETION_BODY))
     assert model.model_name == "test-model"
+
+
+async def test_complete_passes_response_format_when_given() -> None:
+    schema: dict[str, Any] = {"type": "json_object"}
+    server = FakeServer(COMPLETION_BODY)
+    await make_model(server).complete(MESSAGES, response_format=schema)
+    assert server.sent_payload["response_format"] == schema
+
+
+async def test_complete_omits_response_format_by_default() -> None:
+    server = FakeServer(COMPLETION_BODY)
+    await make_model(server).complete(MESSAGES)
+    assert "response_format" not in server.sent_payload

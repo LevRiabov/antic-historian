@@ -523,3 +523,86 @@ citation recall 41.6% · citation precision 42.3% · OOS refusal accuracy 84.6% 
 false-refusal 15.6%. The 72-question judged rows are superseded (different set, pre-baseline-v2
 prompt, pre-v3.1 rubric); records carry `prompt_version` + `judge_rubric` so they can't be
 silently compared.
+
+---
+
+## 2026-06-14 — Phase 4.1 contextual retrieval: dense-ctx-v1 + gen-ctx-v1 (the big arm)
+
+**What changed (one variable):** the chunk's *retrieval representation*. Each chunk's
+embedding now covers `context_note + heading_path + chunk_text` instead of bare text —
+a 1–2 sentence LLM situating note + `Author, Title > BOOK > chapter` prefix. Notes
+generated locally by **gemma-4-12B** (`ahx ingest enrich`, `enrichment_version=enrich-v1`,
+46,159/46,170 chunks; 11 enumeration-dense index/catalog chunks fall back to bare text).
+Everything else identical to the floors: qwen3-8b/Nebius/1024d, structural-v1, per-group
+recall; generation = gemma-12b-16k, baseline-v2 prompt, top-5, judge deepseek-v4-flash
+v3.1. **Generation reads the original `text`, never the note** (verified: dense retriever
+returns `chunk.text`) — so generation deltas are purely a *chunk-selection* effect.
+**Run records:** `2026-06-14T14-59-55Z-dense-ctx-v1.json` (retrieval),
+`2026-06-14T14-57-37Z-gen-ctx-v1.json` (generation, judged).
+
+### Retrieval — dense-ctx-v1 vs dense-v1 floor (135 in-scope, per-group)
+
+| category | n | recall@5 | Δ@5 | recall@1 | Δ@1 | recall@20 | MRR | ΔMRR |
+|---|---|---|---|---|---|---|---|---|
+| literal | 23 | 95.7% | **+8.7** | 69.6% | +4.4 | 95.7% | 0.789 | +0.03 |
+| synonym | 23 | 91.3% | +0.0 | 60.9% | +8.7 | 100.0% | 0.726 | +0.06 |
+| multi-hop | 24 | 33.3% | +2.1 | 20.8% | +4.1 | 52.1% | 0.484 | +0.07 |
+| synthesis | 18 | 31.6% | **+18.2** | 12.4% | +9.6 | 53.9% | 0.444 | +0.22 |
+| cross-book | 28 | 25.4% | **−9.0** | 6.1% | +0.8 | 60.5% | 0.412 | −0.05 |
+| contradiction | 19 | 67.1% | **−5.3** | 26.3% | +10.5 | 86.8% | 0.639 | +0.09 |
+| **overall** | **135** | **56.7%** | **+1.7** | **32.5%** | **+5.8** | **74.5%** | **0.579** | **+0.060** |
+
+### Generation — gen-ctx-v1 vs gen-baseline-v2 floor (161 questions)
+
+| metric | floor | ctx | Δ |
+|---|---|---|---|
+| faithfulness | 4.89 | 4.81 | −0.08 (noise) |
+| completeness | 4.45 | 4.30 | −0.15 (see finding 1) |
+| attribution | 4.28 | 3.98 | **−0.30** (see finding 2) |
+| citation recall | 41.6% | 43.8% | +2.2 |
+| citation precision | 42.3% | 43.9% | +1.6 |
+| in-scope false-refusal | 15.6% | **7.4%** | **−8.2pp** |
+| OOS refusal accuracy | 84.6% | 84.6% | held |
+
+**Findings:**
+
+1. **The "completeness drop" is a selection effect, not a regression (Simpson's paradox).**
+   On the **113 questions both runs answered**, completeness is flat (4.46→4.40), faithfulness
+   flat (4.89→4.87), citation recall flat (47.9%→48.1%). What changed: ctx **converted 12
+   previously-refused questions into answers** (refusals 21→10; 12 newly-answered, 1 newly-
+   refused), and those 12 — the retrieval-starved hard ones (5 multi-hop, 3 synthesis, 3
+   synonym, 1 literal) — score only **3.42** completeness, dragging the *average* down while
+   every prior answer held. Answering 12 refusals as cited answers is a win wearing the
+   disguise of a regression.
+
+2. **The attribution drop (−0.30, real on the apples-to-apples set) is the cross-book/
+   contradiction retrieval regression propagating downstream — not a generation defect.**
+   **All 24 questions with a ≥2-point attribution drop had a changed top-5 retrieval set
+   (24/24).** Mechanism, from the judge's reasons: contextual retrieval reshuffles *which*
+   chunks reach top-5 → a different, often richer multi-source set → on source-attributed
+   questions the model **conflates which source said what** (cb-016 reversed Scipio
+   preservation→destruction vs the new [1]; con-001 tagged Suetonius' content as Plutarch's;
+   lit-006 cross-wired two epitaph versions across Herodotus/other). **Faithfulness held
+   (4.87)** — it is *misattribution, not fabrication* (the judge-v2 distinction, now seen
+   from the other side: grounded content, wrong source label).
+
+3. **The synthesis WIN and the attribution COST share one cause.** The richer/more-diverse
+   source set contextual notes surface is exactly what lifts synthesis (+18.2 @5, the
+   project's historically worst category) — and exactly what taxes per-source attribution.
+   More sources = better coverage, harder bookkeeping.
+
+4. **Headline overall recall@5 +1.7 (≈noise) hides large opposing internals:** synthesis
+   +18.2 and literal +8.7 vs cross-book −9.0 and contradiction −5.3. But ranking sharpened
+   broadly — recall@1 +5.8 and MRR +0.060 (both above noise), recall@20 +3.5. The cross-book/
+   contradiction loss is a *top-5 ordering* problem (recall@1 rose for both; recall@20 held) —
+   the pool keeps the answers, the @5 rank slips.
+
+**Verdict: provisional KEEP, pending 4.2.** Contextual retrieval is a net positive — synthesis
+transformed, literal up, ranking sharper, 12 refusals converted — with a coupled, *recoverable*
+attribution tax. The two costs (cross-book/contradiction @5 regression; source-conflation in
+attribution) are precisely what **4.2 cross-encoder rerank on the contextualized text** targets:
+re-order top-50→top-5 to land the genuinely-best, cleanest source set. If rerank recovers
+cross-book @5 and attribution while preserving synthesis, contextual + rerank ship together.
+A later generation-side lever (prompt v3: per-claim author attribution discipline) and a D5
+model-strength arm (does a stronger generator attribute better across overlapping sources?)
+are the follow-ups if the tax survives rerank.

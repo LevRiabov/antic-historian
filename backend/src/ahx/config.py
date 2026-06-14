@@ -59,6 +59,25 @@ class Settings(BaseSettings):
     judge_model: str | None = None
     judge_api_key: str | None = None
 
+    # Enrichment LLM (Phase 4.1 contextual-note + metadata pass). Offline,
+    # one-time, cached to corpus/enriched/ — so a local model is the cheap
+    # default (gemma-12b-enrich = the parallel-slot llama-swap profile). To run
+    # the pass hosted instead (deepseek-v4-flash ≈ $5/46k), override these three.
+    enrich_base_url: str = "http://127.0.0.1:8080/v1"
+    enrich_model: str = "gemma-12b-enrich"
+    enrich_api_key: str | None = None
+    # Concurrent in-flight calls. Kept BELOW the llama-swap profile's -np slot
+    # count: gemma-12B on the 5070 Ti is compute-bound (~0.8 chunk/s, batching
+    # peaks at ~3-4 concurrent), and going at/above the slot count trips
+    # llama-swap 429 backpressure. 6 saturates the GPU with 2 slots of headroom.
+    enrich_concurrency: int = 6
+    # Output ceiling. The grammar stops at the natural JSON close, so a typical
+    # reply is ~150-200 tokens regardless; this cap only bites a runaway note on
+    # the corpus's densest chunks (geography catalogs, name indices). 256→512→1024
+    # as those edge chunks kept hitting finish=length; 1024 clears them. (maxLength
+    # on the note is ignored by this llama.cpp build, so the cap is the only guard.)
+    enrich_max_tokens: int = 1024
+
     # Corpus locations (downloaded texts are gitignored; manifest is committed).
     corpus_dir: Path = _REPO_ROOT / "corpus"
 
