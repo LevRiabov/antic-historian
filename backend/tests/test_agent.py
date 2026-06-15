@@ -59,13 +59,14 @@ def make_state(collected: list[RetrievedChunk], final: AgentResult) -> AgentStat
 
 
 class FakeChat:
-    """Returns scripted Decisions as JSON (what the model would emit under the
-    grammar). Satisfies the ChatModel Protocol structurally."""
+    """Returns scripted moves as JSON (what the model would emit under the
+    grammar). A `str` item is sent verbatim — for testing malformed/truncated
+    output. Satisfies the ChatModel Protocol structurally."""
 
     model_name = "fake-model"
 
-    def __init__(self, decisions: list[Decision]) -> None:
-        self._decisions = decisions
+    def __init__(self, script: list[Decision | str]) -> None:
+        self._script = script
         self._i = 0
 
     async def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]:
@@ -74,11 +75,10 @@ class FakeChat:
     async def complete(
         self, messages: Sequence[ChatMessage], response_format: dict[str, object] | None = None
     ) -> ChatResult:
-        decision = self._decisions[min(self._i, len(self._decisions) - 1)]
+        item = self._script[min(self._i, len(self._script) - 1)]
         self._i += 1
-        return ChatResult(
-            text=decision.model_dump_json(), usage=Usage(prompt_tokens=10, completion_tokens=5)
-        )
+        text = item if isinstance(item, str) else item.model_dump_json()
+        return ChatResult(text=text, usage=Usage(prompt_tokens=10, completion_tokens=5))
 
 
 def make_retriever(chunks: list[RetrievedChunk]) -> Retriever:
@@ -106,7 +106,7 @@ def test_adapter_numbers_all_collected_not_just_cited() -> None:
     # Two collected; answer cites only one. The judge must still see BOTH.
     state = make_state(
         [chunk(101), chunk(102)],
-        AgentResult(answer="Stabbed 23 times [c101].", refused=False, cited_chunk_ids=[101]),
+        AgentResult(answer="Stabbed 23 times [c101].", refused=False),
     )
     sources, done = build_agent_events(state)
     assert [(c.marker, c.chunk_id) for c in sources.citations] == [(1, 101), (2, 102)]
@@ -116,7 +116,7 @@ def test_adapter_numbers_all_collected_not_just_cited() -> None:
 def test_adapter_renumbers_in_first_appearance_order() -> None:
     state = make_state(
         [chunk(101), chunk(102)],
-        AgentResult(answer="Foo [c102] bar [c101] baz [c102].", refused=False, cited_chunk_ids=[]),
+        AgentResult(answer="Foo [c102] bar [c101] baz [c102].", refused=False),
     )
     _, done = build_agent_events(state)
     # markers assigned by collected order (101->1, 102->2); prose rewritten to them
@@ -128,7 +128,7 @@ def test_adapter_handles_comma_grouped_citations() -> None:
     # gemma groups citations in one bracket: [c101, c102] -> [1][2].
     state = make_state(
         [chunk(101), chunk(102)],
-        AgentResult(answer="Both sources agree [c101, c102].", refused=False, cited_chunk_ids=[]),
+        AgentResult(answer="Both sources agree [c101, c102].", refused=False),
     )
     _, done = build_agent_events(state)
     assert done.answer == "Both sources agree [1][2]."
@@ -138,7 +138,7 @@ def test_adapter_handles_comma_grouped_citations() -> None:
 def test_adapter_dedups_repeated_chunks() -> None:
     state = make_state(
         [chunk(101), chunk(102), chunk(101)],  # 101 resurfaced across searches
-        AgentResult(answer="x [c101].", refused=False, cited_chunk_ids=[]),
+        AgentResult(answer="x [c101].", refused=False),
     )
     sources, _ = build_agent_events(state)
     assert [c.chunk_id for c in sources.citations] == [101, 102]
@@ -147,7 +147,7 @@ def test_adapter_dedups_repeated_chunks() -> None:
 def test_adapter_leaves_uncollected_cite_untouched() -> None:
     state = make_state(
         [chunk(101)],
-        AgentResult(answer="Known [c101], phantom [c777].", refused=False, cited_chunk_ids=[]),
+        AgentResult(answer="Known [c101], phantom [c777].", refused=False),
     )
     _, done = build_agent_events(state)
     assert done.answer == "Known [1], phantom [c777]."  # phantom left as-is
@@ -160,7 +160,7 @@ def test_adapter_detects_refusal_even_when_model_flag_is_false() -> None:
     # flag is the exact-sentence test, matching single-shot.
     state = make_state(
         [chunk(101)],
-        AgentResult(answer=REFUSAL_TEXT, refused=False, cited_chunk_ids=[]),
+        AgentResult(answer=REFUSAL_TEXT, refused=False),
     )
     _, done = build_agent_events(state)
     assert done.refused is True
@@ -176,9 +176,7 @@ async def test_graph_runs_search_then_finalize() -> None:
             Decision(thought="look it up", action=Search(tool="search", query="caesar wounds")),
             Decision(
                 thought="answer it",
-                action=Finalize(
-                    tool="finalize", answer="Stabbed 23 times [c101].", cited_chunk_ids=[101]
-                ),
+                action=Finalize(tool="finalize", answer="Stabbed 23 times [c101]."),
             ),
         ]
     )
@@ -206,6 +204,17 @@ async def test_graph_accumulates_token_usage_across_think_calls() -> None:
     assert state["completion_tokens"] == 10  # 2 think calls x 5
     _, done = build_agent_events(state)
     assert done.usage == Usage(prompt_tokens=20, completion_tokens=10)
+
+
+async def test_graph_survives_unparseable_generation() -> None:
+    # A truncated/degenerate generation -> invalid JSON. The think node must end
+    # the question with a refusal, not raise (the crash that killed the 161-run).
+    chat = FakeChat(['{"thought": "oops", "action": {"tool": "finalize", "answer": '])
+    graph = build_agent_graph(chat, fake_toolbox(make_retriever([chunk(101)])), max_steps=8)
+    state = await invoke_agent(graph, "q", max_steps=8)
+    final = state["final"]
+    assert final is not None
+    assert final.refused is True
 
 
 async def test_graph_forced_finalize_refuses_on_budget() -> None:

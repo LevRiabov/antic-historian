@@ -535,6 +535,12 @@ def generate(
     ),
     max_steps: int = typer.Option(8, help="Agent loop bound (only with --agent)."),
     limit: int = typer.Option(0, help="Cap questions for a dry run (0 = whole golden set)."),
+    concurrency: int = typer.Option(
+        1,
+        help="Questions in flight at once. >1 only speeds up the local model if its "
+        "server runs with parallel slots (llama.cpp --parallel N); raises temp-0 "
+        "batching nondeterminism, so pin it across compared runs.",
+    ),
 ) -> None:
     """Run the generation-tier eval (full ask pipeline over the golden set)."""
     import sys
@@ -585,6 +591,7 @@ def generate(
             retriever_name=retriever,
             agent=agent,
             max_steps=max_steps,
+            concurrency=concurrency,
         ),
         loop_factory=loop_factory,
     )

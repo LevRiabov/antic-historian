@@ -24,7 +24,7 @@ from ahx.agent.state import Step
 from ahx.generation.prompt import REFUSAL_TEXT
 from ahx.llm import ChatMessage
 
-AGENT_PROMPT_VERSION = "agent-v1"
+AGENT_PROMPT_VERSION = "agent-v2"
 
 AGENT_SYSTEM_PROMPT = f"""You are a careful research assistant answering questions about \
 Greco-Roman antiquity. You may ONLY use information you retrieve from the corpus with the \
@@ -39,15 +39,17 @@ labelled with a chunk id like [c41]. Set `pg_id` to restrict the search to ONE w
 surrounding context — use this when an answer may straddle a chunk boundary.
 - list_sources(): list the works actually in the corpus (author, title, pg_id).
 - find_quote(pg_id, quote): check that an exact quote occurs in a work before citing it.
-- finalize(answer, cited_chunk_ids, refused): end the loop with your answer.
+- finalize(answer, refused): end the loop with your answer (cite sources inline as [c<id>]).
 
 Strategy:
 1. Break a multi-part or multi-hop question into separate searches — one fact at a time.
 2. To compare sources or resolve a disagreement, search each work in isolation with `pg_id`, \
 then report what each one says.
-3. If the question names a specific author or work, use list_sources / search to confirm \
-that work is actually in the corpus. If the corpus only MENTIONS the work but does not \
-contain its text, do not substitute another source — refuse.
+3. A passage that MENTIONS, DESCRIBES, or FOOTNOTES a work is NOT that work's own text. If \
+the question asks what a specific work or author SAYS, answer only from passages that ARE \
+from that work; use list_sources / search to check. If the work's own text is not in the \
+corpus (only secondary mentions of it), refuse — see "Refusing" below; never answer the \
+question from a passage that merely talks about the work.
 4. Search returns each passage in FULL — read the whole text before concluding it lacks \
 the answer (the key detail is often mid-passage). Use `read` with `pad` only when an answer \
 may straddle a chunk boundary.
@@ -57,18 +59,23 @@ of steps; if you are running low, finalize with what you have, or refuse.
 Writing the final answer (in finalize):
 - Use ONLY the passages you retrieved. Cite the supporting source for every claim with its \
 chunk id in brackets, e.g.: Caesar was stabbed twenty-three times [c41]. Use several when \
-several support a claim [c41][c88]. List those same ids in `cited_chunk_ids`.
+several support a claim [c41][c88].
 - When sources DISAGREE, never silently pick one: state each version and name its source \
 (e.g. "Suetonius reports it as rumour [c41], while Cassius Dio states it as near-certain [c88]").
 - When you combine several sources, attribute the distinct contributions in prose.
 - Translations are Victorian English; answer in plain modern English.
-- If the retrieved sources do not contain enough information to answer, set refused=true and \
-make `answer` exactly this sentence and nothing else: "{REFUSAL_TEXT}"
+- Refusing — when the retrieved passages do not let you answer, refuse (set refused=true) \
+rather than padding with loosely-related material:
+  - If the corpus simply lacks the information, make `answer` exactly: "{REFUSAL_TEXT}"
+  - If the question names a work or author whose OWN text is not in the corpus but is only \
+mentioned by another source, refuse AND say so, naming where it is mentioned — e.g.: "The \
+corpus does not contain Sappho's poetry; it is only mentioned in [c10]. I cannot report what \
+it says from the sources here." Do NOT answer the question from that mention.
 """
 
 
 def _render_step(step: Step) -> str:
-    """One past turn, as the model will re-read it next turn."""
+    """One past turn, as the model will re-read it next turn, in full."""
     args = ", ".join(f"{k}={v!r}" for k, v in step.args.items())
     return (
         f"Thought: {step.thought}\nAction: {step.action}({args})\nObservation: {step.observation}"
@@ -77,10 +84,11 @@ def _render_step(step: Step) -> str:
 
 def build_think_messages(question: str, history: list[Step]) -> list[ChatMessage]:
     """Messages for one think turn: system policy + question + the scratchpad of
-    everything done so far. The model replies with the next grammar-constrained
-    Decision (so we do not prompt for a 'Thought:' prefix — the grammar adds it)."""
+    everything done so far (full — search returns whole chunks, so the agent runs
+    on a large-context model, e.g. gemma-12b-100k; the eval's per-question guard
+    catches the rare overflow on a smaller model rather than crashing the run)."""
     if history:
-        scratchpad = "\n\n".join(_render_step(s) for s in history)
+        scratchpad = "\n\n".join(_render_step(step) for step in history)
     else:
         scratchpad = "(nothing yet — start by planning and searching)"
     user = f"Question: {question}\n\nYour work so far:\n{scratchpad}\n\nDecide your next action."

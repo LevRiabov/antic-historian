@@ -95,8 +95,7 @@ def build_agent_events(state: AgentState) -> tuple[SourcesEvent, DoneEvent]:
         for (cid, chunk), marker in zip(by_id.items(), marker_of.values(), strict=True)
     ]
     sources = SourcesEvent(citations=citations, prompt_version=AGENT_PROMPT_VERSION)
-    # `used` = the prose [c<id>] markers (the comparable, single-shot-style signal);
-    # final.cited_chunk_ids is an advisory deliberate-citing nudge, not scored here.
+    # `used` = the prose [c<id>] markers — the comparable, single-shot-style signal.
     done = DoneEvent(
         answer=rewritten,
         refused=_is_refusal(rewritten),

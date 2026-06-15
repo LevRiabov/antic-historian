@@ -752,3 +752,108 @@ is **architectural, not retrieval-ranking** — it belongs to the Phase 5 agent 
 search assembles distributed answers), not to more single-query retrieval technique. Optional
 unrun control: BM25-alone (`sparse-v1`) to quantify how far lexical trails dense — case-study
 color, not a decision input.
+
+---
+
+## 2026-06-15 — Phase 5.1 agentic layer: gen-agent-v2 (KEEP for the distributed-answer path)
+
+**What changed (the architecture, not a ranking knob):** a single grammar-constrained ReAct
+agent (LangGraph; D1 recheck confirmed LangGraph, no LlamaIndex in prod) replaces single-shot
+generation on the SAME retrieval stack. Each turn the model emits a pydantic `Decision` under a
+GBNF grammar (llama.cpp) — `search` (whole-corpus rerank-pro OR `pg_id` source-isolated dense) ·
+`read(chunk_id)` · `list_sources` · `find_quote` · `finalize` — looping think→act with a
+`max_steps` forced-finalize bound. The citation adapter renumbers the agent's `[c<id>]` markers
+to the standard `[n]` table, so the eval/judge consume it byte-identically to single-shot
+(agent-vs-single-shot is a like-for-like comparison). **Config:** agent prompt **agent-v2**,
+`gemma-12b-100k` (large context so full-text search history fits — see infra notes), cohere/
+rerank-4-pro (retry-hardened), judge deepseek-v4-flash **judge-v3.1**, all 161 questions,
+concurrency 4. Run ≈ 35 min; spend ≈ $1.5 (⚠ est. — cohere per-search × multi-search/question
++ judge).
+**Run record:** `backend/evals/runs/2026-06-15T12-18-31Z-gen-agent-v2.json`
+
+### Agent vs single-shot floor (gen-rerank-pro-v1, same rerank-pro retrieval, judge-v3.1)
+
+| metric | single-shot floor | **agent-v2** | Δ |
+|---|---|---|---|
+| faithfulness | 4.82 | 4.84 | +0.02 (noise) |
+| completeness | 4.41 | 4.53 | +0.12 |
+| **attribution** | 4.18 | **4.50** | **+0.32** |
+| citation recall | 46.8% | 45.4% | −1.4 (parity) |
+| citation precision | 38.2% | 41.4% | +3.2 |
+| in-scope false-refusal | 3.0% | 3.0% | 0 |
+| OOS refusal accuracy | 80.8% | **73.1%** | **−7.7** |
+| mean completion tokens | 250 | 660 | 2.6× |
+| mean latency | 6.9s | 30.7s | 4.5× |
+
+### Per-category attribution / completeness (vs single-shot per-category gen-baseline-v2-v3.1)
+
+| category | attrib ss→agent | compl ss→agent | read |
+|---|---|---|---|
+| synthesis | 3.67 → **4.56** | 3.53 → **4.44** | transformed — the project's worst category |
+| cross-book | 3.93 → **4.31** | 4.21 → **4.54** | win on both |
+| contradiction | 4.05 → **4.47** | 4.42 → 4.32 | attribution win, completeness flat |
+| multi-hop | 5.00 → **3.78** | 4.67 → **4.13** | **REGRESSED** — the agent's weak spot |
+| literal/synonym | ~5.00 → ~4.95 | ~4.9 → ~4.87 | parity (already strong single-shot) |
+
+**Findings:**
+
+1. **Attribution is the win, concentrated exactly on the distributed-answer categories.** +0.32
+   overall; per-category synthesis +0.89, contradiction +0.42, cross-book +0.38. Source-isolated
+   searching surfaces each source and the agent names it — the contradiction/synthesis weakness
+   single-shot couldn't touch (Phase 4 closed retrieval-ranking; this is the architectural lever
+   the 4.3 entry pointed to). **Synthesis is transformed** (compl 3.53→4.44): multi-step search
+   assembles distributed answers, as predicted. Faithfulness stays highest-tier (4.84); in-scope
+   quality is at parity (false-refusal 3.0%, citation recall ≈ floor).
+
+2. **Multi-hop REGRESSED — the one in-scope category the agent hurts** (attrib 5.00→3.78, compl
+   4.67→4.13, cit-recall 0.23). Mechanism: single-shot's tight top-5 keeps each hop's single
+   source cleanly attributable; the agent pulls many sources across several searches and
+   **conflates which source supports which hop** (misattribution drives attribution to 3.78).
+   More sources = better synthesis coverage, harder per-hop bookkeeping — the same coupling the
+   4.1 contextual entry saw, now from the agent side. A Phase 5.2 target (per-hop attribution
+   discipline / a stronger reasoner).
+
+3. **OOS refusal regressed to 73.1% (−7.7) — a MODEL limit, not a prompt gap (receipt).** The
+   agent over-answers source-absent questions by substituting adjacent secondary material
+   (Sappho's themes from a Grote footnote; Plato's *Republic* from Bury's commentary). Tracing
+   the model proves it is **not** a detection failure and **not** a prompt-clarity gap: on
+   oos-023 the model reasons *"Sappho's own works are not listed as primary sources"* — correctly
+   detecting absence — then **answers anyway from the secondary mention.** prompt-v2 sharpened the
+   rule and added a refusal-with-provenance form; it recovered exactly 1 of 8 (gemma-12b
+   acknowledges the abstention precondition but overrides it under the pull of relevant-looking
+   material). **Disciplined abstention on source-absent questions is a model-strength frontier
+   (D5 arm), not a prompt fix** — the cleanest case-study evidence that some failures are the
+   model, measured directly.
+
+4. **Cost is real and is the whole reason for a router.** 2.6× completion tokens, 4.5× latency
+   (30.7s mean; the forced-finalize multi-hop/synthesis questions run 80–120s). The agent is the
+   expensive path — Phase 6's router sends only hard distributed-answer questions down it, easy/
+   literal/OOS stay single-shot.
+
+5. **Agent runs carry stochastic-tool-path variance beyond single-shot's temp-0 noise.** A prior
+   (infra-noisy) run of the same config scored attribution 4.81 vs this run's 4.50 — different
+   search paths surface different sources. Treat single-question movements and sub-0.3 per-
+   category deltas as agent noise; the architecture-level signal (attribution up, synthesis
+   transformed, multi-hop down) is stable.
+
+**Two measurement bugs found and fixed en route (rule #5), both worth the receipt:**
+- **Unbounded `cited_chunk_ids` → run crash.** The first full run died when gemma emitted a
+  runaway integer list until the JSON truncated → `ValidationError` → uncaught → whole run lost.
+  Fix: dropped the (unused) field; defensive parse in `think` ends a degenerate generation as a
+  refusal, never a crash.
+- **Transient cohere-rerank failures under concurrency → 6 false "refusals".** Concurrent searches
+  rate-limited OpenRouter; `RerankClient` read the error body as `payload["results"]` → KeyError,
+  recorded as failed refusals (inflated false-refusal 3.0%→7.4%, deflated recall). Fix: rerank
+  retry with backoff + a clear `RerankError`. The clean re-run confirms: 0 errors, false-refusal
+  back to 3.0%. (A per-question resilience guard in the eval also records-and-continues so one
+  failure can't abort a concurrent run.)
+
+**Verdict: KEEP — the agent is the distributed-answer path, routed.** The 5.1 exit (beat
+single-shot on synthesis + contradiction with evidence) is **met**: synthesis transformed,
+contradiction/cross-book attribution up, in-scope quality at parity. It is NOT a universal
+replacement — multi-hop attribution regresses and OOS abstention drops (both partly model-strength
+limits), and it costs ~4.5× latency. Production shape: Phase 6 router → single-shot for easy/
+literal/OOS, agent for synthesis/cross-book/contradiction. **Open follow-ups (Phase 5.2):** D5
+stronger-reasoner arm (the lever for OOS abstention AND multi-hop attribution — needs verified
+structured-output support to keep grammar-ReAct); per-hop attribution discipline (prompt-v3);
+reflection/critic edge. **This row is the agent baseline; technique arms measure against it.**

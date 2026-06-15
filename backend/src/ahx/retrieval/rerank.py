@@ -24,6 +24,8 @@ it belongs in no slot we control. QWEN3_RERANK_INSTRUCTION is kept as a document
 constant only — the fallback if a future server/model does NOT template the query.
 """
 
+import asyncio
+import time
 from typing import Any, cast
 
 import httpx
@@ -66,6 +68,28 @@ def rerank_query_instruction_for(model: str) -> str:
     )
 
 
+# Retry policy: concurrent agent searches hammer the hosted reranker, so a
+# fraction of calls come back as rate-limit / upstream-error bodies (HTTP 429/5xx,
+# or a 200 whose JSON has no "results"). These are transient — retry with backoff
+# rather than failing the whole question. A 4xx-other (bad request/auth) is not.
+_RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+_MAX_ATTEMPTS = 4
+_BACKOFF_BASE = 0.5  # seconds; 0.5, 1, 2 between attempts
+
+
+class RerankError(RuntimeError):
+    """An unusable rerank response (e.g. an upstream error body with no 'results'),
+    surfaced only after retries are exhausted."""
+
+
+def _retryable(exc: Exception) -> bool:
+    if isinstance(exc, RerankError):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in _RETRY_STATUSES
+    return isinstance(exc, httpx.TransportError)  # connect/read timeouts, conn resets
+
+
 class RerankResult(BaseModel):
     index: int  # position in the documents list sent to rerank()
     score: float  # relevance score, higher = better (range is model-dependent)
@@ -96,10 +120,14 @@ class RerankClient:
         return body
 
     def _parse(self, payload: object, expected: int) -> list[RerankResult]:
-        assert isinstance(payload, dict)
+        if not isinstance(payload, dict) or "results" not in payload:
+            # An upstream error body (rate limit, etc.) — retryable, not a KeyError.
+            raise RerankError(
+                f"rerank response has no 'results' field: {str(cast(object, payload))[:200]}"
+            )
         results = cast(list[dict[str, Any]], payload["results"])
         if not results:
-            raise ValueError("empty rerank response")
+            raise RerankError("empty rerank response")
         parsed: list[RerankResult] = []
         for item in results:
             index = int(item["index"])
@@ -114,26 +142,43 @@ class RerankClient:
         return parsed
 
     def rerank_sync(self, query: str, documents: list[str]) -> list[RerankResult]:
-        """Sync path: CLI / retrieval eval harness."""
-        with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
-            response = client.post(
-                f"{self._base_url}/rerank",
-                json=self._body(query, documents),
-                headers=self._headers(),
-            )
-            response.raise_for_status()
-            return self._parse(response.json(), expected=len(documents))
+        """Sync path: CLI / retrieval eval harness. Retries transient failures."""
+        for attempt in range(_MAX_ATTEMPTS):
+            try:
+                with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
+                    response = client.post(
+                        f"{self._base_url}/rerank",
+                        json=self._body(query, documents),
+                        headers=self._headers(),
+                    )
+                    response.raise_for_status()
+                    return self._parse(response.json(), expected=len(documents))
+            except (RerankError, httpx.HTTPError) as exc:
+                if attempt == _MAX_ATTEMPTS - 1 or not _retryable(exc):
+                    raise
+                time.sleep(_BACKOFF_BASE * 2**attempt)
+        raise RerankError("unreachable")  # the loop always returns or raises
 
     async def rerank(self, query: str, documents: list[str]) -> list[RerankResult]:
-        """Async path: FastAPI routes (rule #7) / generation eval."""
-        async with httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client:
-            response = await client.post(
-                f"{self._base_url}/rerank",
-                json=self._body(query, documents),
-                headers=self._headers(),
-            )
-            response.raise_for_status()
-            return self._parse(response.json(), expected=len(documents))
+        """Async path: FastAPI routes (rule #7) / generation eval. Retries transient
+        failures with backoff — concurrent agent searches rate-limit the reranker."""
+        for attempt in range(_MAX_ATTEMPTS):
+            try:
+                async with httpx.AsyncClient(
+                    timeout=self._timeout, transport=self._transport
+                ) as client:
+                    response = await client.post(
+                        f"{self._base_url}/rerank",
+                        json=self._body(query, documents),
+                        headers=self._headers(),
+                    )
+                    response.raise_for_status()
+                    return self._parse(response.json(), expected=len(documents))
+            except (RerankError, httpx.HTTPError) as exc:
+                if attempt == _MAX_ATTEMPTS - 1 or not _retryable(exc):
+                    raise
+                await asyncio.sleep(_BACKOFF_BASE * 2**attempt)
+        raise RerankError("unreachable")  # the loop always returns or raises
 
 
 def _aligned_text(chunk: RetrievedChunk) -> str:

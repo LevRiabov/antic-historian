@@ -64,14 +64,14 @@ class FindQuote(BaseModel):
 
 
 class Finalize(BaseModel):
-    """End the loop with an answer (or an abstention). `cited_chunk_ids` are
-    chunk ids drawn from what the agent collected; `refused=True` carries the
-    abstention contract."""
+    """End the loop with an answer (or an abstention). Citations live in the
+    answer prose as [c<id>] tokens (the adapter scores those); `refused=True`
+    carries the abstention contract. No id list — an unbounded one let the model
+    run away emitting integers until the JSON truncated (the 161-run crash)."""
 
     tool: Literal["finalize"]
     answer: str
     refused: bool = False
-    cited_chunk_ids: list[int] = Field(default_factory=list[int])
 
 
 # Discriminated union: pydantic (and the grammar) select the variant by `tool`,

@@ -33,6 +33,7 @@ from typing import Any, cast
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from pydantic import ValidationError
 
 from ahx.agent.actions import Finalize, action_response_format, parse_decision
 from ahx.agent.prompts import build_think_messages
@@ -59,15 +60,14 @@ def initial_state(question: str) -> AgentState:
 
 
 def _result_from_finalize(action: Finalize) -> AgentResult:
-    return AgentResult(
-        answer=action.answer, refused=action.refused, cited_chunk_ids=action.cited_chunk_ids
-    )
+    return AgentResult(answer=action.answer, refused=action.refused)
 
 
 def _forced_refusal() -> AgentResult:
-    """Budget exhausted without the model finalizing: refuse honestly. A v1
-    choice — a later arm could spend one more call to synthesize from `collected`."""
-    return AgentResult(answer=REFUSAL_TEXT, refused=True, cited_chunk_ids=[])
+    """End with an honest refusal — used both when the budget is exhausted and
+    when the model's output won't parse (a degenerate/truncated generation). A v1
+    choice; a later arm could spend one more call to synthesize from `collected`."""
+    return AgentResult(answer=REFUSAL_TEXT, refused=True)
 
 
 def build_agent_graph(
@@ -83,7 +83,14 @@ def build_agent_graph(
             return {"final": _forced_refusal(), "step": step + 1}
         messages = build_think_messages(state["question"], state["history"])
         result = await chat.complete(messages, response_format=response_format)
-        decision = parse_decision(result.text)  # grammar-guaranteed valid
+        try:
+            decision = parse_decision(result.text)
+        except ValidationError:
+            # The grammar bounds structure, not length: a runaway generation that
+            # hits the context limit yields truncated, invalid JSON. Don't let one
+            # bad question crash the whole (concurrent, expensive) run — end it with
+            # an honest refusal. Counts as a false refusal in the eval, not a crash.
+            return {"final": _forced_refusal(), "step": step + 1}
         update: dict[str, Any] = {"pending": decision, "step": step + 1}
         if result.usage is not None:  # additive reducer sums these across calls
             update["prompt_tokens"] = result.usage.prompt_tokens

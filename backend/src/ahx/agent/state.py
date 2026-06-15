@@ -53,7 +53,6 @@ class AgentResult(BaseModel):
 
     answer: str
     refused: bool
-    cited_chunk_ids: list[int]  # subset of `collected` the model chose to cite
 
 
 class AgentState(TypedDict):

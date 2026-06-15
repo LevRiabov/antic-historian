@@ -16,6 +16,7 @@ Run records mirror the retrieval-tier layout: aggregates first, then
 per-question results with ideal_answer next to the model's actual answer.
 """
 
+import asyncio
 import json
 import time
 from collections.abc import Awaitable, Callable
@@ -424,8 +425,9 @@ async def judge_question(
         f"{c.author}, {c.work_title}:\n{c.text}"
         for c in citations
     )
-    notes: list[str] = []
-    for field, prompt in (
+    # The three rubrics are independent hosted calls — fire them concurrently.
+    # gather preserves order, so judge_notes stays deterministic.
+    rubrics = (
         (
             "faithfulness",
             FAITHFULNESS_RUBRIC.format(
@@ -448,8 +450,12 @@ async def judge_question(
                 answer=result.answer,
             ),
         ),
-    ):
-        response = await judge.complete([ChatMessage(role="user", content=prompt)])
+    )
+    responses = await asyncio.gather(
+        *(judge.complete([ChatMessage(role="user", content=prompt)]) for _, prompt in rubrics)
+    )
+    notes: list[str] = []
+    for (field, _), response in zip(rubrics, responses, strict=True):
         verdict = parse_verdict(response.text)
         if verdict is None:
             notes.append(f"{field}: unparseable judge reply")
@@ -468,6 +474,35 @@ async def judge_question(
 GenEngine = Callable[[str], Awaitable[tuple[SourcesEvent, DoneEvent]]]
 
 
+def _error_result(
+    question: GoldenQuestion, spans: list[ResolvedSpan], exc: Exception, latency_ms: int
+) -> GenQuestionResult:
+    """A question that errored mid-run, recorded as a failed refusal (empty answer,
+    zero recall) so the run completes and the failure is visible in judge_notes
+    rather than aborting everything. Used by the per-question resilience guard."""
+    expected = question.category == "out-of-scope"
+    return GenQuestionResult(
+        question_id=question.id,
+        category=question.category,
+        question=question.question,
+        ideal_answer=question.ideal_answer,
+        answer="",
+        refused=True,
+        refusal_expected=expected,
+        refusal_correct=expected,  # an error on an in-scope question counts as a false refusal
+        markers_used=[],
+        markers_dangling=[],
+        retrieved_chunk_ids=[],
+        cited_chunk_ids=[],
+        citation_span_recall=0.0 if spans else None,
+        citation_precision=None,
+        latency_ms=latency_ms,
+        prompt_tokens=None,
+        completion_tokens=None,
+        judge_notes=f"RUN ERROR: {type(exc).__name__}: {exc}",
+    )
+
+
 async def run_generation_eval(
     settings: Settings,
     questions: list[GoldenQuestion],
@@ -478,6 +513,7 @@ async def run_generation_eval(
     retriever_name: str = "dense",
     agent: bool = False,
     max_steps: int = 8,
+    concurrency: int = 1,
 ) -> GenerationRun:
     from ahx.ingest.chunker import CHUNKING_VERSION
     from ahx.retrieval.factory import build_async_retriever, is_rerank_label
@@ -508,29 +544,60 @@ async def run_generation_eval(
         prompt_version = PROMPT_VERSION
         engine_label = "single-shot"
 
-    results: list[GenQuestionResult] = []
-    try:
-        for question in questions:
-            spans: list[ResolvedSpan] = []
-            for span in question.gold_spans:
-                resolved = resolve_span(span, settings.corpus_normalized_dir, question.id)
-                if isinstance(resolved, ResolutionError):
-                    raise ValueError(
-                        f"{question.id}: unresolved gold span ({resolved.problem}) — "
-                        "run `ahx eval validate` first"
-                    )
-                spans.append(resolved)
+    # Resolve all gold spans up front. A golden-set bug must abort the whole run
+    # (the fail-fast contract: "run `ahx eval validate` first"), not surface
+    # mid-flight inside one concurrent task.
+    def _resolve(question: GoldenQuestion) -> list[ResolvedSpan]:
+        spans: list[ResolvedSpan] = []
+        for span in question.gold_spans:
+            resolved = resolve_span(span, settings.corpus_normalized_dir, question.id)
+            if isinstance(resolved, ResolutionError):
+                raise ValueError(
+                    f"{question.id}: unresolved gold span ({resolved.problem}) — "
+                    "run `ahx eval validate` first"
+                )
+            spans.append(resolved)
+        return spans
 
+    resolved_spans = [_resolve(question) for question in questions]
+
+    # Run (engine + judge) per question, at most `concurrency` in flight. The
+    # local chat model is the bottleneck, so this only pays off when the
+    # llama.cpp server runs with parallel slots (--parallel N); hosted stages
+    # (embed/rerank/judge) parallelize regardless. gather preserves input order,
+    # so `results` stays question-ordered no matter the completion order.
+    sem = asyncio.Semaphore(max(1, concurrency))
+
+    async def _run_question(
+        question: GoldenQuestion, spans: list[ResolvedSpan]
+    ) -> GenQuestionResult:
+        async with sem:
             started = time.perf_counter()
-            sources, done = await run_one(question.question)
-            latency_ms = round((time.perf_counter() - started) * 1000)
+            try:
+                sources, done = await run_one(question.question)
+                latency_ms = round((time.perf_counter() - started) * 1000)
+                result = score_generation(question, spans, sources, done, latency_ms)
+                if judge is not None:
+                    await judge_question(judge, result, sources.citations)
+            except Exception as exc:
+                # One question's failure (HTTP/DB/parse) must not abort the whole
+                # concurrent run — record it as a failed refusal and carry on. Since
+                # this never re-raises, gather can't cascade-cancel siblings.
+                latency_ms = round((time.perf_counter() - started) * 1000)
+                result = _error_result(question, spans, exc, latency_ms)
+        if on_result is not None:
+            on_result(result)  # fires on completion (out of order) — progress only
+        return result
 
-            result = score_generation(question, spans, sources, done, latency_ms)
-            if judge is not None:
-                await judge_question(judge, result, sources.citations)
-            results.append(result)
-            if on_result is not None:
-                on_result(result)
+    try:
+        results = list(
+            await asyncio.gather(
+                *(
+                    _run_question(question, spans)
+                    for question, spans in zip(questions, resolved_spans, strict=True)
+                )
+            )
+        )
     finally:
         await engine.dispose()
 

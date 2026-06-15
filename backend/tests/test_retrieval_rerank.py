@@ -14,6 +14,7 @@ from ahx.config import Settings
 from ahx.retrieval.dense import RetrievedChunk
 from ahx.retrieval.rerank import (
     RerankClient,
+    RerankError,
     RerankResult,
     _aligned_text,  # pyright: ignore[reportPrivateUsage]
     _reorder,  # pyright: ignore[reportPrivateUsage]
@@ -129,6 +130,44 @@ def test_score_key_variant_tolerated() -> None:
     client = RerankClient(settings, transport=httpx.MockTransport(handler))
     (result,) = client.rerank_sync("q", ["a"])
     assert result.score == 0.9
+
+
+def _no_sleep(_seconds: float) -> None:
+    return None
+
+
+def test_rerank_retries_transient_then_succeeds(monkeypatch: pytest.MonkeyPatch) -> None:
+    # First call returns an upstream error body (no 'results'); the client retries.
+    monkeypatch.setattr("ahx.retrieval.rerank.time.sleep", _no_sleep)
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return httpx.Response(200, json={"error": "rate limited"})  # no "results"
+        return httpx.Response(200, json={"results": [{"index": 0, "relevance_score": 1.0}]})
+
+    client = RerankClient(
+        Settings(_env_file=None),  # pyright: ignore[reportCallIssue]
+        transport=httpx.MockTransport(handler),
+    )
+    (result,) = client.rerank_sync("q", ["a"])
+    assert result.index == 0
+    assert calls["n"] == 2, "retried exactly once after the transient failure"
+
+
+def test_rerank_raises_after_exhausting_retries(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("ahx.retrieval.rerank.time.sleep", _no_sleep)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"error": "always bad"})  # never has "results"
+
+    client = RerankClient(
+        Settings(_env_file=None),  # pyright: ignore[reportCallIssue]
+        transport=httpx.MockTransport(handler),
+    )
+    with pytest.raises(RerankError, match="no 'results'"):
+        client.rerank_sync("q", ["a"])
 
 
 def test_out_of_range_index_raises() -> None:
