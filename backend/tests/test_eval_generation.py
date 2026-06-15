@@ -163,7 +163,7 @@ class FakeJudge:
 
     def __init__(self, reply: str, refusal_reply: str = "no") -> None:
         self._reply = reply
-        self._refusal_reply = refusal_reply  # answer for the yes/no refusal prompt
+        self._refusal_reply = refusal_reply  # answer for the refusal prompt (yes/no or JSON)
         self.calls = 0
         self.prompts: list[str] = []
 
@@ -179,7 +179,8 @@ class FakeJudge:
         self.calls += 1
         content = messages[-1].content
         self.prompts.append(content)
-        reply = self._refusal_reply if "Reply with ONLY one word" in content else self._reply
+        is_refusal_prompt = '"refusal"' in content  # judge-v3.2 refusal JSON template
+        reply = self._refusal_reply if is_refusal_prompt else self._reply
         return ChatResult(text=reply, usage=None)
 
 
@@ -252,6 +253,50 @@ async def test_paraphrased_oos_refusal_accepted() -> None:
     assert result.faithfulness is None
     assert result.completeness is None
     assert result.attribution is None
+
+
+async def test_false_premise_correction_credited_as_refusal_with_reason() -> None:
+    # judge-v3.2: a false-premise correction (denies the premise, gives no impossible fact)
+    # is a refusal even though it reads as substantive prose; the reason is stored in
+    # judge_notes so the OOS verdict is auditable (regression guard for oos-013).
+    result = score_generation(
+        question("out-of-scope", n_spans=0),
+        [],
+        sources(citation(1)),
+        done(
+            answer="Caesar was never at Gaugamela; that was Alexander over Darius.", refused=False
+        ),
+        latency_ms=1,
+    )
+    judge = FakeJudge(
+        '{"score": 5, "reason": "n/a"}',
+        refusal_reply='{"refusal": true, "reason": "denies the false premise, gives no fact"}',
+    )
+    await judge_question(judge, result, [citation(1)])
+    assert judge.calls == 1  # only the refusal check on OOS
+    assert result.refused_semantic is True
+    assert result.refusal_correct is True
+    assert "denies the false premise" in result.judge_notes  # reason is captured
+
+
+async def test_source_absent_substitution_stays_a_leak() -> None:
+    # judge-v3.2: substituting secondary material for an absent named work is NOT a
+    # refusal; the leak verdict and its reason are both recorded (oos-019/023/024/025).
+    result = score_generation(
+        question("out-of-scope", n_spans=0),
+        [],
+        sources(citation(1)),
+        done(answer="Sappho's poetry expresses impassioned longing and desire.", refused=False),
+        latency_ms=1,
+    )
+    judge = FakeJudge(
+        '{"score": 5, "reason": "n/a"}',
+        refusal_reply='{"refusal": false, "reason": "substitutes secondary material"}',
+    )
+    await judge_question(judge, result, [citation(1)])
+    assert result.refused_semantic is False
+    assert result.refusal_correct is False  # OOS expected a refusal; it answered
+    assert "substitutes secondary material" in result.judge_notes
 
 
 async def test_judge_skips_refusals() -> None:

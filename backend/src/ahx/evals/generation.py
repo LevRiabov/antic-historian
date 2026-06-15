@@ -231,6 +231,16 @@ class JudgeVerdict(BaseModel):
     reason: str = ""
 
 
+class RefusalVerdict(BaseModel):
+    """Semantic refusal call (judge-v3.2): now carries the judge's reasoning so the
+    out-of-scope verdict is auditable — previously a bare yes/no left judge_notes empty
+    for every OOS question, hiding miscalls like oos-013 (a false-premise correction the
+    yes/no prompt misread as a substantive answer)."""
+
+    refusal: bool
+    reason: str = ""
+
+
 # Rubric history (rule #5 — judge changes are measured, see eval-log):
 # judge-v1: judge saw only CITED chunks -> correct-but-miscited answers scored
 #   like fabrications, double-counting what citation_precision already measures.
@@ -256,7 +266,17 @@ class JudgeVerdict(BaseModel):
 #       lacking prose attribution it doesn't need. Disagreement = incompatible claims (not
 #       mere omission/emphasis); misattribution = citing a source that doesn't support the
 #       claim (not an extra on-topic corroborating marker).
-JUDGE_RUBRIC_VERSION = "judge-v3.1"
+# judge-v3.2: two refusal-judge fixes (rule #5), isolated by rejudging frozen answers:
+#   (a) the semantic refusal call now returns JSON {"refusal", "reason"} instead of a bare
+#       yes/no — the reason is stored in judge_notes, so the out-of-scope verdict is
+#       auditable (v3.1 left judge_notes empty for all 26 OOS, hiding miscalls).
+#   (b) refusal definition widened to credit a FALSE-PREMISE CORRECTION: an answer that
+#       denies the question's premise and does not supply the (impossible) requested fact
+#       is a refusal, even when it volunteers correct adjacent facts. v3.1's narrow "states
+#       the sources lack the info" wording credited oos-014 but not oos-013 (same pattern,
+#       different phrasing). Substituting adjacent SECONDARY material for an absent named
+#       work is NOT a refusal (the source-absent trap — oos-019/020/023/024/025 stay leaks).
+JUDGE_RUBRIC_VERSION = "judge-v3.2"
 
 FAITHFULNESS_RUBRIC = """You are grading a RAG system's answer for FAITHFULNESS: did the
 model invent content, or is everything grounded in the source passages it was shown?
@@ -350,17 +370,29 @@ Answer to grade:
 Reply with ONLY a JSON object: {{"score": <1-5>, "reason": "<one sentence>"}}"""
 
 
-REFUSAL_JUDGE = """Decide whether the following answer is a REFUSAL: does it decline to
-answer, stating in any wording that the provided sources do not contain the information
-needed — as opposed to actually attempting to answer the question?
+REFUSAL_JUDGE = """Decide whether the following answer is a REFUSAL — it declines to give
+the requested answer — or an ATTEMPT to answer the question as posed.
+
+Count as a REFUSAL ("yes"):
+- It states, in any wording, that the provided sources do not contain the information needed.
+- It DENIES THE QUESTION'S PREMISE (the question assumes a false fact) and does not supply the
+  impossible requested fact — EVEN IF it volunteers correct related facts or a correction.
+  (Illustrative only: a question asking "which fleet did Hannibal command on the Moon" met with
+  "the sources record no such event; Hannibal led no lunar campaign" is a refusal.)
+
+Count as an ATTEMPT ("no"):
+- It supplies the requested fact/description, including by SUBSTITUTING adjacent or secondary
+  material for an absent named work — answering from other authors who merely discuss that work
+  or its author is an ATTEMPT, not a refusal.
+
+These examples are illustrative of the RULE only; judge the answer below on its own.
 
 Question: {question}
 
 Answer:
 {answer}
 
-Reply with ONLY one word: "yes" if it is a refusal/abstention, "no" if it attempts a
-substantive answer."""
+Reply with ONLY a JSON object: {{"refusal": <true|false>, "reason": "<one sentence>"}}"""
 
 
 def _parse_yes_no(raw: str) -> bool | None:
@@ -389,6 +421,19 @@ def parse_verdict(raw: str) -> JudgeVerdict | None:
         return None
 
 
+def parse_refusal_verdict(raw: str) -> RefusalVerdict | None:
+    """Parse the judge-v3.2 refusal JSON; falls back to a bare yes/no token (older
+    judge replies / models that ignore the JSON instruction) with an empty reason."""
+    start, end = raw.find("{"), raw.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return RefusalVerdict.model_validate(json.loads(raw[start : end + 1]))
+        except (json.JSONDecodeError, ValueError):
+            pass
+    token = _parse_yes_no(raw)
+    return None if token is None else RefusalVerdict(refusal=token, reason="")
+
+
 async def judge_question(
     judge: ChatModel, result: GenQuestionResult, citations: list[Citation]
 ) -> None:
@@ -400,8 +445,10 @@ async def judge_question(
     and attribution (1-5). The judge sees ALL retrieved passages (what the answer
     model saw), with cited ones flagged; see rubric history above.
     """
+    refusal_note = ""
     if result.refused:
         result.refused_semantic = True  # the exact contract sentence is unambiguous
+        refusal_note = "refusal: exact contract sentence (mechanical match)"
     else:
         reply = await judge.complete(
             [
@@ -411,14 +458,18 @@ async def judge_question(
                 )
             ]
         )
-        verdict = _parse_yes_no(reply.text)
-        result.refused_semantic = verdict if verdict is not None else result.refused
+        verdict = parse_refusal_verdict(reply.text)
+        result.refused_semantic = verdict.refusal if verdict is not None else result.refused
+        reason = verdict.reason if verdict is not None else "unparseable refusal verdict"
+        refusal_note = f"refusal={result.refused_semantic}: {reason}"
     result.refusal_correct = result.refused_semantic == result.refusal_expected
 
     # 1-5 dimensions: answered, in-scope only (out-of-scope has no ideal answer —
     # it stays binary refuse/answer, scored above; the user's call, to keep the
-    # faithfulness aggregate clean).
+    # faithfulness aggregate clean). For the refuse/OOS branch the refusal verdict's
+    # reason IS the record's only judge note — store it so the verdict is auditable.
     if result.refused_semantic or result.refusal_expected:
+        result.judge_notes = refusal_note
         return
     sources_text = "\n\n".join(
         f"[{c.marker}]{' (cited)' if c.marker in result.markers_used else ''} "

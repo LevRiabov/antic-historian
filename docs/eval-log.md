@@ -857,3 +857,89 @@ literal/OOS, agent for synthesis/cross-book/contradiction. **Open follow-ups (Ph
 stronger-reasoner arm (the lever for OOS abstention AND multi-hop attribution — needs verified
 structured-output support to keep grammar-ReAct); per-hop attribution discipline (prompt-v3);
 reflection/critic edge. **This row is the agent baseline; technique arms measure against it.**
+
+---
+
+## 2026-06-15 — Pre-D5 forensic audit of gen-agent-v2 + judge-v3.2 (two measurement fixes)
+
+**Why:** before opening the D5 stronger-reasoner arm (the production model; gemma-12b is
+local-only), audit every failed answer in the agent baseline to separate model failures from
+*judge* failures — and to confirm the harness can fairly measure what the smarter model is
+expected to improve. Forensic read of all 11 in-scope failures (4 refusals + 7 weak) and all 7
+OOS leaks in the gen-agent-v2 record (the judge-v3.1 row, 2026-06-15T12-18-31Z).
+
+### Finding 1 — one real judge bug (OOS), fixed in judge-v3.2
+
+The semantic-refusal judge stored **only a yes/no bit, no rationale** — so every OOS verdict
+(26/26) was unauditable (`judge_notes` empty). Worse, its narrow wording ("states the sources
+lack the info") credited a false-premise *correction* only when phrased as an explicit
+abstention: **oos-013** ("which Persian king did Caesar beat at Gaugamela?") was answered with a
+textbook premise-rejection ("the sources don't place Caesar there; Gaugamela was Alexander over
+Darius") yet scored as a non-refusal — inconsistent with oos-014, credited on the same pattern.
+
+**judge-v3.2 (rule #5):** refusal call returns JSON `{"refusal", "reason"}` (reason stored, OOS
+now auditable) and the rubric explicitly credits a premise-correction-without-supplying-the-fact
+as a refusal, while keeping secondary-material substitution a leak. **Methodology guard:** the
+first draft of the new prompt pasted oos-013's real question+answer as the illustrative example —
+caught and replaced with a synthetic non-corpus example (Hannibal-on-the-Moon). A judge prompt
+that hard-codes a held-out item's answer overfits the judge to the test and voids that
+measurement; illustrations in judge prompts must be synthetic (the three scoring rubrics already
+follow this — abstract `X`/`Y` placeholders).
+**Run record:** `backend/evals/runs/2026-06-15T13-44-11Z-gen-agent-v2-judge-v3.2.json` (rejudge
+of the frozen gen-agent-v2 answers; 0 answers differ — judge-only isolation).
+
+| | v3.1 | v3.2 | reading |
+|---|---|---|---|
+| OOS refusal accuracy | 73.1% | **76.9%** | oos-013 flipped (19→20/26), the *only* refusal change |
+| in-scope false-refusal | 3.0% | 3.0% | no in-scope answer misread as a refusal |
+| in-scope answered | 131/135 | 131/135 | unchanged |
+| faithfulness | 4.84 | 4.79 | reproduced within noise |
+| completeness | 4.53 | 4.48 | reproduced within noise |
+
+The remaining 5 OOS leaks (oos-019/020/023/024/025) re-audited as **genuine model failures** —
+the agent substitutes secondary material for an absent named work (oos-024 also a faithfulness
+breach: recited the *Natural History*'s 37-book structure, present in no cited chunk). oos-021
+(Behistun) stays flagged as a too-subtle question (Rawlinson decoded the inscription and reports
+its content). **No in-scope judge errors found** — several low scores are *impressively* precise
+(caught the 207 BC-vs-362 BC Mantinea swap in con-018; the regent-vs-king Pausanias conflation in
+mh-016).
+
+### Finding 2 — in-scope failures are one mechanism: namesake/date conflation
+
+8 of 11 in-scope failures share a signature — **faithfulness 5, completeness 1**: every sentence
+is grounded in *some* retrieved passage, but the answer is assembled around the **wrong entity**.
+Two wives of Claudius (mh-002, Agrippina for Messalina), two statesmen (mh-008, Themistocles for
+Pericles), one general's two battles (mh-014, Leuctra for Mantinea), two men named Pausanias
+(mh-016), two battles of Mantinea (con-018). Not retrieval (right passages in pool), not the
+judge (scores the defect correctly), not the prompt — a **disambiguation limit of the 12B**. The
+other 3: cb-005/cb-017 are false refusals on answerable cross-book *breadth* (the agent churns
+99–105s / 1000–1800 tokens then quits assembling — an agent-synthesis/`max_steps` limit);
+syn-006 is the one honestly-correct refusal (documented chunk-boundary split of *Cambyses* +
+*sacred disease*). This is the D5 reasoner's target, now with a precise mechanism.
+
+### Finding 3 — attribution is judge-noise-limited (the blocker for the D5 arm)
+
+The v3.2 rejudge is a controlled judge-variance probe: **identical frozen answers, byte-identical
+scoring rubrics, re-scored** (only the refusal prompt changed; judge already at temperature 0).
+Faithfulness/completeness reproduced at the ±0.2 floor; **attribution did not.**
+
+| dimension | % questions changed | mean \|Δ\|/question | aggregate Δ |
+|---|---|---|---|
+| faithfulness | 10% | 0.20 | −0.05 |
+| completeness | 9% | 0.22 | −0.05 |
+| **attribution** | **19%** | **0.66** | **−0.41** |
+
+Not jitter — **full 1↔5 flips on 25 questions** (con-013/con-018/cb-002/cb-003/cb-008 all 5→1),
+concentrated on the multi-source categories. The flash judge cannot *stably* answer "do these
+sources disagree, and did the answer attribute each in prose?" — itself a hard reasoning task.
+**Consequence:** the agent's headline "+0.32 attribution win over single-shot" and the "multi-hop
+attribution regression (5.00→3.78)" both sit **inside the judge's own 0.41 aggregate swing** — not
+reliably real. A frontier judge for the attribution rubric (or N≥3 self-consistency) is a
+**prerequisite** before the D5 model is measured on attribution; faithfulness/completeness are
+ready as-is. This is the eval log's pre-registered "calibrate vs a frontier judge when a decision
+rides on a small difference" — D5 is that decision.
+
+**Verdict:** gemma-12b agent baseline locked and honest (judge-v3.2). Still a strong portfolio
+result — faithfulness 4.79, 131/135 in-scope answered, synthesis transformed. Two clean pre-D5
+work items: (1) stabilise the attribution measurement (frontier/ensemble judge); (2) the D5
+stronger-reasoner arm targets namesake/date conflation (the 8-question mechanism above).
