@@ -44,14 +44,22 @@ class RetrievedChunk(BaseModel):
     rerank_score: float | None = None  # set only when a reranker reordered the list
 
 
-def _statement(vector: list[float], top_k: int) -> Select[tuple[ChunkRow, str, str, Any]]:
+def _statement(
+    vector: list[float], top_k: int, pg_id: int | None = None
+) -> Select[tuple[ChunkRow, str, str, Any]]:
     distance = ChunkRow.embedding.cosine_distance(vector)  # pyright: ignore[reportAttributeAccessIssue]
-    return (
+    statement = (
         select(ChunkRow, SourceRow.author, SourceRow.title, distance.label("distance"))
         .join(SourceRow, SourceRow.pg_id == ChunkRow.pg_id)
         .order_by(distance)
         .limit(top_k)
     )
+    # Source-isolation (Phase 5 agent): restrict to one work. None = whole corpus,
+    # which yields the IDENTICAL statement as before — a no-op for every existing
+    # caller (eval-equals-served guarantee preserved).
+    if pg_id is not None:
+        statement = statement.where(ChunkRow.pg_id == pg_id)
+    return statement
 
 
 def _to_chunks(rows: Sequence[Row[tuple[ChunkRow, str, str, Any]]]) -> list[RetrievedChunk]:
@@ -74,20 +82,21 @@ def _to_chunks(rows: Sequence[Row[tuple[ChunkRow, str, str, Any]]]) -> list[Retr
 
 
 def dense_retrieve(
-    engine: Engine, embedder: EmbeddingClient, query: str, top_k: int
+    engine: Engine, embedder: EmbeddingClient, query: str, top_k: int, pg_id: int | None = None
 ) -> list[RetrievedChunk]:
-    """Sync path: CLI tools and the eval harness."""
+    """Sync path: CLI tools and the eval harness. `pg_id` restricts to one work."""
     vector = embedder.embed_query_sync(query)
     with Session(engine) as session:
-        rows = session.execute(_statement(vector, top_k)).all()
+        rows = session.execute(_statement(vector, top_k, pg_id)).all()
     return _to_chunks(rows)
 
 
 async def dense_retrieve_async(
-    engine: AsyncEngine, embedder: EmbeddingClient, query: str, top_k: int
+    engine: AsyncEngine, embedder: EmbeddingClient, query: str, top_k: int, pg_id: int | None = None
 ) -> list[RetrievedChunk]:
-    """Async path: FastAPI routes (rule #7 — never block the event loop)."""
+    """Async path: FastAPI routes (rule #7 — never block the event loop).
+    `pg_id` restricts to one work (the agent's source-isolation tool)."""
     vector = await embedder.embed_query(query)
     async with AsyncSession(engine) as session:
-        rows = (await session.execute(_statement(vector, top_k))).all()
+        rows = (await session.execute(_statement(vector, top_k, pg_id))).all()
     return _to_chunks(rows)

@@ -40,3 +40,25 @@ Two self-contained scripts ([backend/spikes/d1/](../../backend/spikes/d1/)) buil
 - Two framework dependencies, one per layer — justified by each being best-of-breed for its layer and by the thin waist keeping them replaceable.
 - Known LlamaIndex risks accepted: global-Settings footgun (banned by convention — models passed explicitly), plugin sprawl (deps pinned via uv lock).
 - The wrong-Caesar retrieval failure is the first entry in the case-study evidence log.
+
+## Phase 5 recheck (2026-06-15) — LangGraph confirmed
+
+Decision point 2 above promised a mini-recheck of LangGraph vs LlamaIndex Workflows when
+the agent layer started. Done; **LangGraph confirmed**, faster than expected because the
+counter-argument collapsed:
+
+- **No LlamaIndex investment to protect.** Across Phases 1–4 the thin waist won completely —
+  `grep llama_index src/` returns nothing. Every retrieval ablation (contextual notes,
+  rerank-on-aligned-text, RRF) was written as plain functions behind our own pydantic
+  protocols; LlamaIndex was spiked but never adopted in production code. So "use LlamaIndex
+  Workflows because we already use LlamaIndex" is false — both frameworks are fresh deps.
+- **Our loop doesn't use framework tool-calling.** Phase 5 uses a *grammar-constrained ReAct*
+  loop: the think step is our own `llm.complete(..., response_format=<GBNF schema>)`, not
+  `bind_tools`. We need the framework only for loop scaffolding — typed state, conditional
+  edges, checkpointing, per-node streaming — which is LangGraph's core competency and the
+  résumé-valuable name (a stated project goal). LlamaIndex Workflows' event model adds nothing
+  here.
+
+`langgraph` promoted from the (now-removed) `spike` dependency group into main `dependencies`
+(1.2.4, same major line the D1 spike validated). Framework types stay inside `ahx.agent`,
+never in the eval harness or API (the thin-waist rule, unchanged).

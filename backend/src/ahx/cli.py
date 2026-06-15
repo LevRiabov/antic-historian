@@ -355,6 +355,66 @@ def search(query: str, top_k: int = 5) -> None:
         console.print(f"        {preview}...\n")
 
 
+agent_app = typer.Typer(help="Agentic RAG (Phase 5): the multi-step search-read-cite loop.")
+app.add_typer(agent_app, name="agent")
+
+
+@agent_app.command(name="ask")
+def agent_ask(
+    question: str,
+    retriever: str = typer.Option(
+        "rerank-cohere-pro-v1", help="Retriever label the agent's whole-corpus search uses."
+    ),
+    max_steps: int = typer.Option(8, help="Hard loop bound — forced-finalize (refuse) after."),
+    trace: bool = typer.Option(
+        True, help="Print the ReAct trace (thought / action / observation)."
+    ),
+) -> None:
+    """Run the agent on one question; print its reasoning trace and cited answer.
+
+    Costs query-time money when `retriever` is a hosted rerank label; pass a
+    'dense-v1' label for a free local run.
+    """
+    import sys
+    import time
+
+    from rich.markup import escape
+
+    from ahx.agent.runner import run_agent
+    from ahx.config import get_settings
+
+    settings = get_settings()
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    started = time.perf_counter()
+    sources, done, state = asyncio.run(
+        run_agent(question, settings, retriever_name=retriever, max_steps=max_steps),
+        loop_factory=loop_factory,
+    )
+    elapsed = time.perf_counter() - started
+
+    if trace:
+        for i, step in enumerate(state["history"], start=1):
+            head = f"[bold cyan]{i}. {step.action}[/bold cyan] [dim]{escape(str(step.args))}[/dim]"
+            console.print(head)
+            console.print(f"   [dim]{escape(step.thought)}[/dim]")
+            console.print(f"   -> {escape(' '.join(step.observation.split())[:200])}")
+        console.print()
+
+    console.print(f"[bold]{escape(done.answer)}[/bold]\n")
+    # status is either controlled markup (render) or contains the markers list
+    # (brackets must be escaped); build each case so console.print does the right thing.
+    status = (
+        "[yellow]REFUSED[/yellow]" if done.refused else f"markers={escape(str(done.markers.used))}"
+    )
+    console.print(
+        f"{status}  steps={state['step']}  {len(sources.citations)} sources seen  {elapsed:.1f}s"
+    )
+    for c in sources.citations:
+        mark = "[green]cited[/green]" if c.marker in done.markers.used else "     "
+        title = escape(c.work_title[:50])
+        console.print(f"  {mark} ({c.marker}) chunk {c.chunk_id}: {escape(c.author)}, {title}")
+
+
 eval_app = typer.Typer(help="Golden set + evaluation harness.")
 app.add_typer(eval_app, name="eval")
 
