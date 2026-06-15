@@ -25,7 +25,7 @@ from ahx.agent.tools import Toolbox, execute
 from ahx.config import Settings
 from ahx.generation.pipeline import Retriever
 from ahx.generation.prompt import REFUSAL_TEXT
-from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent
+from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent, Usage
 from ahx.retrieval.dense import RetrievedChunk
 from ahx.retrieval.embedding import EmbeddingClient
 
@@ -47,7 +47,14 @@ def chunk(chunk_id: int, text: str = "passage", pg_id: int = 1) -> RetrievedChun
 
 def make_state(collected: list[RetrievedChunk], final: AgentResult) -> AgentState:
     return AgentState(
-        question="q", history=[], collected=collected, step=1, final=final, pending=None
+        question="q",
+        history=[],
+        collected=collected,
+        step=1,
+        final=final,
+        pending=None,
+        prompt_tokens=0,
+        completion_tokens=0,
     )
 
 
@@ -69,7 +76,9 @@ class FakeChat:
     ) -> ChatResult:
         decision = self._decisions[min(self._i, len(self._decisions) - 1)]
         self._i += 1
-        return ChatResult(text=decision.model_dump_json(), usage=None)
+        return ChatResult(
+            text=decision.model_dump_json(), usage=Usage(prompt_tokens=10, completion_tokens=5)
+        )
 
 
 def make_retriever(chunks: list[RetrievedChunk]) -> Retriever:
@@ -182,6 +191,21 @@ async def test_graph_runs_search_then_finalize() -> None:
     assert done.answer == "Stabbed 23 times [1]."
     assert done.markers.used == [1]
     assert done.refused is False
+
+
+async def test_graph_accumulates_token_usage_across_think_calls() -> None:
+    chat = FakeChat(
+        [
+            Decision(thought="s", action=Search(tool="search", query="x")),
+            Decision(thought="f", action=Finalize(tool="finalize", answer="done")),
+        ]
+    )
+    graph = build_agent_graph(chat, fake_toolbox(make_retriever([chunk(101)])), max_steps=8)
+    state = await invoke_agent(graph, "q", max_steps=8)
+    assert state["prompt_tokens"] == 20  # 2 think calls x 10
+    assert state["completion_tokens"] == 10  # 2 think calls x 5
+    _, done = build_agent_events(state)
+    assert done.usage == Usage(prompt_tokens=20, completion_tokens=10)
 
 
 async def test_graph_forced_finalize_refuses_on_budget() -> None:

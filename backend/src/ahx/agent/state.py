@@ -65,3 +65,7 @@ class AgentState(TypedDict):
     step: int  # loop counter (overwritten each turn); guards max-steps / forced-finalize
     final: AgentResult | None  # set by finalize -> signals termination
     pending: Decision | None  # transient: the think node's latest move, awaiting `act`
+    # Token usage SUMMED across every think call (additive reducer) — the agent's
+    # total generation cost for the run record, vs single-shot's one call.
+    prompt_tokens: Annotated[int, operator.add]
+    completion_tokens: Annotated[int, operator.add]

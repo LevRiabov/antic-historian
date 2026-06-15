@@ -46,7 +46,16 @@ DEFAULT_MAX_STEPS = 8
 
 def initial_state(question: str) -> AgentState:
     """The starting state for a run — empty memory, step 0."""
-    return AgentState(question=question, history=[], collected=[], step=0, final=None, pending=None)
+    return AgentState(
+        question=question,
+        history=[],
+        collected=[],
+        step=0,
+        final=None,
+        pending=None,
+        prompt_tokens=0,
+        completion_tokens=0,
+    )
 
 
 def _result_from_finalize(action: Finalize) -> AgentResult:
@@ -76,6 +85,9 @@ def build_agent_graph(
         result = await chat.complete(messages, response_format=response_format)
         decision = parse_decision(result.text)  # grammar-guaranteed valid
         update: dict[str, Any] = {"pending": decision, "step": step + 1}
+        if result.usage is not None:  # additive reducer sums these across calls
+            update["prompt_tokens"] = result.usage.prompt_tokens
+            update["completion_tokens"] = result.usage.completion_tokens
         if isinstance(decision.action, Finalize):
             update["final"] = _result_from_finalize(decision.action)
             update["history"] = [

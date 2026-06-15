@@ -21,6 +21,9 @@ handles semantic refusals downstream, exactly as for single-shot.
 """
 
 import re
+from collections.abc import Awaitable, Callable
+
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from ahx.agent.graph import DEFAULT_MAX_STEPS, build_agent_graph, invoke_agent
 from ahx.agent.prompts import AGENT_PROMPT_VERSION
@@ -34,7 +37,7 @@ from ahx.generation.pipeline import (
     SourcesEvent,
     _is_refusal,  # pyright: ignore[reportPrivateUsage]
 )
-from ahx.llm import ChatModel, chat_model_from_settings
+from ahx.llm import ChatModel, Usage, chat_model_from_settings
 from ahx.retrieval.dense import RetrievedChunk
 from ahx.retrieval.embedding import EmbeddingClient
 from ahx.retrieval.factory import build_async_retriever
@@ -98,9 +101,35 @@ def build_agent_events(state: AgentState) -> tuple[SourcesEvent, DoneEvent]:
         answer=rewritten,
         refused=_is_refusal(rewritten),
         markers=extract_markers(rewritten, set(marker_of.values())),
-        usage=None,  # TODO(eval-integration): accumulate usage across think calls
+        # Summed across every think call — the agent's total generation cost.
+        usage=Usage(
+            prompt_tokens=state["prompt_tokens"], completion_tokens=state["completion_tokens"]
+        ),
     )
     return sources, done
+
+
+def make_agent_engine(
+    settings: Settings,
+    engine: AsyncEngine,
+    chat: ChatModel,
+    retriever_name: str,
+    max_steps: int = DEFAULT_MAX_STEPS,
+) -> Callable[[str], Awaitable[tuple[SourcesEvent, DoneEvent]]]:
+    """Build the agent ONCE over an externally-managed DB engine and return a
+    per-question callable producing the same (SourcesEvent, DoneEvent) as
+    single-shot. This is the eval harness's engine seam: it never sees a LangGraph
+    type — the compiled graph is hidden in the closure (thin-waist rule)."""
+    embedder = EmbeddingClient(settings)
+    retriever = build_async_retriever(settings, engine, embedder, retriever_name)
+    toolbox = Toolbox(settings=settings, engine=engine, embedder=embedder, retriever=retriever)
+    graph = build_agent_graph(chat, toolbox, max_steps)
+
+    async def run_one(question: str) -> tuple[SourcesEvent, DoneEvent]:
+        state = await invoke_agent(graph, question, max_steps)
+        return build_agent_events(state)
+
+    return run_one
 
 
 async def run_agent(

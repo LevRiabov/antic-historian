@@ -530,6 +530,11 @@ def generate(
     retriever: str = typer.Option(
         "dense", help="Retrieval path: 'dense' or a 'rerank*' label (uses AHX_RERANK_* config)."
     ),
+    agent: bool = typer.Option(
+        False, "--agent", help="Use the Phase-5 agent loop instead of single-shot."
+    ),
+    max_steps: int = typer.Option(8, help="Agent loop bound (only with --agent)."),
+    limit: int = typer.Option(0, help="Cap questions for a dry run (0 = whole golden set)."),
 ) -> None:
     """Run the generation-tier eval (full ask pipeline over the golden set)."""
     import sys
@@ -546,6 +551,8 @@ def generate(
     settings = get_settings()
     golden_dir = Path(__file__).resolve().parents[2] / "evals" / "golden"
     questions = load_golden_set(golden_dir)
+    if limit:
+        questions = questions[:limit]
 
     judge_model = None
     if judge:
@@ -576,6 +583,8 @@ def generate(
             judge=judge_model,
             on_result=progress,
             retriever_name=retriever,
+            agent=agent,
+            max_steps=max_steps,
         ),
         loop_factory=loop_factory,
     )

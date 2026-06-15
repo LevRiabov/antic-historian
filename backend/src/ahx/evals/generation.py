@@ -18,7 +18,7 @@ per-question results with ideal_answer next to the model's actual answer.
 
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -102,6 +102,8 @@ class GenerationRun(BaseModel):
     chunking_version: str
     prompt_version: str
     top_k: int
+    engine: str = "single-shot"  # "single-shot" or "agent" (Phase 5); absent on older records
+    agent_max_steps: int | None = None  # set only for agent runs
     retriever: str = "dense"  # which retrieval path fed the prompt (Phase 4.2)
     rerank_model: str | None = None  # set only for rerank-* retrievers
     rerank_pool_n: int | None = None
@@ -460,6 +462,12 @@ async def judge_question(
 # --- runner ---
 
 
+# A generation engine: question text -> (sources shown, answer produced). Both the
+# single-shot pipeline and the Phase-5 agent satisfy this; the eval loop is engine-
+# agnostic (the agent's runner hides every LangGraph type behind this callable).
+GenEngine = Callable[[str], Awaitable[tuple[SourcesEvent, DoneEvent]]]
+
+
 async def run_generation_eval(
     settings: Settings,
     questions: list[GoldenQuestion],
@@ -468,13 +476,37 @@ async def run_generation_eval(
     judge: ChatModel | None = None,
     on_result: Callable[[GenQuestionResult], None] | None = None,
     retriever_name: str = "dense",
+    agent: bool = False,
+    max_steps: int = 8,
 ) -> GenerationRun:
     from ahx.ingest.chunker import CHUNKING_VERSION
     from ahx.retrieval.factory import build_async_retriever, is_rerank_label
 
     engine = create_async_db_engine(settings.database_url)
-    retriever = build_async_retriever(settings, engine, EmbeddingClient(settings), retriever_name)
     chat = chat_model_from_settings(settings)
+
+    # Pick the engine. Agent and single-shot both produce (SourcesEvent, DoneEvent),
+    # so everything downstream (scoring, judge, record) is identical.
+    run_one: GenEngine
+    if agent:
+        from ahx.agent.prompts import AGENT_PROMPT_VERSION
+        from ahx.agent.runner import make_agent_engine
+
+        run_one = make_agent_engine(settings, engine, chat, retriever_name, max_steps)
+        prompt_version = AGENT_PROMPT_VERSION
+        engine_label = "agent"
+    else:
+        retriever = build_async_retriever(
+            settings, engine, EmbeddingClient(settings), retriever_name
+        )
+
+        async def _single_shot(question_text: str) -> tuple[SourcesEvent, DoneEvent]:
+            events = [event async for event in ask(question_text, retriever, chat, top_k)]
+            return collect(events)
+
+        run_one = _single_shot
+        prompt_version = PROMPT_VERSION
+        engine_label = "single-shot"
 
     results: list[GenQuestionResult] = []
     try:
@@ -490,9 +522,8 @@ async def run_generation_eval(
                 spans.append(resolved)
 
             started = time.perf_counter()
-            events = [event async for event in ask(question.question, retriever, chat, top_k)]
+            sources, done = await run_one(question.question)
             latency_ms = round((time.perf_counter() - started) * 1000)
-            sources, done = collect(events)
 
             result = score_generation(question, spans, sources, done, latency_ms)
             if judge is not None:
@@ -509,8 +540,10 @@ async def run_generation_eval(
         chat_model=settings.chat_model,
         embed_model=settings.embed_model,
         chunking_version=CHUNKING_VERSION,
-        prompt_version=PROMPT_VERSION,
+        prompt_version=prompt_version,
         top_k=top_k,
+        engine=engine_label,
+        agent_max_steps=max_steps if agent else None,
         retriever=retriever_name,
         rerank_model=settings.rerank_model if is_rerank_label(retriever_name) else None,
         rerank_pool_n=settings.rerank_pool_n if is_rerank_label(retriever_name) else None,
