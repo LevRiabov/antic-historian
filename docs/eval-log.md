@@ -943,3 +943,225 @@ rides on a small difference" — D5 is that decision.
 result — faithfulness 4.79, 131/135 in-scope answered, synthesis transformed. Two clean pre-D5
 work items: (1) stabilise the attribution measurement (frontier/ensemble judge); (2) the D5
 stronger-reasoner arm targets namesake/date conflation (the 8-question mechanism above).
+
+---
+
+## 2026-06-15 — Split judge + attribution calibration: blocker CLEARED (kimi + qwen3.7-max)
+
+**Why:** the pre-D5 audit (above) found attribution **judge-noise-limited** on deepseek-v4-flash
+(re-scoring IDENTICAL frozen answers swung 0.66/question with full 1↔5 flips), so no D5 number
+could be trusted on attribution until a stronger, *stable* attribution judge existed. A judge
+must also be ≥ the generated model's tier (a flash judge cannot reliably grade a stronger agent).
+
+**Change — the split judge (code, gated):** the three rubrics were already independent hosted
+calls; routed **attribution → a separate, stronger model** while faithfulness/completeness/refusal
+stay on the main judge. New `AHX_ATTRIB_JUDGE_*` settings + `attribution_judge_from_settings()`
+(unset → main judge scores attribution, back-compat); run records now carry `attribution_judge_model`
+so a split run can't be silently compared to a single-judge one (rule #5/#6). Picked (different
+family from the deepseek-pro agent, both frontier-tier): **judge = moonshotai/kimi-k2.6**
+(refusal+faith+compl), **attribution = qwen/qwen3.7-max**. Two robustness fixes en route:
+`complete()` now retries 429/5xx **and** empty/malformed 200 bodies (a JSONDecodeError had aborted
+a whole 161-Q pass under concurrency); `rejudge_run` got a per-question guard + concurrency.
+
+**Variance re-probe (the calibration):** two `eval rejudge` passes over the SAME frozen
+gen-agent-v2 answers, byte-identical rubrics, only the judge changed.
+**Run records:** `2026-06-15T15-22-22Z-probe-a-attrib-qwen.json`,
+`2026-06-15T16-35-38Z-probe-b-attrib-qwen.json`.
+
+| dimension | flash (audit) | **kimi/qwen split (now)** |
+|---|---|---|
+| attribution mean \|Δ\|/question | 0.66 | **0.153** |
+| attribution % changed | 19% | 5% |
+| attribution full 1↔5 flips | ~25 | 4 |
+| attribution aggregate Δ | 0.41 | 0.06 |
+| faithfulness \|Δ\| (kimi) | — | 0.211 |
+| completeness \|Δ\| (kimi) | — | 0.123 |
+
+**Findings:** qwen scores attribution about as stably as kimi scores faith/compl — attribution
+mean \|Δ\| (0.153) is now *below* faithfulness (0.211). The blocker is cleared: D5 attribution
+deltas above ~0.1 aggregate are now real, no N≥3 self-consistency needed. **Residual:** 4 questions
+still hard-flip 1↔5 (con-002, cb-002, cb-023, mh-005) — fine for aggregate/per-category reads, not
+for a single-question attribution claim. This closes the pre-registered "calibrate vs a frontier
+judge when a decision rides on a small difference."
+
+---
+
+## 2026-06-15 — D5: deepseek-v4-pro agent (KEEP) — the stronger-reasoner arm, reranker dropped
+
+**What changed (the model + a retrieval simplification):** the agent's reasoner went from local
+gemma-12b → **deepseek/deepseek-v4-pro** (hosted, OpenRouter), and the **reranker was dropped**
+(retriever `dense-ctx-v1`, no cohere). Everything else held: grammar-ReAct agent (prompt
+**agent-v2** — note the run *label* says "v3", a misnomer; the record's `prompt_version` is
+agent-v2), 161 questions, split judge (kimi + qwen3.7-max). The deepseek-pro swap was **env-only** —
+`action_response_format()` already emits the OpenAI `json_schema` envelope and deepseek honored the
+discriminated-union grammar (0 parse failures). Pre-flight judge-free smoke: **7/7** (4 namesake/date
+traps solved, 3 source-absent OOS refused), rerank off.
+**Run record:** `2026-06-15T18-01-51Z-gen-agent-v3-deepseek-pro.json` (label misnomer noted above).
+
+### deepseek-pro (no rerank) vs gemma agent (rerank-pro), SAME split judge (apples-to-apples)
+
+The gemma baseline was re-scored by the identical kimi+qwen judge (the probe-a record), so this is
+a clean model comparison, not a cross-judge one.
+
+| metric | gemma agent | **deepseek-pro** | Δ |
+|---|---|---|---|
+| faithfulness | 4.63 | 4.61 | flat |
+| completeness | 4.68 | **4.96** | +0.28 |
+| attribution | 4.31 | **4.67** | +0.36 |
+| OOS refusal accuracy | 73–77% | **100% (26/26)** | the headline trust fix |
+
+**Findings:**
+
+1. **OOS source-absent abstention is SOLVED — 100%.** The substitution that the audit called a
+   model-strength limit (gemma answered absent named works from secondary mentions) is gone:
+   deepseek-pro reasons "X summarizes the work but is NOT its text" and refuses with provenance.
+   This is the headline trust result and the thing gemma fundamentally could not do.
+2. **Attribution +0.36 (now trustworthy)** and **completeness +0.28**, faithfulness flat-high.
+   Multi-hop attribution — gemma's worst regression (3.78) — recovered to 4.65. Namesake/date
+   conflation fixed (smoke + traces).
+3. **The cost: in-scope false-refusal rose to 18.5%** (gemma+rerank 3.0%), concentrated in
+   **cross-book (13/28) and synthesis (7/18)** — the retrieval-hard breadth categories. deepseek-pro
+   abstains rather than half-assemble a distributed answer. **CONFOUNDED:** model AND reranker both
+   changed, so this cannot be cleanly attributed; the rerank-ON arm that would isolate it was skipped
+   for cost. **Reranker-drop therefore stays a receipt-gap on cross-book/synthesis.** A single-question
+   probe (cb-001) showed the gold chunks ARE all retrievable in one keyword query and that rerank ≈
+   dense there (confirming 4.2 "cross-book not rerankable") — so for that question the reranker was
+   exonerated and the lever is agent query strategy, not rerank.
+4. **Headline completeness/attribution is partly a selection effect (Simpson's paradox, as on 4.1):**
+   20 of the 25 in-scope refusals are breadth questions that, if answered, score low — refusing them
+   lifts the answered-set average. Real quality gain + weak answers removed from the pool, both.
+5. **Cost/latency:** agent gen ~$2.14 (256k completion + 4.4M prompt tokens) + judge ~$2–4; mean
+   completion 1591 tokens, mean latency 64s.
+
+**Verdict: KEEP deepseek-v4-pro as the agent reasoner.** It delivers the two D5 targets (attribution,
+OOS abstention) plus completeness, on a now-trustworthy judge. Open: the 18.5% cross-book/synthesis
+false-refusal, and the un-isolated reranker-drop.
+
+---
+
+## 2026-06-15 — Agent prompt-v3 REJECTED (cover-all-or-refuse) → v4 fix
+
+**Hypothesis:** the 18.5% false-refusal is an agent search-strategy problem (cb-001 probe: the broad
+question retrieves 2/4 gold chunks, a keyword query 4/4) — so prompt-v3 made query **reformulation
+mandatory** (keyword/entity phrasing, period-synonym retries) and added a plan→search→adapt
+persistence loop. A 6-question trace test looked good (3/4 prior failures converted, OOS held).
+**Full run (161 Q, deepseek-pro, split judge, max-steps 10):**
+`2026-06-15T20-33-07Z-gen-agent-promptv3-deepseek.json`.
+
+| metric | agent-v2 | **agent-v3** |
+|---|---|---|
+| in-scope false-refusal | 18.5% | **31.1%** ⬇ |
+| OOS refusal accuracy | 100% | 96.2% ⬇ |
+| faithfulness | 4.61 | 4.23 ⬇ |
+| citation recall | 45.8% | 40.5% ⬇ |
+| mean completion tokens | 1591 | 2840 ⬇ |
+| mean latency | 64s | 119s ⬇ (one question ran 28 min) |
+
+Refusals by category v2→v3: literal 2→4, multi-hop **1→5**, contradiction **1→5**, cross-book
+**13→21** (the targeted category, *worse*). 26 questions flipped answer→refuse, 9 refuse→answer.
+
+**Root cause (a prompt bug, reproduced — con-012, Nineveh):** the agent **found a complete answer
+early** (Rawlinson c41845: Nabopolassar + Cyaxares besiege Nineveh, Saracus self-immolates), then
+spent 5+ searches hunting the Diodorus/Ctesias, Herodotus, and Josephus versions "for completeness",
+hit the step bound, and **refused with the answer in hand**. v3 had deleted v2's escape hatch
+("finalize with what you have, or refuse") and replaced it with Rule 3 "list each relevant work" +
+Rule 6 "finish only when EVERY requirement is covered, else refuse" — a cover-all-or-refuse binary.
+On multi-source questions (contradiction/cross-book) that makes "find every source" a precondition;
+when it can't, the only branch left is refuse. It hit the categories that were *fine* in v2 hardest.
+The model was **obeying the prompt**, not disobeying it. (Caveat: some flips are plain path-variance —
+lit-018 answered on retrace — but con-012 is the systematic, reproducible mechanism.)
+
+**Verdict: REJECT agent-v3.** A rejection with a receipt (rule #1). Methodology note: the 6-question
+trace test predicted the OPPOSITE of the 161-Q result — **cherry-picked traces do not predict
+population behavior; only the full set decides** (rule #5, re-learned).
+
+**Fix — agent-v4 (written, NOT yet run):** keep the reformulation rules (1–2, which help retrieval);
+restore the escape hatch — *"ANSWER as soon as you have relevant evidence, even from a single source;
+more sources only ENRICH, never gate; refuse ONLY when searches turn up nothing relevant."* Awaiting
+prompt review; the validating full run is pending (one run, ~$8–12). Until then **agent-v2 +
+deepseek-v4-pro + no-rerank (the 18-01-51Z row) is the standing D5 result.**
+
+---
+
+## 2026-06-16 — Agent prompt-v4 KEEP — in-scope false-refusal 18.5% → 3.0% (the v3 fix, validated)
+
+**What changed — FOUR levers bundled (a deliberate confound, see below):** after the v3 reject, the
+prompt review turned into a small package, all aimed at the 18.5% in-scope false-refusal:
+1. **Prompt edits** — kept v3's reformulation rules; restored the v2 escape hatch but made it
+   *graded* (single-fact → one source suffices; compare/contradiction → two-three, never *every*
+   source); added a `top_k` 10–15 hint for breadth questions; cross-linked the escape hatch to the
+   absent-named-work refusal (rule 7) to protect OOS; forbade invented chunk ids.
+2. **Step-budget visibility** — `build_think_messages` now injects *"step N of M (searches left K)"*
+   with a hard "FINALIZE NOW" warning at ≤2 left. The model could not previously *see* its budget,
+   so it could not manage the over-search-into-the-wall that caused con-012.
+3. **Forced synthesis, not blind refusal** — at the step bound the loop now runs ONE finalize-only
+   grammar call ("answer from collected evidence, or refuse") instead of discarding everything and
+   emitting REFUSAL_TEXT. The structural fix for con-012 ("refused with the answer in hand").
+4. **`find_quote` removed** — verifies a *verbatim* span, but the agent paraphrases + cites by chunk
+   id, so it never touched the citation path or any measured failure mode (invoked ~1/6 questions,
+   no effect). Pure simplification of the constrained-decoder's action space.
+
+Run config held identical to the agent-v2 deepseek baseline (the 18-01-51Z row) for an apples-to-apples
+*prompt* comparison: deepseek-v4-pro, `dense-ctx-v1` (no rerank), split judge (kimi-k2.6 + qwen3.7-max),
+max-steps 8, concurrency 8. Pre-flight 1-Q smoke confirmed the escape hatch live (the agent answered
+Mantinea in 2 steps, explicitly reasoning "evidence is sufficient … I'll answer now").
+**Run record:** `backend/evals/runs/2026-06-16T08-01-40Z-gen-agent-v4-deepseek.json`.
+
+### agent-v4 vs agent-v2, BOTH on deepseek-v4-pro (model held constant; same split judge)
+
+| metric | agent-v2 | **agent-v4** | reading |
+|---|---|---|---|
+| in-scope false-refusal | 18.5% (25) | **3.0% (4)** | the open wound, closed — back to the gemma+rerank rate, on deepseek |
+| — cross-book | 13/28 | **1/28** | the targeted category |
+| — synthesis | 7/18 | **1/18** | the targeted category |
+| OOS refusal accuracy | 100% | 92.3% | −2 questions; both borderline (below), named-work guard held |
+| faithfulness | 4.61 | 4.52 | within judge noise (±0.21) |
+| completeness | 4.96 | 4.94 | flat |
+| attribution | 4.67 | 4.71 | flat |
+| citation span recall | 56.2% | 59.0% | up |
+| mean prompt tokens | 27,515 | 21,724 | DOWN — stops over-searching (mechanism confirmed) |
+| mean completion tokens | 1,601 | 1,252 | down |
+| mean latency | 63.7s | 78.9s | up (forced-synthesis round-trip + provider variance) |
+
+### Findings
+
+1. **The false-refusal fix is real and on-target** — 25 → 4, almost all of the drop in the two targeted
+   categories (cross-book 13→1, synthesis 7→1), with completeness/attribution/citation-recall held or up
+   and *fewer* tokens. The token drop is the smoking gun: the agent answers sooner rather than churning.
+2. **OOS 100→92.3% is two BORDERLINE items, not the dangerous failure mode.** Every genuine
+   absent-named-work case held (Plato/Homer/Sappho/Pliny/Galen/Marcus Aurelius/Euclid all refused) —
+   v4 did NOT reintroduce the gemma-era "fabricate an absent work's content" leak. The two flips:
+   oos-021 (Behistun — already flagged here as mislabeled; Rawlinson decoded the inscription and its
+   content IS in-corpus) and oos-010 (Roman concrete — answered the pozzolana "why durable" part from
+   real ancient passages, Dio + Strabo, but over-reached into the OOS "vs modern concrete" framing).
+3. **Dominant residual quality drag = parametric embellishment (23 faithfulness-3s, one mechanism):**
+   answers "overwhelmingly grounded BUT add an unsupported specific" — a date or name from the model's
+   own memory not in the sources (AD 96–180, 371 BC, 15 Jan 69 AD; "Barca", "Porta Praetoria", "Helike").
+   A direct "never outside knowledge" leak via garnish. Prompt-fixable — the next lever (agent-v4.1,
+   one anti-embellishment rule, clean ablation vs v4).
+4. **Attribution-1 (9 questions) is PRE-EXISTING, not a v4 regression.** v2 also had exactly 9
+   attribution-1s — with ZERO overlap in *which* questions. Same rate, different questions → a stable
+   model+judge characteristic (path variance + the qwen judge's documented attribution instability),
+   not something v4 broke (mean flat 4.67→4.71). Two flavours: wrong-author-in-prose (con-002 credits
+   Grote for Bury; cb-003 Polybius for Mommsen; cb-009 Plutarch for Appian) and silently-picks-a-side
+   of a disagreement the prompt forbids (mh-012 poison vs bull's-blood; mh-020 15th vs 18th year). The
+   principled fix is the clean-writer arm (compose from deduped, author-labelled evidence), not a blind
+   prompt tweak on a noise-limited metric.
+5. **4 residual false-refusals** (con-012 Nineveh, cb-022 Lycurgus's Sparta, lit-023 the *salutatio*,
+   synth-015 Strabo on decayed cities) — all answerable from the corpus. con-012 is *the v3 motivating
+   example* and still refuses; a trace look is the open TODO (found-evidence-then-refused vs retrieved-
+   nothing). One true content failure remains: mh-007 (namesake/multi-hop — answered Leotychides-at-
+   Mycale instead of Pausanias, who led the same-day land battle at Plataea).
+
+**Confound (rule #1/#5):** four levers moved in one run, so a *clean* attribution of the win to any single
+lever is not possible from this record alone. Accepted deliberately — the result is lopsidedly positive
+and the levers all push the same direction; decompose only if a future question needs it. The token drop
++ con-012 behaviour point to step-budget + escape-hatch as the primary drivers; `find_quote` removal is
+quality-neutral by construction.
+
+**Verdict: KEEP agent-v4 — the standing D5 result.** False-refusal solved (18.5→3.0%) with quality held
+and cost down, OOS trust intact on the cases that matter. Open follow-ups, all pre-registered here:
+(1) **agent-v4.1** — one anti-embellishment rule, clean ablation (targets the 23 faithfulness-3s);
+(2) **clean-writer arm** — compose the final answer from deduped author-labelled evidence (targets the
+attribution misattribution + embellishment together); (3) **con-012 trace** — why the motivating example
+still refuses.

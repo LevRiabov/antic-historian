@@ -80,6 +80,16 @@ class Settings(BaseSettings):
     judge_model: str | None = None
     judge_api_key: str | None = None
 
+    # Attribution judge — the attribution rubric is judge-noise-limited on a
+    # flash-tier judge (0.66/question swing, full 1<->5 flips on multi-source;
+    # eval-log 2026-06-15), itself a hard reasoning task. Route ONLY attribution
+    # to a stronger model than the faith/compl judge. Unset = the main judge
+    # scores attribution too (back-compat). A judge must be >= the GENERATED
+    # model's tier — a weaker judge can't reliably grade a stronger model.
+    attrib_judge_base_url: str | None = None
+    attrib_judge_model: str | None = None
+    attrib_judge_api_key: str | None = None
+
     # Enrichment LLM (Phase 4.1 contextual-note + metadata pass). Offline,
     # one-time, cached to corpus/enriched/ — so a local model is the cheap
     # default (gemma-12b-enrich = the parallel-slot llama-swap profile). To run

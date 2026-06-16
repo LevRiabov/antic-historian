@@ -536,10 +536,10 @@ def generate(
     max_steps: int = typer.Option(8, help="Agent loop bound (only with --agent)."),
     limit: int = typer.Option(0, help="Cap questions for a dry run (0 = whole golden set)."),
     concurrency: int = typer.Option(
-        1,
-        help="Questions in flight at once. >1 only speeds up the local model if its "
-        "server runs with parallel slots (llama.cpp --parallel N); raises temp-0 "
-        "batching nondeterminism, so pin it across compared runs.",
+        8,
+        help="Questions in flight at once. With every stage hosted there is no local "
+        "bottleneck, so raise this to shorten the run; complete() retries 429s with "
+        "backoff. Pin it across compared runs for reproducibility.",
     ),
 ) -> None:
     """Run the generation-tier eval (full ask pipeline over the golden set)."""
@@ -552,7 +552,7 @@ def generate(
         save_generation_run,
     )
     from ahx.evals.golden import CATEGORIES, load_golden_set
-    from ahx.llm import judge_model_from_settings
+    from ahx.llm import attribution_judge_from_settings, judge_model_from_settings
 
     settings = get_settings()
     golden_dir = Path(__file__).resolve().parents[2] / "evals" / "golden"
@@ -561,11 +561,16 @@ def generate(
         questions = questions[:limit]
 
     judge_model = None
+    attribution_judge = None
     if judge:
         judge_model = judge_model_from_settings(settings)
         if judge_model is None:
             console.print("[red]--judge needs AHX_JUDGE_BASE_URL and AHX_JUDGE_MODEL set.[/red]")
             raise typer.Exit(code=1)
+        # Optional split judge: a stronger model for the attribution rubric only.
+        attribution_judge = attribution_judge_from_settings(settings)
+        if attribution_judge is not None:
+            console.print(f"[dim]attribution rubric -> {attribution_judge.model_name}[/dim]")
 
     def progress(result: GenQuestionResult) -> None:
         mark = "refused" if result.refused else f"markers={result.markers_used}"
@@ -592,6 +597,7 @@ def generate(
             agent=agent,
             max_steps=max_steps,
             concurrency=concurrency,
+            attribution_judge=attribution_judge,
         ),
         loop_factory=loop_factory,
     )
@@ -605,6 +611,7 @@ def generate(
     table = Table(
         title=f"Generation eval — {run.label} · {run.chat_model} · {run.prompt_version}"
         + (f" · judge={run.judge_model}" if run.judge_model else " · no judge")
+        + (f" · attrib={run.attribution_judge_model}" if run.attribution_judge_model else "")
     )
     for column in (
         "category",
@@ -663,6 +670,9 @@ def generate(
 def rejudge(
     record: Annotated[Path, typer.Argument(help="Path to a saved generation run record (JSON).")],
     label: str = typer.Option("rejudged", help="Label for the new record."),
+    concurrency: int = typer.Option(
+        8, help="Frozen answers re-scored in parallel (provider-rate-bound; retries 429s)."
+    ),
 ) -> None:
     """Re-judge a saved run's frozen answers with the current rubric —
     isolates judge changes from generation nondeterminism."""
@@ -670,13 +680,16 @@ def rejudge(
 
     from ahx.config import get_settings
     from ahx.evals.generation import GenQuestionResult, rejudge_run, save_generation_run
-    from ahx.llm import judge_model_from_settings
+    from ahx.llm import attribution_judge_from_settings, judge_model_from_settings
 
     settings = get_settings()
     judge_model = judge_model_from_settings(settings)
     if judge_model is None:
         console.print("[red]Needs AHX_JUDGE_BASE_URL and AHX_JUDGE_MODEL set.[/red]")
         raise typer.Exit(code=1)
+    attribution_judge = attribution_judge_from_settings(settings)
+    if attribution_judge is not None:
+        console.print(f"[dim]attribution rubric -> {attribution_judge.model_name}[/dim]")
 
     def progress(result: GenQuestionResult) -> None:
         if result.faithfulness is not None:
@@ -687,7 +700,15 @@ def rejudge(
 
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     run = asyncio.run(
-        rejudge_run(settings, record, judge_model, label, on_result=progress),
+        rejudge_run(
+            settings,
+            record,
+            judge_model,
+            label,
+            on_result=progress,
+            attribution_judge=attribution_judge,
+            concurrency=concurrency,
+        ),
         loop_factory=loop_factory,
     )
 

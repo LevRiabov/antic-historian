@@ -109,6 +109,10 @@ class GenerationRun(BaseModel):
     rerank_model: str | None = None  # set only for rerank-* retrievers
     rerank_pool_n: int | None = None
     judge_model: str | None
+    # Set only when the attribution rubric used a DIFFERENT model than judge_model
+    # (the split judge); None = one judge scored all rubrics. Keeps a split run
+    # from being silently compared to a single-judge one (rule #5/#6).
+    attribution_judge_model: str | None = None
     judge_rubric: str | None = None  # None on pre-judge-v2 records
     aggregates: GenAggregates
     results: list[GenQuestionResult]
@@ -435,7 +439,10 @@ def parse_refusal_verdict(raw: str) -> RefusalVerdict | None:
 
 
 async def judge_question(
-    judge: ChatModel, result: GenQuestionResult, citations: list[Citation]
+    judge: ChatModel,
+    result: GenQuestionResult,
+    citations: list[Citation],
+    attribution_judge: ChatModel | None = None,
 ) -> None:
     """Mutates result with the judge-layer fields (judge-v3.1).
 
@@ -477,10 +484,14 @@ async def judge_question(
         for c in citations
     )
     # The three rubrics are independent hosted calls — fire them concurrently.
-    # gather preserves order, so judge_notes stays deterministic.
+    # gather preserves order, so judge_notes stays deterministic. Attribution is
+    # routed to a (stronger) judge when configured — it's the one rubric a flash
+    # judge can't score stably (eval-log 2026-06-15); faith/compl stay on `judge`.
+    attrib_judge = attribution_judge or judge
     rubrics = (
         (
             "faithfulness",
+            judge,
             FAITHFULNESS_RUBRIC.format(
                 question=result.question,
                 sources=sources_text or "(none cited)",
@@ -489,12 +500,14 @@ async def judge_question(
         ),
         (
             "completeness",
+            judge,
             COMPLETENESS_RUBRIC.format(
                 question=result.question, ideal=result.ideal_answer, answer=result.answer
             ),
         ),
         (
             "attribution",
+            attrib_judge,
             ATTRIBUTION_RUBRIC.format(
                 question=result.question,
                 sources=sources_text or "(none cited)",
@@ -503,10 +516,13 @@ async def judge_question(
         ),
     )
     responses = await asyncio.gather(
-        *(judge.complete([ChatMessage(role="user", content=prompt)]) for _, prompt in rubrics)
+        *(
+            model.complete([ChatMessage(role="user", content=prompt)])
+            for _, model, prompt in rubrics
+        )
     )
     notes: list[str] = []
-    for (field, _), response in zip(rubrics, responses, strict=True):
+    for (field, _, _), response in zip(rubrics, responses, strict=True):
         verdict = parse_verdict(response.text)
         if verdict is None:
             notes.append(f"{field}: unparseable judge reply")
@@ -565,6 +581,7 @@ async def run_generation_eval(
     agent: bool = False,
     max_steps: int = 8,
     concurrency: int = 1,
+    attribution_judge: ChatModel | None = None,
 ) -> GenerationRun:
     from ahx.ingest.chunker import CHUNKING_VERSION
     from ahx.retrieval.factory import build_async_retriever, is_rerank_label
@@ -612,11 +629,11 @@ async def run_generation_eval(
 
     resolved_spans = [_resolve(question) for question in questions]
 
-    # Run (engine + judge) per question, at most `concurrency` in flight. The
-    # local chat model is the bottleneck, so this only pays off when the
-    # llama.cpp server runs with parallel slots (--parallel N); hosted stages
-    # (embed/rerank/judge) parallelize regardless. gather preserves input order,
-    # so `results` stays question-ordered no matter the completion order.
+    # Run (engine + judge) per question, at most `concurrency` in flight. With
+    # every stage hosted (agent/embed/judge on OpenRouter) there is no local
+    # bottleneck, so concurrency scales the whole run — bounded only by provider
+    # rate limits (complete() retries 429s with backoff). gather preserves input
+    # order, so `results` stays question-ordered no matter the completion order.
     sem = asyncio.Semaphore(max(1, concurrency))
 
     async def _run_question(
@@ -629,7 +646,7 @@ async def run_generation_eval(
                 latency_ms = round((time.perf_counter() - started) * 1000)
                 result = score_generation(question, spans, sources, done, latency_ms)
                 if judge is not None:
-                    await judge_question(judge, result, sources.citations)
+                    await judge_question(judge, result, sources.citations, attribution_judge)
             except Exception as exc:
                 # One question's failure (HTTP/DB/parse) must not abort the whole
                 # concurrent run — record it as a failed refusal and carry on. Since
@@ -666,6 +683,7 @@ async def run_generation_eval(
         rerank_model=settings.rerank_model if is_rerank_label(retriever_name) else None,
         rerank_pool_n=settings.rerank_pool_n if is_rerank_label(retriever_name) else None,
         judge_model=judge.model_name if judge else None,
+        attribution_judge_model=attribution_judge.model_name if attribution_judge else None,
         judge_rubric=JUDGE_RUBRIC_VERSION if judge else None,
         aggregates=compute_gen_aggregates(results),
         results=results,
@@ -678,6 +696,8 @@ async def rejudge_run(
     judge: ChatModel,
     label: str,
     on_result: Callable[[GenQuestionResult], None] | None = None,
+    attribution_judge: ChatModel | None = None,
+    concurrency: int = 1,
 ) -> GenerationRun:
     """Re-score a saved run's FROZEN answers with the current judge/rubric.
 
@@ -720,23 +740,38 @@ async def rejudge_run(
     if missing:
         raise ValueError(f"chunks no longer in DB (chunking changed?): {sorted(missing)[:5]}")
 
-    for result in run.results:
-        citations = [
-            by_id[cid].model_copy(update={"marker": rank})
-            for rank, cid in enumerate(result.retrieved_chunk_ids, start=1)
-        ]
-        result.faithfulness = None
-        result.completeness = None
-        result.attribution = None
-        result.refused_semantic = None
-        result.judge_notes = ""
-        await judge_question(judge, result, citations)
+    # Re-score concurrently — frozen answers, all judge calls hosted, so this is
+    # purely provider-rate-bound (complete() retries 429s). Order is irrelevant:
+    # each task mutates its own result in place; aggregates recompute at the end.
+    sem = asyncio.Semaphore(max(1, concurrency))
+
+    async def _rejudge_one(result: GenQuestionResult) -> None:
+        async with sem:
+            citations = [
+                by_id[cid].model_copy(update={"marker": rank})
+                for rank, cid in enumerate(result.retrieved_chunk_ids, start=1)
+            ]
+            result.faithfulness = None
+            result.completeness = None
+            result.attribution = None
+            result.refused_semantic = None
+            result.judge_notes = ""
+            try:
+                await judge_question(judge, result, citations, attribution_judge)
+            except Exception as exc:
+                # One question's judge failure must not abort the whole pass (it did:
+                # a malformed-body crash lost a 161-question pass). Record and carry on;
+                # the None scores drop out of aggregates and a variance diff.
+                result.judge_notes = f"REJUDGE ERROR: {type(exc).__name__}: {exc}"
         if on_result is not None:
             on_result(result)
+
+    await asyncio.gather(*(_rejudge_one(result) for result in run.results))
 
     run.created_at = datetime.now(UTC).isoformat(timespec="seconds")
     run.label = label
     run.judge_model = judge.model_name
+    run.attribution_judge_model = attribution_judge.model_name if attribution_judge else None
     run.judge_rubric = JUDGE_RUBRIC_VERSION
     run.aggregates = compute_gen_aggregates(run.results)
     return run

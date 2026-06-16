@@ -12,6 +12,7 @@ smuggle a return value out of an `async for`, so the terminal event IS the
 return value). These map 1:1 onto the API's SSE `delta`/`done` events.
 """
 
+import asyncio
 import json
 from collections.abc import AsyncIterator, Sequence
 from typing import Any, Literal, Protocol, cast
@@ -20,6 +21,13 @@ import httpx
 from pydantic import BaseModel
 
 from ahx.config import Settings
+
+# Transient statuses worth retrying: 429 (rate limit) + the 5xx family. With every
+# stage hosted (agent/embed/judge all on OpenRouter), a concurrent run WILL hit
+# 429s; an unretried one surfaces as a false refusal (eval-log 2026-06-15 cohere
+# incident). Retry makes higher --concurrency safe.
+_RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+_MAX_ATTEMPTS = 5
 
 Role = Literal["system", "user", "assistant"]
 
@@ -135,16 +143,33 @@ class OpenAICompatChat:
         messages: Sequence[ChatMessage],
         response_format: dict[str, Any] | None = None,
     ) -> ChatResult:
-        async with httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client:
-            response = await client.post(
-                f"{self._base_url}/chat/completions",
-                json=self._payload(messages, stream=False, response_format=response_format),
-                headers=self._headers(),
-            )
-            response.raise_for_status()
-            data = cast(dict[str, Any], response.json())
-        text = data["choices"][0]["message"]["content"] or ""
-        return ChatResult(text=text, usage=self._parse_usage(data.get("usage")))
+        payload = self._payload(messages, stream=False, response_format=response_format)
+        for attempt in range(_MAX_ATTEMPTS):
+            try:
+                async with httpx.AsyncClient(
+                    timeout=self._timeout, transport=self._transport
+                ) as client:
+                    response = await client.post(
+                        f"{self._base_url}/chat/completions",
+                        json=payload,
+                        headers=self._headers(),
+                    )
+                    response.raise_for_status()
+                    data = cast(dict[str, Any], response.json())
+                text = data["choices"][0]["message"]["content"] or ""
+                return ChatResult(text=text, usage=self._parse_usage(data.get("usage")))
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code not in _RETRY_STATUSES or attempt == _MAX_ATTEMPTS - 1:
+                    raise
+            except (httpx.TransportError, json.JSONDecodeError, KeyError, IndexError):
+                # connection reset / read timeout, OR a 200 with an empty or malformed
+                # body / missing choices (an OpenRouter hiccup under concurrency) — all
+                # transient, all retryable rather than a hard crash mid-run.
+                if attempt == _MAX_ATTEMPTS - 1:
+                    raise
+            # exponential backoff: 0.5, 1, 2, 4s — deterministic (resume-safe, no RNG)
+            await asyncio.sleep(0.5 * 2**attempt)
+        raise RuntimeError("unreachable: retry loop exhausted without return or raise")
 
     async def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]:
         usage: Usage | None = None
@@ -192,4 +217,17 @@ def judge_model_from_settings(settings: Settings) -> ChatModel | None:
         base_url=settings.judge_base_url,
         model=settings.judge_model,
         api_key=settings.judge_api_key,
+    )
+
+
+def attribution_judge_from_settings(settings: Settings) -> ChatModel | None:
+    """A separate, stronger judge for the attribution rubric only (the rubric a
+    flash judge can't score stably). None unless AHX_ATTRIB_JUDGE_* is set — the
+    caller then falls back to the main judge for attribution too."""
+    if not (settings.attrib_judge_base_url and settings.attrib_judge_model):
+        return None
+    return OpenAICompatChat(
+        base_url=settings.attrib_judge_base_url,
+        model=settings.attrib_judge_model,
+        api_key=settings.attrib_judge_api_key,
     )

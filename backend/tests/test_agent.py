@@ -217,8 +217,34 @@ async def test_graph_survives_unparseable_generation() -> None:
     assert final.refused is True
 
 
-async def test_graph_forced_finalize_refuses_on_budget() -> None:
-    # The model never finalizes; the loop must stop itself and refuse.
+async def test_graph_forced_synthesis_answers_from_evidence() -> None:
+    # Budget spent WITH evidence in hand: the loop must run one synthesis turn and
+    # write the answer from collected passages, not blind-refuse (eval-log con-012).
+    chat = FakeChat(
+        [
+            Decision(thought="s", action=Search(tool="search", query="x")),
+            Decision(thought="s", action=Search(tool="search", query="y")),
+            Decision(thought="s", action=Search(tool="search", query="z")),
+            # the synthesis turn runs under the finalize-only grammar, so the model
+            # emits a BARE Finalize (not a Decision) — sent verbatim as a str.
+            Finalize(tool="finalize", answer="Ans [c101].").model_dump_json(),
+        ]
+    )
+    graph = build_agent_graph(chat, fake_toolbox(make_retriever([chunk(101)])), max_steps=3)
+    state = await invoke_agent(graph, "q", max_steps=3)
+
+    final = state["final"]
+    assert final is not None
+    assert final.refused is False
+    assert final.answer == "Ans [c101]."
+    assert sum(1 for s in state["history"] if s.action == "search") == 3  # 3 searches, then synth
+    _, done = build_agent_events(state)
+    assert done.answer == "Ans [1]."  # renumbered through the adapter
+
+
+async def test_graph_forced_synthesis_falls_back_to_refusal_when_unparseable() -> None:
+    # Budget spent and the synthesis turn can't produce a valid Finalize (model
+    # never finalizes) -> honest refusal, the safety net behind synthesis.
     chat = FakeChat([Decision(thought="keep going", action=Search(tool="search", query="x"))])
     graph = build_agent_graph(chat, fake_toolbox(make_retriever([chunk(101)])), max_steps=3)
     state = await invoke_agent(graph, "q", max_steps=3)

@@ -13,15 +13,19 @@ decision or an unknown tool — validity is a property of the grammar, not of lu
 order, so the model is forced to write its reasoning before it picks a tool —
 the "Reason" half of ReAct, enforced structurally.
 
-The five tools mirror the existing corpus functions (see mcp_server.py) and map
+The tools mirror the existing corpus functions (see mcp_server.py) and map
 1:1 onto the failure modes the agent targets (eval-log.md):
   search       — corpus search; `pg_id` restricts to one source (source-isolation
                  -> cross-book / multi-hop)
   read         — expand context around a hit before citing (read-before-cite
                  -> faithfulness / precision)
   list_sources — what works are actually in the corpus (-> source-absent OOS gap)
-  find_quote   — verify a span is verbatim before citing (-> attribution)
   finalize     — emit the answer (or abstain) and end the loop (forced-finalize)
+
+(find_quote was dropped after the D5 audit: it verifies a VERBATIM span, but the
+agent paraphrases into modern English and cites by chunk id, so it never touched
+the citation path or any measured failure mode — invoked ~1/6 questions with no
+effect. Removing it shrinks the decision space the constrained decoder samples.)
 """
 
 from typing import Annotated, Any, Literal
@@ -55,14 +59,6 @@ class ListSources(BaseModel):
     tool: Literal["list_sources"]
 
 
-class FindQuote(BaseModel):
-    """Locate an exact quote within a source — verify before citing."""
-
-    tool: Literal["find_quote"]
-    pg_id: int
-    quote: str
-
-
 class Finalize(BaseModel):
     """End the loop with an answer (or an abstention). Citations live in the
     answer prose as [c<id>] tokens (the adapter scores those); `refused=True`
@@ -78,7 +74,7 @@ class Finalize(BaseModel):
 # so each branch carries exactly its own required args — nothing optional-by-
 # accident. PEP-604 `|` union + an explicit discriminator field.
 ToolCall = Annotated[
-    Search | Read | ListSources | FindQuote | Finalize,
+    Search | Read | ListSources | Finalize,
     Field(discriminator="tool"),
 ]
 
@@ -99,8 +95,26 @@ def action_response_format() -> dict[str, Any]:
     }
 
 
+def finalize_response_format() -> dict[str, Any]:
+    """Like `action_response_format`, but constrains the model to a `Finalize`
+    only — no search/read/etc. Used for the forced synthesis turn at the step
+    bound (graph.py), where searching is over and the only legal move is to write
+    the answer (or refuse) from evidence already collected."""
+    return {
+        "type": "json_schema",
+        "json_schema": {"name": "agent_finalize", "schema": Finalize.model_json_schema()},
+    }
+
+
 def parse_decision(text: str) -> Decision:
     """Validate the model's grammar-constrained output into a typed Decision.
     With the grammar in force this should never raise; it stays as the boundary
     check (and the fallback path for any endpoint that ignores response_format)."""
     return Decision.model_validate_json(text)
+
+
+def parse_finalize(text: str) -> Finalize:
+    """Validate the model's output for a forced synthesis turn into a `Finalize`.
+    Mirrors `parse_decision`; a ValidationError here means the synthesis call
+    truncated/degenerated, and the caller falls back to an honest refusal."""
+    return Finalize.model_validate_json(text)

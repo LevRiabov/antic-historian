@@ -5,7 +5,7 @@ against the corpus and renders the outcome as an `observation` string fed back
 to the model on its next turn. Design rules in force:
 
 * Async throughout (rule #7): the agent runs inside FastAPI, so no sync IO on
-  the event loop. The two disk-reading tools (read / find_quote) are pushed to
+  the event loop. The disk-reading tool (read, on its `pad` path) is pushed to
   a worker thread with asyncio.to_thread.
 * Shared retrieval CORE, not the MCP layer (rule #4, alignment): whole-corpus
   `search` reuses the shipped rerank-pro retriever; source-isolated `search`
@@ -24,15 +24,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from ahx.agent.actions import FindQuote, ListSources, Read, Search, ToolCall
+from ahx.agent.actions import ListSources, Read, Search, ToolCall
 from ahx.config import Settings
 from ahx.db import ChunkRow, SourceRow
 from ahx.evals.golden import (
-    GoldSpan,
-    ResolutionError,
-    ResolvedSpan,
     _canonical_for,  # pyright: ignore[reportPrivateUsage]
-    resolve_span,
 )
 from ahx.generation.pipeline import Retriever
 from ahx.retrieval.dense import RetrievedChunk, dense_retrieve_async
@@ -54,7 +50,7 @@ class Toolbox:
 class ToolResult(BaseModel):
     """Uniform tool output: the `observation` the model reads next turn, plus any
     citable `chunks` to merge into state['collected'] (search only — read /
-    find_quote / list_sources inform the model but add no new citable units)."""
+    list_sources inform the model but add no new citable units)."""
 
     observation: str
     chunks: list[RetrievedChunk] = Field(default_factory=list[RetrievedChunk])
@@ -130,19 +126,6 @@ async def _list_sources(tb: Toolbox) -> ToolResult:
     return ToolResult(observation="\n".join(lines) if lines else "Corpus is empty.")
 
 
-async def _find_quote(action: FindQuote, tb: Toolbox) -> ToolResult:
-    span = GoldSpan(pg_id=action.pg_id, quote=action.quote)
-    result: ResolvedSpan | ResolutionError = await asyncio.to_thread(
-        resolve_span, span, tb.settings.corpus_normalized_dir, "agent"
-    )
-    if isinstance(result, ResolutionError):
-        return ToolResult(
-            observation=f"find_quote: {result.problem} (occurrences={result.occurrences})."
-        )
-    where = f"pg{action.pg_id} at chars {result.char_start}-{result.char_end}"
-    return ToolResult(observation=f"find_quote: FOUND in {where}.")
-
-
 async def execute(action: ToolCall, tb: Toolbox) -> ToolResult:
     """Run a non-finalize action. The graph never routes Finalize here (it ends
     the loop); the final raise is a guard, not an expected path."""
@@ -152,6 +135,4 @@ async def execute(action: ToolCall, tb: Toolbox) -> ToolResult:
         return await _read(action, tb)
     if isinstance(action, ListSources):
         return await _list_sources(tb)
-    if isinstance(action, FindQuote):
-        return await _find_quote(action, tb)
     raise ValueError(f"execute() called on non-tool action {type(action).__name__}")

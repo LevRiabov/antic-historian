@@ -14,8 +14,9 @@ The whole ReAct loop is three nodes and one branch:
   to act. This is how the model's choice (finalize vs tool) steers the graph;
   no native tool-calling involved (grammar-ReAct — see ADR-001 Phase 5 recheck).
 
-Termination is guaranteed: think force-finalizes once `step >= max_steps`, so
-the loop cannot run away regardless of what the model does.
+Termination is guaranteed: once `step >= max_steps` the think node runs ONE
+finalize-only synthesis call (answer from collected evidence, or refuse) and
+ends, so the loop cannot run away regardless of what the model does.
 
 The compiled graph produces a final AgentState; converting that to the streamed
 SourcesEvent/DoneEvent the API + eval consume (and renumbering [c<id>] citations)
@@ -35,8 +36,14 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import ValidationError
 
-from ahx.agent.actions import Finalize, action_response_format, parse_decision
-from ahx.agent.prompts import build_think_messages
+from ahx.agent.actions import (
+    Finalize,
+    action_response_format,
+    finalize_response_format,
+    parse_decision,
+    parse_finalize,
+)
+from ahx.agent.prompts import build_synthesis_messages, build_think_messages
 from ahx.agent.state import AgentResult, AgentState, Step
 from ahx.agent.tools import Toolbox, execute
 from ahx.generation.prompt import REFUSAL_TEXT
@@ -64,9 +71,10 @@ def _result_from_finalize(action: Finalize) -> AgentResult:
 
 
 def _forced_refusal() -> AgentResult:
-    """End with an honest refusal — used both when the budget is exhausted and
-    when the model's output won't parse (a degenerate/truncated generation). A v1
-    choice; a later arm could spend one more call to synthesize from `collected`."""
+    """End with an honest refusal — the fallback when a generation won't parse (a
+    degenerate/truncated output), including the forced synthesis turn. The step
+    bound itself no longer auto-refuses: it runs one synthesis call first (`think`
+    below) so an answer already in `collected` is written, not discarded."""
     return AgentResult(answer=REFUSAL_TEXT, refused=True)
 
 
@@ -77,11 +85,38 @@ def build_agent_graph(
     (explicit injection, no globals — ADR-001)."""
     response_format = action_response_format()
 
+    async def synthesize(state: AgentState, step: int) -> dict[str, Any]:
+        """Budget spent: one final grammar-constrained call that may ONLY finalize,
+        so a complete answer already in `collected` gets written instead of being
+        thrown away by a blind refusal (eval-log con-012). If even this won't parse,
+        fall back to the honest refusal."""
+        messages = build_synthesis_messages(state["question"], state["history"])
+        result = await chat.complete(messages, response_format=finalize_response_format())
+        update: dict[str, Any] = {"step": step + 1}
+        if result.usage is not None:
+            update["prompt_tokens"] = result.usage.prompt_tokens
+            update["completion_tokens"] = result.usage.completion_tokens
+        try:
+            action = parse_finalize(result.text)
+        except ValidationError:
+            update["final"] = _forced_refusal()
+            return update
+        update["final"] = _result_from_finalize(action)
+        update["history"] = [
+            Step(
+                thought="(out of search steps — synthesizing from collected evidence)",
+                action="finalize",
+                args=action.model_dump(exclude={"tool"}),
+                observation="(forced final answer at the step bound)",
+            )
+        ]
+        return update
+
     async def think(state: AgentState) -> dict[str, Any]:
         step = state["step"]
-        if step >= max_steps:  # forced-finalize: the hard loop bound
-            return {"final": _forced_refusal(), "step": step + 1}
-        messages = build_think_messages(state["question"], state["history"])
+        if step >= max_steps:  # budget spent -> forced synthesis (not a blind refusal)
+            return await synthesize(state, step)
+        messages = build_think_messages(state["question"], state["history"], step, max_steps)
         result = await chat.complete(messages, response_format=response_format)
         try:
             decision = parse_decision(result.text)
@@ -119,7 +154,7 @@ def build_agent_graph(
             observation=result.observation,
         )
         # reducers append: history grows by one completed Step, collected by the
-        # new chunks (empty for read/list_sources/find_quote).
+        # new chunks (empty for read/list_sources).
         return {"history": [step], "collected": result.chunks}
 
     def route(state: AgentState) -> str:
