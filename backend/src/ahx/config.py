@@ -73,6 +73,11 @@ class Settings(BaseSettings):
     chat_base_url: str = "http://127.0.0.1:8080/v1"
     chat_model: str = "gemma-12b-16k"
     chat_api_key: str | None = None
+    # Decoding temperature — pinned low for run-to-run stability (the agent's
+    # answer/refuse decision is high-variance; eval-log 2026-06-16). 0.0 asks for
+    # greedy decoding where the provider honours it; recorded as an explicit knob
+    # rather than an invisible default so it is part of every run's config.
+    chat_temperature: float = 0.0
 
     # Judge LLM (eval generation tier, phase boundaries). Unset = judge
     # layer unavailable; use a strong model — weak judges miscalibrate.

@@ -45,7 +45,13 @@ def chunk(chunk_id: int, text: str = "passage", pg_id: int = 1) -> RetrievedChun
     )
 
 
-def make_state(collected: list[RetrievedChunk], final: AgentResult) -> AgentState:
+def make_state(
+    collected: list[RetrievedChunk],
+    final: AgentResult,
+    kept: list[int] | None = None,
+) -> AgentState:
+    # kept defaults to "all collected ids" so the legacy adapter tests express
+    # "everything is relevant"; the filtering tests pass an explicit kept set.
     return AgentState(
         question="q",
         history=[],
@@ -53,6 +59,7 @@ def make_state(collected: list[RetrievedChunk], final: AgentResult) -> AgentStat
         step=1,
         final=final,
         pending=None,
+        kept=kept if kept is not None else [c.chunk_id for c in collected],
         prompt_tokens=0,
         completion_tokens=0,
     )
@@ -102,15 +109,31 @@ def fake_toolbox(retriever: Retriever) -> Toolbox:
 # --- adapter: build_agent_events ---
 
 
-def test_adapter_numbers_all_collected_not_just_cited() -> None:
-    # Two collected; answer cites only one. The judge must still see BOTH.
+def test_adapter_numbers_kept_even_when_not_cited() -> None:
+    # Two kept; answer cites only one. The judge must still see BOTH kept passages
+    # (agent-v5: the "see uncited grounding" property holds WITHIN the kept set).
     state = make_state(
         [chunk(101), chunk(102)],
         AgentResult(answer="Stabbed 23 times [c101].", refused=False),
+        kept=[101, 102],
     )
     sources, done = build_agent_events(state)
     assert [(c.marker, c.chunk_id) for c in sources.citations] == [(1, 101), (2, 102)]
     assert done.markers.used == [1]  # only the cited one is "used"
+
+
+def test_adapter_judge_sees_only_kept_plus_cited() -> None:
+    # agent-v5 relevance filter: 3 collected, agent kept only 101 and cites 102.
+    # The judge set is kept-union-cited = {101, 102}; 103 (neither) is dropped.
+    state = make_state(
+        [chunk(101), chunk(102), chunk(103)],
+        AgentResult(answer="Point [c102].", refused=False),
+        kept=[101],
+    )
+    sources, done = build_agent_events(state)
+    assert [c.chunk_id for c in sources.citations] == [101, 102]  # 103 filtered out
+    assert done.answer == "Point [2]."  # 101->1, 102->2 by first-appearance order
+    assert done.markers.used == [2]
 
 
 def test_adapter_renumbers_in_first_appearance_order() -> None:
@@ -191,6 +214,29 @@ async def test_graph_runs_search_then_finalize() -> None:
     assert done.refused is False
 
 
+async def test_graph_keep_ids_flow_filters_judge_set() -> None:
+    # keep_ids on the decision accumulates into state['kept'] and drives the
+    # judge/citation set: 102 was retrieved but neither kept nor cited -> dropped.
+    chunks = [chunk(101, "kept passage"), chunk(102, "dropped passage")]
+    chat = FakeChat(
+        [
+            Decision(thought="look", action=Search(tool="search", query="x")),
+            Decision(
+                thought="found it",
+                keep_ids=[101],
+                action=Finalize(tool="finalize", answer="Answer [c101]."),
+            ),
+        ]
+    )
+    graph = build_agent_graph(chat, fake_toolbox(make_retriever(chunks)), max_steps=8)
+    state = await invoke_agent(graph, "q", max_steps=8)
+    assert state["kept"] == [101]
+    assert [c.chunk_id for c in state["collected"]] == [101, 102]  # both retrieved
+    sources, done = build_agent_events(state)
+    assert [c.chunk_id for c in sources.citations] == [101]  # only the kept/cited one
+    assert done.answer == "Answer [1]."
+
+
 async def test_graph_accumulates_token_usage_across_think_calls() -> None:
     chat = FakeChat(
         [
@@ -215,6 +261,27 @@ async def test_graph_survives_unparseable_generation() -> None:
     final = state["final"]
     assert final is not None
     assert final.refused is True
+
+
+async def test_graph_rerolls_a_malformed_reply_instead_of_refusing() -> None:
+    # agent-v5.1: hosted providers enforce response_format only best-effort, so a
+    # single call can return unparseable JSON. That must NOT become an instant
+    # zero-retrieval refusal (eval-log 2026-06-16) — the think node re-rolls and
+    # the next (valid) generation wins. Token usage sums across both attempts.
+    chat = FakeChat(
+        [
+            "not valid json — a hosted-provider hiccup",  # attempt 1: unparseable
+            Decision(thought="recovered", action=Finalize(tool="finalize", answer="Ans [c101].")),
+        ]
+    )
+    graph = build_agent_graph(chat, fake_toolbox(make_retriever([chunk(101)])), max_steps=8)
+    state = await invoke_agent(graph, "q", max_steps=8)
+
+    final = state["final"]
+    assert final is not None
+    assert final.refused is False
+    assert final.answer == "Ans [c101]."
+    assert state["prompt_tokens"] == 20  # 10 per attempt, both paid for
 
 
 async def test_graph_forced_synthesis_answers_from_evidence() -> None:

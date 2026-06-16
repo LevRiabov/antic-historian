@@ -43,6 +43,11 @@ class Step(BaseModel):
     action: str
     args: dict[str, Any]
     observation: str
+    # agent-v5: for a `search` step, the ids it returned (rank order) so the
+    # scratchpad can re-render this turn's hits dynamically — full text for kept
+    # ids, the compact context_note for the rest. None for non-search steps
+    # (read / list_sources / finalize), whose `observation` string is shown as-is.
+    chunk_ids: list[int] | None = None
 
 
 class AgentResult(BaseModel):
@@ -64,6 +69,10 @@ class AgentState(TypedDict):
     step: int  # loop counter (overwritten each turn); guards max-steps / forced-finalize
     final: AgentResult | None  # set by finalize -> signals termination
     pending: Decision | None  # transient: the think node's latest move, awaiting `act`
+    # agent-v5: the chunk ids the agent has marked relevant (keep_ids), accumulated
+    # across turns (additive reducer; dedup-on-read). Drives scratchpad compaction
+    # and, unioned with the cited ids, the set the judge actually scores.
+    kept: Annotated[list[int], operator.add]
     # Token usage SUMMED across every think call (additive reducer) — the agent's
     # total generation cost for the run record, vs single-shot's one call.
     prompt_tokens: Annotated[int, operator.add]

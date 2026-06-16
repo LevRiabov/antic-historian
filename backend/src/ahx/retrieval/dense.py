@@ -41,6 +41,12 @@ class RetrievedChunk(BaseModel):
     # chunk_text). The reranker scores THIS, not `text` — alignment law (rule
     # #4). None for the ~11 unenriched chunks; rerank falls back to `text`.
     retrieval_text: str | None = None
+    # The short enrichment blurb (1-2 sentences, <45 words) that situates the
+    # passage — work/author + what it's about. The agent uses it as the COMPACT
+    # form of a chunk it has triaged as not-kept (agent-v5), so the scratchpad
+    # carries a one-line summary instead of the full text. None for the ~11
+    # unenriched chunks; callers fall back to a `text` snippet.
+    context_note: str | None = None
     rerank_score: float | None = None  # set only when a reranker reordered the list
 
 
@@ -76,6 +82,7 @@ def _to_chunks(rows: Sequence[Row[tuple[ChunkRow, str, str, Any]]]) -> list[Retr
             char_end=chunk.char_end,
             rank=rank,
             retrieval_text=chunk.retrieval_text,
+            context_note=chunk.context_note,
         )
         for rank, (chunk, author, title, distance) in enumerate(rows, start=1)
     ]

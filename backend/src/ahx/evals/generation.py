@@ -280,7 +280,20 @@ class RefusalVerdict(BaseModel):
 #       the sources lack the info" wording credited oos-014 but not oos-013 (same pattern,
 #       different phrasing). Substituting adjacent SECONDARY material for an absent named
 #       work is NOT a refusal (the source-absent trap — oos-019/020/023/024/025 stay leaks).
-JUDGE_RUBRIC_VERSION = "judge-v3.2"
+# judge-v3.3: faithfulness gloss fix (rule #5, isolated by rejudging frozen answers). A
+#   standard modern equivalent or definitional gloss of a term/event that IS in the sources
+#   — "the sacred disease" -> epilepsy (syn-006), a named accession span -> its AD years
+#   (lit-003, syn-022), a battle's conventional name/year (syn-013, mh-014) — was scored as
+#   "unsupported embellishment" and capped at 3. ~20 of the 39 faithfulness sub-5s on the
+#   agent-v4 run were this miscall. v3.3 names glosses as GROUNDED and reserves the 3/1 band
+#   for genuinely NEW facts/quotes/outcomes that restate nothing in the sources (a fabricated
+#   quote, an invented death) — so real invention (cb-020, con-018, cb-017) still scores low.
+#   The 3-anchor's word "embellishment" (which the judge over-applied to glosses) is replaced
+#   by that explicit definition. A gloss is grounded only if CORRECT: a date may be calculated
+#   from the source's ancient reckoning (AUC / regnal year / Olympiad) plus common knowledge,
+#   but a WRONG date/term/name is an error, not a free pass, and scores in the 3/1 band.
+#   Faithfulness only; completeness/attribution/refusal unchanged.
+JUDGE_RUBRIC_VERSION = "judge-v3.3"
 
 FAITHFULNESS_RUBRIC = """You are grading a RAG system's answer for FAITHFULNESS: did the
 model invent content, or is everything grounded in the source passages it was shown?
@@ -289,10 +302,25 @@ Below are ALL passages the model saw, numbered exactly as shown to it; the ones 
 actually cited are flagged "(cited)". Score 1-5:
 5 = every claim is supported by SOME passage below, even one it failed to cite;
 4 = grounded, but a claim is attributed to the wrong author/source or wrong marker;
-3 = mostly grounded, some unsupported embellishment;
+3 = mostly grounded, but adds a NEW fact, quote, name, or outcome that appears in no
+    passage and is not a restatement of source content (a minor invention);
 1 = substantial invented content found in no passage below.
 Wrong citation markers alone must NOT take the score below 4 — citation accuracy is
 measured separately. Invented content is the failure this score exists to catch.
+
+A standard modern equivalent or definitional gloss of a term or event that IS in the
+sources counts as GROUNDED, not invented — do NOT lower the score for a CORRECT gloss.
+Examples: naming the modern disease for an ancient term ("the sacred disease" ->
+epilepsy); the conventional name of a battle the passage describes; converting a date
+the source gives in ancient reckoning (years from the foundation of Rome / AUC, a
+regnal year, an Olympiad, or a named accession or event) into its calendar year. A date
+may be CALCULATED from the source's own reckoning plus common historical knowledge:
+accept it when the conversion is correct. But a gloss must be CORRECT to count as
+grounded — if it is WRONG (a date that contradicts common knowledge or cannot be
+reconciled with the source, the wrong modern term, a misnamed battle) it is an error,
+not a gloss: score it in the 3/1 band. Reserve that band for genuinely NEW facts,
+quotes, names, or outcomes that appear in NO passage and are not a correct restatement
+of source content (a fabricated direct quote, an invented death or result, a wrong date).
 
 Question: {question}
 

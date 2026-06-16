@@ -1165,3 +1165,62 @@ and cost down, OOS trust intact on the cases that matter. Open follow-ups, all p
 (2) **clean-writer arm** — compose the final answer from deduped author-labelled evidence (targets the
 attribution misattribution + embellishment together); (3) **con-012 trace** — why the motivating example
 still refuses.
+
+## 2026-06-16 — agent-v5 full run: context goal MET (−11% prompt tokens); false-refusal "regression" was ~90% measurement noise
+
+**What v5 changed (vs the agent-v4 KEEP):** the scratchpad gained a `keep_ids` relevance filter — kept
+passages stay in full, the rest compact to a one-line note next turn — to bound context growth across the
+loop. Goal: cut tokens/latency and reduce the judge's lost-in-the-middle load **without** regressing the
+v4 false-refusal win. Judge held at v3.3 (the faithfulness-gloss fix). Run config identical to the v4
+deepseek baseline: deepseek-v4-pro, `dense-ctx-v1`, max-steps 8, split judge (kimi-k2.6 + qwen3.7-max),
+concurrency 8. **Run record:** `backend/evals/runs/2026-06-16T13-07-18Z-gen-agent-v5.json`.
+
+### agent-v5 vs agent-v4, model held constant (deepseek-v4-pro, same split judge)
+
+| metric | agent-v4 | **agent-v5** | reading |
+|---|---|---|---|
+| **mean prompt tokens** | 21,724 | **19,282** | **−11% — the context goal, met (aggregate over 161, low-variance, trustworthy)** |
+| mean completion tokens | 1,252 | 1,650 | up (reasons more per turn; writes answers not refusals) |
+| mean latency | 78.9s | 75.2s | flat / slightly down |
+| in-scope false-refusal | 3.0% (4) | **7.4% (10)** | LOOKED like a regression — but see below |
+| OOS refusal accuracy | 92.3% | 92.3% | flat |
+| faithfulness / completeness / attribution | 4.52 / 4.94 / 4.71 | 4.55 / 4.89 / 4.76 | within judge noise |
+| citation span recall | 59.0% | 53.6% | down (distributed-answer span-mismatch artifact) |
+
+### The probe lied — the load-bearing methodology finding
+
+A pre-run 5-question smoke (the four v4 false-refusals + mh-007) showed v5 fixing **all five** — a clean
+sweep. It was sampling bias: I probed exactly the questions v4 failed and v5 happened to fix. On the full
+set v5 fixed **all 4** v4 false-refusals (con-012/cb-022/lit-023/synth-015) **but introduced 10 NEW ones
+with ZERO overlap** (cb-010, cb-017, cb-021, cb-023, mh-004, mh-008, mh-022, syn-007, syn-023, synth-013).
+
+**Repro run** (`2026-06-16T...-gen-agent-v5-refusal-repro.json`, same config, concurrency 5): of those 10,
+**9 answered on a fresh sample** — only mh-008 reproduced. So the per-question answer/refuse outcome is
+~90% non-reproducible run-to-run. The "3.0% → 7.4%" was two noisy draws of the same underlying rate, not a
+real v5 regression. **agent+deepseek in-scope false-refusal is too high-variance to compare from single
+runs** — the rule-#5 trap (a measurement property masquerading as a real change), the same zero-overlap
+pattern the audit already documented for attribution-1.
+
+Two failure signatures among the 10: **7 refused with `retrieved=0` and ~2k prompt tokens** (gave up in
+1–2 steps without searching) and **3 searched heavily then refused** (cb-017: 25 chunks/70k tok). The
+zero-retrieval cluster + the concurrency-8→5 sensitivity pointed at a harness bug, not a prompt effect.
+
+### Verdict & fixes (agent-v5.1, no prompt-text change)
+
+- **Context goal: KEEP.** −11% prompt tokens is an aggregate mean — robust, not a variance artifact; the
+  worst single case (mh-007) dropped 127,831 → 24,723 tokens (−81%) and flipped wrong→correct.
+- **False-refusal axis: UNMEASURABLE from one run.** Cannot rule v5 vs v4 on it without multi-sampling.
+- **Root-caused the zero-retrieval refusals → agent-v5.1 fix:** on hosted providers `response_format` is
+  best-effort (not llama.cpp's strict GBNF), so deepseek can emit unparseable JSON on a single call →
+  `graph.py` instantly forced a refusal (`retrieved=0`, ~2k tok). v5.1 **re-rolls the grammar call up to 3×
+  before refusing** (provider sampling differs run-to-run even at temp 0); only a genuinely degenerate
+  generation now refuses. Token accounting sums all attempts.
+- **Decoding temperature pinned as an explicit knob** (`chat_temperature`, default 0.0) — was an invisible
+  `OpenAICompatChat` default; now a recorded, tunable setting so it is part of every run's config.
+
+**Deferred (needs a hard USD API budget — not run):** the multi-sample refusal protocol (k samples → rate
++ CI / pass^k) that would make the v4-vs-v5 false-refusal comparison ratable, and a fixed `seed` for
+reproducibility (seed doesn't degrade quality — it pins which sample you draw — but single-seed ≠ low
+variance, so it pairs with multi-sampling, not with this run). **Next:** re-run agent-v5.1 once budgeted to
+confirm the zero-retrieval refusals are gone; mh-008 (the one reproducing refusal) is the lone real
+weak-spot candidate, n=1, pending a trace.

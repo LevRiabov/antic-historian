@@ -535,6 +535,9 @@ def generate(
     ),
     max_steps: int = typer.Option(8, help="Agent loop bound (only with --agent)."),
     limit: int = typer.Option(0, help="Cap questions for a dry run (0 = whole golden set)."),
+    ids: str = typer.Option(
+        "", help="Comma-separated golden ids to run (e.g. 'con-012,mh-007'); empty = all."
+    ),
     concurrency: int = typer.Option(
         8,
         help="Questions in flight at once. With every stage hosted there is no local "
@@ -557,6 +560,14 @@ def generate(
     settings = get_settings()
     golden_dir = Path(__file__).resolve().parents[2] / "evals" / "golden"
     questions = load_golden_set(golden_dir)
+    if ids:
+        wanted = [i.strip() for i in ids.split(",") if i.strip()]
+        by_id = {q.id: q for q in questions}
+        missing = [i for i in wanted if i not in by_id]
+        if missing:
+            console.print(f"[red]Unknown golden ids: {', '.join(missing)}[/red]")
+            raise typer.Exit(code=1)
+        questions = [by_id[i] for i in wanted]  # preserve requested order
     if limit:
         questions = questions[:limit]
 

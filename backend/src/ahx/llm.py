@@ -206,6 +206,7 @@ def chat_model_from_settings(settings: Settings) -> ChatModel:
         base_url=settings.chat_base_url,
         model=settings.chat_model,
         api_key=settings.chat_api_key,
+        temperature=settings.chat_temperature,
     )
 
 

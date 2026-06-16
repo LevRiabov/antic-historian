@@ -1,0 +1,293 @@
+{
+  "created_at": "2026-06-16T11:18:42+00:00",
+  "label": "gen-agent-v5-5fail",
+  "chat_model": "deepseek/deepseek-v4-pro",
+  "embed_model": "qwen/qwen3-embedding-8b",
+  "chunking_version": "structural-v1",
+  "prompt_version": "agent-v5",
+  "top_k": 5,
+  "engine": "agent",
+  "agent_max_steps": 8,
+  "retriever": "dense-ctx-v1",
+  "rerank_model": null,
+  "rerank_pool_n": null,
+  "judge_model": "moonshotai/kimi-k2.6",
+  "attribution_judge_model": "qwen/qwen3.7-max",
+  "judge_rubric": "judge-v3.3",
+  "aggregates": {
+    "questions": 5,
+    "refusal_accuracy_oos": null,
+    "false_refusal_rate": 0.0,
+    "citation_span_recall": 0.3583333333333333,
+    "citation_precision": 0.2583333333333333,
+    "faithfulness": 4.8,
+    "completeness": 5.0,
+    "attribution": 5.0,
+    "mean_latency_ms": 118300,
+    "mean_completion_tokens": 2979.4,
+    "by_category": {
+      "literal": {
+        "count": 1,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.5,
+        "citation_precision": 0.3333333333333333,
+        "faithfulness": 5.0,
+        "completeness": 5.0,
+        "attribution": 5.0,
+        "mean_latency_ms": 130113
+      },
+      "multi-hop": {
+        "count": 1,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.125,
+        "citation_precision": 0.5,
+        "faithfulness": 5.0,
+        "completeness": 5.0,
+        "attribution": 5.0,
+        "mean_latency_ms": 121148
+      },
+      "synthesis": {
+        "count": 1,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.0,
+        "citation_precision": 0.0,
+        "faithfulness": 5.0,
+        "completeness": 5.0,
+        "attribution": 5.0,
+        "mean_latency_ms": 178724
+      },
+      "cross-book": {
+        "count": 1,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.5,
+        "citation_precision": 0.125,
+        "faithfulness": 4.0,
+        "completeness": 5.0,
+        "attribution": 5.0,
+        "mean_latency_ms": 106207
+      },
+      "contradiction": {
+        "count": 1,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.6666666666666666,
+        "citation_precision": 0.3333333333333333,
+        "faithfulness": 5.0,
+        "completeness": 5.0,
+        "attribution": 5.0,
+        "mean_latency_ms": 55310
+      }
+    }
+  },
+  "results": [
+    {
+      "question_id": "con-012",
+      "category": "contradiction",
+      "question": "How was the city of Nineveh captured and the Assyrian empire brought to an end?",
+      "ideal_answer": "The accounts disagree on how Nineveh fell. In the version Herodotus and Rawlinson follow, it was taken by a Median assault: Cyaxares, allied with the Babylonian Nabopolassar, pressed the siege until the Assyrian king's means of resistance were exhausted and he burned himself in his palace. A rival tradition, reported from Ctesias, has the walls breached not by storm but by nature — an unusually wet season swelled the Tigris until it burst in and swept away more than two miles of wall, after which the king set fire to himself. Both traditions end with the king's self-immolation, but differ on whether the city fell to siege or to flood.",
+      "answer": "According to the historical accounts, Nineveh was captured by a combined army of Medes under Cyaxares and Babylonians under Nabopolassar (some versions also include Persians and Arabs) [4][6][7]. Nabopolassar, who had been an Assyrian general, treacherously allied with Cyaxares and sealed the pact by marrying his son Nebuchadnezzar to the Median king's daughter, thus enabling the joint siege [6]. The siege is reported to have lasted two full years; in the third year an unusually heavy rainy season swelled the Tigris, which burst through a flood‑gate at the north‑west angle of the city and swept away a large section of the wall [4][5]. The prophet Nahum’s oracle, “the gates of the rivers are opened, and the palace is dissolved,” appears to echo this same event [5]. With the city breached, the Assyrian king—variously named Saracus or Sardanapalus—took his own life by burning himself, together with his concubines, eunuchs, and chief wealth, in his palace [4][6]. The fall of Nineveh terminated the Assyrian empire; its territories were divided, with Media annexing Assyria proper and the lands to the north‑west, while Babylonia received the south‑western portion up to the border of Egypt [1][7]. The sources do not fully agree on all details: Herodotus speaks of Cyaxares the Mede capturing Nineveh without the Babylonians, whereas Ctesias (preserved in Diodorus) provides the elaborate flood narrative, and Josephus states that Medes and Babylonians together overthrew the empire [2].",
+      "refused": false,
+      "refused_semantic": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        4,
+        6,
+        7,
+        5,
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        17023,
+        34409,
+        16941,
+        42007,
+        42009,
+        41845,
+        23059
+      ],
+      "cited_chunk_ids": [
+        42007,
+        41845,
+        23059,
+        42009,
+        17023,
+        34409
+      ],
+      "citation_span_recall": 0.6666666666666666,
+      "citation_precision": 0.3333333333333333,
+      "faithfulness": 5,
+      "completeness": 5,
+      "attribution": 5,
+      "judge_notes": "faithfulness: Every claim in the answer—including the joint Medo-Babylonian alliance and marriage, the two-year siege, the Tigris flood and breach of the wall, the king's self-immolation, the territorial division, and the disagreements among ancient sources—is directly supported by the cited passages, with no invented facts, quotes, or outcomes. | completeness: The answer fully covers how Nineveh was captured (detailing the combined siege, the flood breach, and noting disagreements among sources) and how the Assyrian empire ended (the king’s self-immolation and the division of territories), omitting nothing the question requires. | attribution: The answer correctly synthesizes the sources, explicitly surfaces the historical discrepancies regarding the capture of Nineveh in prose, and accurately attributes the differing accounts to Herodotus, Ctesias, and Josephus.",
+      "latency_ms": 55310,
+      "prompt_tokens": 7912,
+      "completion_tokens": 2292
+    },
+    {
+      "question_id": "cb-022",
+      "category": "cross-book",
+      "question": "How do the sources describe the Spartan system of government attributed to Lycurgus?",
+      "ideal_answer": "The sources credit Lycurgus with a mixed, balanced constitution. Plutarch singles out the central institution: \"the first and of greatest importance was the establishment of the senate,\" a council of twenty-eight elders whose power, equal to the kings', acted \"like ballast in a ship\" between monarchy and democracy. Herodotus gives the early Greek account of the same transformation — once Lycurgus had reformed their institutions \"the Spartans had good laws,\" and after his death \"they erected a temple\" to him and paid him great worship.",
+      "answer": "The sources describe the Spartan system of government attributed to Lycurgus as a mixed constitution balancing monarchy, aristocracy, and popular elements.\n\n**Herodotus** (as summarized by Grote) reports that the Spartans themselves said Lycurgus introduced the institutions from Crete, including the senate (*gerousia*), the ephors, the military divisions (Enômoties and Triakads), and the public messes (*syssitia*) [5].\n\n**Plutarch** gives the most detailed account. He writes that Lycurgus's first and most important reform was the establishment of a senate of twenty-eight elders, who together with the two kings made a council of thirty. This senate served as a balance between the kings (monarchy) and the people (democracy), “always adhering to the kings so far as to resist democracy, and … supporting the people against the establishment of absolute monarchy” [8]. Lycurgus also instituted regular open-air assemblies of the people, held between Babyca and Cnacion, but these assemblies were not allowed to debate — they could only ratify or reject proposals put before them by the kings and senate [6][2]. According to Plutarch, the ephors were NOT part of Lycurgus's original system; they were added about 130 years later, under kings Polydorus and Theopompus, as a check on the oligarchic element [2]. The same kings also inserted a rider into the original Lycurgan “Rhetra” allowing the senate and kings to dissolve the assembly if the people “decided crookedly” [2][1].\n\n**Grote** notes that the Lycurgan political constitution, apart from the later addition of the ephors, closely resembles the old heroic government depicted in Homer — a council of chiefs and a listening assembly, merely defined and regularized in a particular manner [3]. The unique feature was the hereditary dual kingship from two lines descended from the twin sons of Aristodemus [3].\n\n**Bury** characterises the resulting constitution as a blend: “This unique constitution cannot be placed under any general head, cannot be called kingdom, oligarchy, or democracy, without misleading” [4]. He also casts doubt on Lycurgus's very existence, arguing that the earliest statements about the constitution's origin from the fifth century BC were mere guesses, and suggesting that Lycurgus was originally an Arcadian deity (meaning “wolf-repeller”) whose cult was adopted by the Spartans [7].",
+      "refused": false,
+      "refused_semantic": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        5,
+        8,
+        6,
+        2,
+        1,
+        3,
+        4,
+        7
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        33843,
+        2343,
+        33851,
+        22942,
+        33840,
+        2342,
+        22955,
+        2341
+      ],
+      "cited_chunk_ids": [
+        33840,
+        2341,
+        2342,
+        2343,
+        33843,
+        33851,
+        22942,
+        22955
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.125,
+      "faithfulness": 4,
+      "completeness": 5,
+      "attribution": 5,
+      "judge_notes": "faithfulness: The answer is largely grounded but misattributes to Plutarch the detail that the ephors were added under both kings Polydorus and Theopompus, whereas Plutarch only names Theopompus for that event. | completeness: The answer comprehensively covers how the sources describe the Spartan governmental system attributed to Lycurgus, including the mixed constitution, the senate's balancing role, the assembly, kingship, and later additions, without omitting any core element the question requires. | attribution: The answer correctly attributes the distinct contributions and disagreements of the various sources in prose, clearly distinguishing between Herodotus, Plutarch, Grote, and Bury without any misattribution.",
+      "latency_ms": 106207,
+      "prompt_tokens": 11277,
+      "completion_tokens": 4372
+    },
+    {
+      "question_id": "lit-023",
+      "category": "literal",
+      "question": "How did a Roman patron's clients begin his day, in the morning ceremony at his house?",
+      "ideal_answer": "A patron's clients began his day with the salutatio — the morning reception. In the early hours after daybreak, clients and callers gathered at his house to greet him and pay their respects before he went down to the Forum, often escorting him there in a train; under the Empire they thronged the reception hoping for an invitation to dinner or a dole (the sportula).",
+      "answer": "In the morning ceremony at a Roman patron's house, clients would gather outside at daybreak, during the first two hours of the day (*mane*) [1]. The patron would open his house, salute his household (*familia*) and ask a blessing of the household gods, and then attend to his own affairs and those of his clients [1]. After a light meal, the patron would leave the house, where his clients and other hangers-on were waiting, and proceed to the Forum in a kind of procession — some going ahead to clear the way, others following behind [2]. Under the Empire, the morning reception became more sordid: the hungry client would rush to his patron's morning reception, submit to coldness and insolence, and then follow his chair through the streets for a miserable alms [3].",
+      "refused": false,
+      "refused_semantic": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2,
+        3
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        44987,
+        44989,
+        45263
+      ],
+      "cited_chunk_ids": [
+        44987,
+        44989,
+        45263
+      ],
+      "citation_span_recall": 0.5,
+      "citation_precision": 0.3333333333333333,
+      "faithfulness": 5,
+      "completeness": 5,
+      "attribution": 5,
+      "judge_notes": "faithfulness: Every claim is supported by the provided passages: the timing and morning household rite come from [1], the procession to the Forum after the morning meal from [2], and the degrading Imperial client routine from [3], with no invented facts or quotes. | completeness: The answer fully covers what the question asks by describing the clients’ dawn gathering, their attendance during the patron’s morning business, and their escorting him to the Forum, plus the imperial-era pursuit of alms, without omitting any required element. | attribution: The sources provide complementary details about the morning routine in different eras without disagreeing, and the answer accurately attributes each point to the correct source without any misattribution.",
+      "latency_ms": 130113,
+      "prompt_tokens": 40447,
+      "completion_tokens": 1487
+    },
+    {
+      "question_id": "synth-015",
+      "category": "synthesis",
+      "question": "How does Strabo portray the decayed condition of the once-great cities of Greece in his own day?",
+      "ideal_answer": "Strabo repeatedly registers how the once-great cities of Greece had dwindled or vanished by his own day. In the Argolid \"some of the cities mentioned in the Catalogue of the Ships, and said to be subject to Argos, have disappeared.\" In Arcadia the famous cities — Mantinea, Orchomenus, Heraea, Cleitor, Pheneus, Stymphalus and the rest — \"either exist no longer, or traces and signs only of their existence are visible,\" the country sunk into a deserted condition. Lesser towns such as Dyspontium \"was razed, and the greatest part of the inhabitants removed\" abroad. Even Corinth had been sacked, Strabo recalling Polybius's eyewitness account of the soldiers' indifference to its art and sacred offerings. The recurring note is depopulation and ruin set against a glorious past.",
+      "answer": "Strabo portrays the decay of once-great Greek cities in his own day in stark terms. He states generally that \"the greatest part of the country... is at present uninhabited, and the settlements, especially the cities, have been destroyed\" [4]. He attributes this destruction to ongoing rebellion and notes that it has only been checked by the Romans, who \"accepted the supreme authority from the inhabitants and lodged soldiers in their houses\" — implying a military occupation of a depopulated landscape [4]. As a specific example, he describes Orneae in the Peloponnese: \"At present it is deserted; formerly, it was well inhabited\" [5]. Strabo's view is thus one of widespread urban collapse: formerly flourishing cities reduced to uninhabited ruins or mere villages, with the surviving population living under Roman garrison control.",
+      "refused": false,
+      "refused_semantic": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        4,
+        5
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        11473,
+        11780,
+        11789,
+        11858,
+        12189
+      ],
+      "cited_chunk_ids": [
+        11858,
+        12189
+      ],
+      "citation_span_recall": 0.0,
+      "citation_precision": 0.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "attribution": 5,
+      "judge_notes": "faithfulness: All claims are grounded in cited passages [4] and [5], with no invented facts, quotes, or names; inferences about Roman military presence are reasonable glosses of Strabo's description of soldiers lodged in houses. | completeness: The answer fully addresses how Strabo portrays Greece’s urban decay by offering a general characterization of ruin and depopulation under Roman occupation, a specific Peloponnese example (Orneae), and the contrast between former flourishing and present desolation, omitting none of the question’s requirements. | attribution: The cited sources agree on the decayed condition of the cities, and the model correctly attributes the specific claims to the appropriate passages without any misattribution.",
+      "latency_ms": 178724,
+      "prompt_tokens": 84303,
+      "completion_tokens": 3844
+    },
+    {
+      "question_id": "mh-007",
+      "category": "multi-hop",
+      "question": "Which Spartan commanded the Greeks at the land battle fought the same day as the sea battle at Mycale?",
+      "ideal_answer": "Pausanias, son of Cleombrotos (regent for Leonidas' young son Pleistarchos). Herodotus reports that the victory at Plataea and the fight at Mycale fell on the same day, and that Pausanias was appointed to lead the Spartan army that won at Plataea.",
+      "answer": "The Spartan who commanded the Greeks at the land battle fought the same day as the sea battle at Mycale was Pausanias. Herodotus records that on the day of the battle at Mycale, a rumour reached the Greek fleet that the Hellenes under Pausanias had already defeated Mardonius at Plataea — and this rumour proved true, as the battle of Plataea had been fought that very morning while Mycale occurred in the afternoon [5]. Grote, citing Herodotus, confirms the simultaneity, noting that the victory of the Greeks under Pausanias at Plataea and the battle at Mycale took place on the same day [4].",
+      "refused": false,
+      "refused_semantic": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        5,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        882,
+        883,
+        880,
+        35645,
+        881
+      ],
+      "cited_chunk_ids": [
+        881,
+        35645
+      ],
+      "citation_span_recall": 0.125,
+      "citation_precision": 0.5,
+      "faithfulness": 5,
+      "completeness": 5,
+      "attribution": 5,
+      "judge_notes": "faithfulness: The answer correctly identifies Pausanias from the passages and accurately reports the simultaneity of the battles and the rumour, with all substantive claims grounded in the provided sources. | completeness: The answer correctly identifies Pausanias as the Spartan commander of the Greek land forces at Plataea, which occurred the same day as Mycale, fully satisfying the question without requiring the extra biographical detail in the reference. | attribution: The sources agree on the facts, and the model correctly attributes the information to Herodotus and Grote without any misattribution or need for disagreement-surfacing.",
+      "latency_ms": 121148,
+      "prompt_tokens": 24723,
+      "completion_tokens": 2902
+    }
+  ]
+}

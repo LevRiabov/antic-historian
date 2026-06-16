@@ -80,9 +80,18 @@ ToolCall = Annotated[
 
 
 class Decision(BaseModel):
-    """One full ReAct turn from the model: reason first, then act."""
+    """One full ReAct turn from the model: reason first, mark which passages seen
+    so far are relevant (keep_ids), then act."""
 
     thought: str
+    # agent-v5: the chunk ids (from ANY search so far) that bear on the question.
+    # Kept ids stay in FULL in the scratchpad; un-kept ids are compacted to their
+    # one-line context_note next turn (still re-readable by id). This is the
+    # relevance filter — fewer, focused passages for the agent's own reasoning AND
+    # the downstream judge (which scores only the kept-plus-cited set). Property order
+    # is grammar order: keep_ids sits AFTER thought (decide relevance having
+    # reasoned) and BEFORE action. Empty default = keep nothing new this turn.
+    keep_ids: list[int] = Field(default_factory=list[int])
     action: ToolCall
 
 

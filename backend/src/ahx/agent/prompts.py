@@ -22,22 +22,38 @@ AGENT_PROMPT_VERSION is recorded in every run; prompt edits are ablations.
 from ahx.agent.state import Step
 from ahx.generation.prompt import REFUSAL_TEXT
 from ahx.llm import ChatMessage
+from ahx.retrieval.dense import RetrievedChunk
 
-AGENT_PROMPT_VERSION = "agent-v4"
+# agent-v5.1: NO prompt-text change from v5 — the bump marks two loop/config fixes
+# (graph.py + config.py) so the next run is distinguishable from the agent-v5 full
+# run in the eval-log: (1) a malformed grammar reply now re-rolls before becoming a
+# forced refusal (killed the zero-retrieval false-refusals, eval-log 2026-06-16);
+# (2) decoding temperature promoted to an explicit pinned setting (chat_temperature,
+# default 0.0) instead of an invisible default.
+AGENT_PROMPT_VERSION = "agent-v5.1"
 
 AGENT_SYSTEM_PROMPT = f"""You are a careful research assistant answering questions about \
 Greco-Roman antiquity. You may ONLY use information you retrieve from the corpus with the \
 tools below — never outside knowledge, even if you know the answer.
 
-You work in a loop. Each turn you write a brief thought, then choose exactly ONE action:
+You work in a loop. Each turn you write a brief thought, mark which passages seen so far are \
+relevant (keep_ids), then choose exactly ONE action:
 
 - search(query, pg_id?, top_k?): find passages by meaning. Returns each hit's FULL text \
 labelled with a chunk id like [c41]. Set `pg_id` to restrict the search to ONE work \
 (source-isolation).
 - read(chunk_id, pad?): re-read one chunk's full text by its id; set `pad` to also see the \
-surrounding context — use this when an answer may straddle a chunk boundary.
+surrounding context — use this when an answer may straddle a chunk boundary, OR to pull back \
+the full text of a passage that was compacted to a summary.
 - list_sources(): list the works actually in the corpus (author, title, pg_id).
 - finalize(answer, refused): end the loop with your answer (cite sources inline as [c<id>]).
+
+keep_ids — your relevance filter: set it each turn to the chunk ids (from ANY search so far) \
+that actually bear on the question. Ids you keep stay in FULL in your notes; ids you do NOT \
+keep are compacted to a one-line summary on the next turn (you can still `read` one by id if \
+you change your mind). Keep an id the moment a passage looks useful, and ALWAYS keep every \
+passage you intend to cite in your final answer. This keeps your notes — and your final \
+evidence — focused on what matters; do not keep passages that turned out irrelevant.
 
 Searching well is the core skill — most failures are weak queries, not missing sources:
 1. NEVER search with the question's wording. Convert it into a focused query that reads like \
@@ -95,28 +111,69 @@ it says from the sources here." Do NOT answer the question from that mention.
 """
 
 
-def _render_step(step: Step) -> str:
-    """One past turn, as the model will re-read it next turn, in full."""
-    args = ", ".join(f"{k}={v!r}" for k, v in step.args.items())
-    return (
-        f"Thought: {step.thought}\nAction: {step.action}({args})\nObservation: {step.observation}"
-    )
+def _render_hit(chunk: RetrievedChunk, full: bool) -> str:
+    """One search hit. `full` -> the verbatim passage (latest search, or a kept id);
+    otherwise the compact one-line context_note (fall back to a text snippet for the
+    ~11 unenriched chunks), tagged so the model knows it can `read` the id for more."""
+    loc = " > ".join(chunk.locator) if chunk.locator else ""
+    head = f"[c{chunk.chunk_id}] {chunk.author}, {chunk.work_title}" + (f" > {loc}" if loc else "")
+    if full:
+        return f"{head}\n  {' '.join(chunk.text.split())}"
+    note = (chunk.context_note or " ".join(chunk.text.split())[:200]).strip()
+    return f"{head}\n  (compacted — read {chunk.chunk_id} for full text) {note}"
+
+
+def _render_scratchpad(
+    history: list[Step], by_id: dict[int, RetrievedChunk], kept: set[int]
+) -> str:
+    """Re-render the whole trace for this turn. Search hits are shown FULL when the
+    chunk is kept OR belongs to the most recent search (which the model still has to
+    triage); every other hit collapses to its context_note. Non-search steps show
+    their stored observation verbatim."""
+    latest_search = max((i for i, s in enumerate(history) if s.chunk_ids is not None), default=None)
+    parts: list[str] = []
+    for i, s in enumerate(history):
+        if s.chunk_ids is not None:
+            full = i == latest_search
+            hits = [by_id[cid] for cid in s.chunk_ids if cid in by_id]
+            obs = (
+                "\n".join(_render_hit(c, full or c.chunk_id in kept) for c in hits)
+                if hits
+                else "No passages found."
+            )
+        else:
+            obs = s.observation
+        args = ", ".join(f"{k}={v!r}" for k, v in s.args.items())
+        parts.append(f"Thought: {s.thought}\nAction: {s.action}({args})\nObservation: {obs}")
+    return "\n\n".join(parts)
+
+
+def _by_id(collected: list[RetrievedChunk]) -> dict[int, RetrievedChunk]:
+    by_id: dict[int, RetrievedChunk] = {}
+    for chunk in collected:  # first occurrence wins (a chunk can resurface)
+        by_id.setdefault(chunk.chunk_id, chunk)
+    return by_id
 
 
 def build_think_messages(
-    question: str, history: list[Step], step: int, max_steps: int
+    question: str,
+    history: list[Step],
+    collected: list[RetrievedChunk],
+    kept: list[int],
+    step: int,
+    max_steps: int,
 ) -> list[ChatMessage]:
-    """Messages for one think turn: system policy + question + a visible step
-    budget + the scratchpad of everything done so far (full — search returns whole
-    chunks, so the agent runs on a large-context model; the eval's per-question
-    guard catches the rare overflow rather than crashing the run).
+    """Messages for one think turn: system policy + question + a visible step budget
+    + the scratchpad. The scratchpad carries the latest search and every KEPT passage
+    in full and compacts the rest to a one-line note (agent-v5), so context stays
+    bounded across turns instead of growing one full search per step.
 
     `step`/`max_steps` are surfaced so the model can manage its own budget: the
     eval-log's biggest in-scope false-refusal mechanism was the agent over-searching
     past the step bound and being force-ended (con-012). A model that cannot see its
     budget cannot spend it well — so we tell it, and warn hard near the limit."""
     if history:
-        scratchpad = "\n\n".join(_render_step(s) for s in history)
+        scratchpad = _render_scratchpad(history, _by_id(collected), set(kept))
     else:
         scratchpad = "(nothing yet — start by planning and searching)"
     searches_left = max_steps - step
@@ -137,13 +194,21 @@ def build_think_messages(
     ]
 
 
-def build_synthesis_messages(question: str, history: list[Step]) -> list[ChatMessage]:
+def build_synthesis_messages(
+    question: str, history: list[Step], collected: list[RetrievedChunk], kept: list[int]
+) -> list[ChatMessage]:
     """The forced FINAL turn, used when the step budget is spent (graph.py). No
     more searching — the model writes its best answer from evidence already
     gathered, or refuses honestly. This replaces a blind auto-refusal that used to
     throw away a complete answer the agent had already found (eval-log: con-012,
-    'refused with the answer in hand')."""
-    scratchpad = "\n\n".join(_render_step(s) for s in history) or "(no searches were made)"
+    'refused with the answer in hand'). Same compacted scratchpad as the think
+    turn (kept + latest in full); the model can no longer `read`, so it must answer
+    from what is shown."""
+    scratchpad = (
+        _render_scratchpad(history, _by_id(collected), set(kept))
+        if history
+        else "(no searches were made)"
+    )
     user = (
         f"Question: {question}\n\nYour work so far:\n{scratchpad}\n\n"
         "You have run out of search steps and may no longer search, read, or look anything up. "

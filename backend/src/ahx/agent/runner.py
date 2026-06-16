@@ -61,12 +61,17 @@ def build_agent_events(state: AgentState) -> tuple[SourcesEvent, DoneEvent]:
     final = state["final"]
     assert final is not None  # the graph always terminates with a final result
 
-    # EVERY passage the model saw becomes a numbered source (judge-v2 principle,
-    # generation.py: the judge sees ALL retrieved passages, cited ones flagged —
-    # not just the cited subset). Markers are 1..N over the deduped collected set
-    # in first-appearance order; the answer's [c<id>] tokens are rewritten to them.
+    # agent-v5: the judge scores the RELEVANT set — the passages the agent kept
+    # (keep_ids) plus any it actually cited — not every passage it ever retrieved.
+    # The agent's own relevance filter shrinks the judge's input (its lost-in-the-
+    # middle failure mode) while still showing it everything the answer rests on,
+    # cited-or-not (the judge-v2 "see uncited grounding" property holds WITHIN the
+    # kept set). Markers are 1..N over that set in first-appearance order.
     by_id = _dedup(state["collected"])  # dict preserves first-occurrence order
-    marker_of = {cid: marker for marker, cid in enumerate(by_id, start=1)}
+    cited = {int(n) for grp in _CITE_GROUP_RE.findall(final.answer) for n in _CID_RE.findall(grp)}
+    relevant_ids = set(state["kept"]) | cited
+    relevant = {cid: chunk for cid, chunk in by_id.items() if cid in relevant_ids}
+    marker_of = {cid: marker for marker, cid in enumerate(relevant, start=1)}
 
     def _rewrite(match: re.Match[str]) -> str:
         # Map each c-id in the (possibly grouped) bracket to its 1..N marker;
@@ -92,7 +97,7 @@ def build_agent_events(state: AgentState) -> tuple[SourcesEvent, DoneEvent]:
             char_start=chunk.char_start,
             char_end=chunk.char_end,
         )
-        for (cid, chunk), marker in zip(by_id.items(), marker_of.values(), strict=True)
+        for (cid, chunk), marker in zip(relevant.items(), marker_of.values(), strict=True)
     ]
     sources = SourcesEvent(citations=citations, prompt_version=AGENT_PROMPT_VERSION)
     # `used` = the prose [c<id>] markers — the comparable, single-shot-style signal.
