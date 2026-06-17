@@ -7,7 +7,19 @@ All values can be overridden via environment variables with the AHX_ prefix
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class ChatEndpoint(BaseModel):
+    """One OpenAI-compatible chat endpoint in the fallback lineup (6.4 / D5). Distinct
+    provider+model from the primary so a single outage isn't total. Parsed from JSON in
+    AHX_CHAT_FALLBACKS, e.g. '[{"base_url":"https://...","model":"...","api_key":"..."}]'."""
+
+    base_url: str
+    model: str
+    api_key: str | None = None
+
 
 # backend/src/ahx/config.py -> repo root is 3 levels above the package dir.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -78,6 +90,25 @@ class Settings(BaseSettings):
     # greedy decoding where the provider honours it; recorded as an explicit knob
     # rather than an invisible default so it is part of every run's config.
     chat_temperature: float = 0.0
+    # Fallback lineup (6.4 / D5): ordered alternates wrapped with the primary in a
+    # CompositeChatModel. Empty = no fallover (the bare primary serves). Distinct
+    # providers so one outage != total outage; the served model rides `served_by` to
+    # the SSE indicator + trace. JSON-encoded list of ChatEndpoint via AHX_CHAT_FALLBACKS.
+    chat_fallbacks: list[ChatEndpoint] = []
+
+    # Rate limiting + per-session cap (6.4) — load-bearing for a public, abusable demo
+    # where every query is hosted spend (phase-6-plan §cost-of-a-query). In-memory,
+    # single-instance (api/limits.py); Redis is the documented scale path. Both limits
+    # disabled when set to 0.
+    #   - IP sliding window: abuse protection, returns a structured 429 + Retry-After.
+    #   - Per-session cap: free-tier protection keyed on a client X-Session-Id header;
+    #     every allowed answer carries "N of M left" on the SSE sources event.
+    rate_limit_per_window: int = 20  # max requests per IP per window (0 = off)
+    rate_limit_window_seconds: int = 60
+    session_query_cap: int = 30  # lifetime queries per session id (0 = off)
+    # Behind a reverse proxy (prod), the real client IP is in X-Forwarded-For, not
+    # request.client. OFF by default (locally the header is spoofable); enable in prod.
+    trust_forwarded_for: bool = False
 
     # Judge LLM (eval generation tier, phase boundaries). Unset = judge
     # layer unavailable; use a strong model — weak judges miscalibrate.

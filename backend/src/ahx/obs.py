@@ -146,6 +146,7 @@ class RequestTrace:
         usage: Usage | None,
         cost: Cost | None = None,
         blocked: bool = False,
+        served_by: str | None = None,
     ) -> None:
         if self._span is None:
             return
@@ -154,6 +155,7 @@ class RequestTrace:
             metadata={
                 "refused": refused,
                 "blocked": blocked,  # 6.3: a security block is visible in the trace
+                "served_by": served_by,  # 6.4: which model answered (fallback-aware)
                 "completion_tokens": usage.completion_tokens if usage else None,
                 "prompt_tokens": usage.prompt_tokens if usage else None,
                 "cost_usd": cost.usd if cost else None,

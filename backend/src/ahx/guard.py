@@ -120,6 +120,7 @@ def refusal_done(message: str, done: DoneEvent | None = None) -> DoneEvent:
         markers=MarkerAudit(used=[], dangling=[]),
         usage=done.usage if done else None,
         cost=done.cost if done else None,
+        served_by=done.served_by if done else None,
     )
 
 

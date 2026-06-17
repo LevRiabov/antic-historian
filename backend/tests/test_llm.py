@@ -100,7 +100,7 @@ async def test_stream_without_usage_chunk_ends_with_none() -> None:
     server = FakeServer(body, content_type="text/event-stream")
     events = [event async for event in make_model(server).stream(MESSAGES)]
 
-    assert events == [TextDelta(text="hi"), StreamEnd(usage=None)]
+    assert events == [TextDelta(text="hi"), StreamEnd(usage=None, served_by="test-model")]
 
 
 async def test_auth_header_only_when_api_key_set() -> None:

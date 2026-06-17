@@ -48,6 +48,11 @@ class TextDelta(BaseModel):
 
 class StreamEnd(BaseModel):
     usage: Usage | None
+    # The model that actually produced this stream — set by the concrete model to
+    # its own id (and passed through unchanged by CompositeChatModel, so a fallback
+    # reports the alternate that served). The pipeline reads this for cost pricing +
+    # the `served_by` indicator (6.4); None falls back to the chat's nominal name.
+    served_by: str | None = None
 
 
 StreamEvent = TextDelta | StreamEnd
@@ -56,6 +61,7 @@ StreamEvent = TextDelta | StreamEnd
 class ChatResult(BaseModel):
     text: str
     usage: Usage | None
+    served_by: str | None = None  # see StreamEnd.served_by (6.4)
 
 
 class ChatModel(Protocol):
@@ -157,7 +163,11 @@ class OpenAICompatChat:
                     response.raise_for_status()
                     data = cast(dict[str, Any], response.json())
                 text = data["choices"][0]["message"]["content"] or ""
-                return ChatResult(text=text, usage=self._parse_usage(data.get("usage")))
+                return ChatResult(
+                    text=text,
+                    usage=self._parse_usage(data.get("usage")),
+                    served_by=self._model,
+                )
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code not in _RETRY_STATUSES or attempt == _MAX_ATTEMPTS - 1:
                     raise
@@ -198,16 +208,93 @@ class OpenAICompatChat:
                     content = delta.get("content")
                     if content:
                         yield TextDelta(text=str(content))
-        yield StreamEnd(usage=usage)
+        yield StreamEnd(usage=usage, served_by=self._model)
+
+
+class CompositeChatModel:
+    """Cross-provider fallback over an ordered lineup (D5: primary -> alternates on
+    distinct providers, so one outage != total outage). The layer ABOVE each model's
+    own retry/backoff (OpenAICompatChat): when a model exhausts its retries and raises,
+    the composite advances to the next.
+
+    Fallover happens ONLY before the first delta (6.4): a model's stream fails at the
+    first `__anext__()` (that is where `raise_for_status` runs), which is before any
+    token shipped, so switching is safe. A failure mid-stream — after deltas are out —
+    can't be undone, so it propagates. `served_by` is not tracked as instance state
+    (the composite is shared across concurrent requests): each inner model stamps its
+    own id onto StreamEnd/ChatResult and the composite passes that through unchanged.
+    """
+
+    def __init__(self, models: Sequence[ChatModel]) -> None:
+        if not models:
+            raise ValueError("CompositeChatModel needs at least one model")
+        self._models = list(models)
+
+    @property
+    def model_name(self) -> str:
+        # The lineup's nominal (primary) id; the model that actually served rides on
+        # served_by. Used only where the served id isn't yet known (e.g. trace setup).
+        return self._models[0].model_name
+
+    async def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]:
+        last_exc: Exception | None = None
+        for model in self._models:
+            gen = model.stream(messages)
+            try:
+                first = await gen.__anext__()  # HTTP/transport failure surfaces HERE
+            except StopAsyncIteration:
+                return  # empty stream, but it opened cleanly: this model "served"
+            except httpx.HTTPError as exc:
+                # __anext__ raising (not StopAsyncIteration) already finalizes the
+                # generator, so no explicit aclose is needed before moving on.
+                last_exc = exc
+                continue  # nothing shipped yet -> fall over to the next provider
+            # Committed: the first event arrived without error. From here a failure is
+            # mid-stream and must propagate (tokens already shipped, can't switch).
+            yield first
+            async for event in gen:
+                yield event
+            return
+        assert last_exc is not None  # the loop only exits here via `continue`
+        raise last_exc
+
+    async def complete(
+        self,
+        messages: Sequence[ChatMessage],
+        response_format: dict[str, Any] | None = None,
+    ) -> ChatResult:
+        last_exc: Exception | None = None
+        for model in self._models:
+            try:
+                return await model.complete(messages, response_format)
+            except httpx.HTTPError as exc:
+                last_exc = exc
+        assert last_exc is not None
+        raise last_exc
 
 
 def chat_model_from_settings(settings: Settings) -> ChatModel:
-    return OpenAICompatChat(
+    """The served chat model. With AHX_CHAT_FALLBACKS set, the primary is wrapped in a
+    CompositeChatModel over [primary, *fallbacks]; otherwise the bare primary (whose own
+    served_by stamping makes the wrap unnecessary when there is nothing to fall over to)."""
+    primary = OpenAICompatChat(
         base_url=settings.chat_base_url,
         model=settings.chat_model,
         api_key=settings.chat_api_key,
         temperature=settings.chat_temperature,
     )
+    if not settings.chat_fallbacks:
+        return primary
+    alternates = [
+        OpenAICompatChat(
+            base_url=ep.base_url,
+            model=ep.model,
+            api_key=ep.api_key,
+            temperature=settings.chat_temperature,
+        )
+        for ep in settings.chat_fallbacks
+    ]
+    return CompositeChatModel([primary, *alternates])
 
 
 def judge_model_from_settings(settings: Settings) -> ChatModel | None:

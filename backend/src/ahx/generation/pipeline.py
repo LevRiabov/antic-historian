@@ -47,6 +47,9 @@ class DoneEvent(BaseModel):
     # Generation cost (6.2). Optional/defaulted so non-API callers and the agent
     # path stay valid; the single-shot pipeline always fills it.
     cost: Cost | None = None
+    # The model that actually served this answer (6.4). With a CompositeChatModel this
+    # is the alternate when the primary fell over — the SSE indicator + trace key on it.
+    served_by: str | None = None
     # Set by the security guard (6.3) when a request was blocked/redacted — distinct
     # from a content `refused` so the client + traces can flag a security event.
     blocked: bool = False
@@ -67,20 +70,26 @@ async def ask(
 
     pieces: list[str] = []
     usage: Usage | None = None
+    served_by: str | None = None
     async for event in chat.stream(build_messages(question, chunks)):
         if isinstance(event, TextDelta):
             pieces.append(event.text)
             yield DeltaEvent(text=event.text)
         else:
             usage = event.usage
+            served_by = event.served_by
 
+    # Price by the model that ACTUALLY served (a fallback alternate, not the nominal
+    # primary chat.model_name) — wrong pricing otherwise once a composite falls over.
+    answer_model = served_by or chat.model_name
     answer = "".join(pieces).strip()
     yield DoneEvent(
         answer=answer,
         refused=_is_refusal(answer),
         markers=extract_markers(answer, {c.marker for c in citations}),
         usage=usage,
-        cost=cost_for(chat.model_name, usage, load_price_table()),
+        cost=cost_for(answer_model, usage, load_price_table()),
+        served_by=answer_model,
     )
 
 

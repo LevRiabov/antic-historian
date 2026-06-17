@@ -10,6 +10,7 @@ import pytest
 
 import ahx
 from ahx.api.app import app, get_chat, get_guard, get_retriever
+from ahx.api.limits import RateLimiter
 from ahx.guard import SECURITY_REDACTION, DefenseConfig
 from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent, TextDelta, Usage
 from ahx.retrieval.dense import RetrievedChunk
@@ -88,9 +89,12 @@ async def test_ask_streams_sources_deltas_done(ask_client: httpx.AsyncClient) ->
     assert response.headers["content-type"].startswith("text/event-stream")
 
     events = parse_sse(response.text)
-    assert [name for name, _ in events] == ["sources", "delta", "delta", "done"]
+    # `meta` first carries the session budget (6.4); lifespan didn't run under
+    # ASGITransport, so the limiter is absent and the status is the uncapped default.
+    assert [name for name, _ in events] == ["meta", "sources", "delta", "delta", "done"]
+    assert events[0][1] == {"limit": 0, "remaining": 0}
 
-    _, sources = events[0]
+    _, sources = events[1]
     assert sources["prompt_version"] == "baseline-v2"
     assert [c["marker"] for c in sources["citations"]] == [1, 2]
     assert sources["citations"][0]["author"] == "Suetonius"
@@ -100,6 +104,8 @@ async def test_ask_streams_sources_deltas_done(ask_client: httpx.AsyncClient) ->
     assert done["refused"] is False
     assert done["markers"] == {"used": [1], "dangling": []}
     assert done["usage"] == {"prompt_tokens": 40, "completion_tokens": 7}
+    # served_by (6.4): no fallover here, so it's the chat's own id.
+    assert done["served_by"] == "fake-model"
     # Cost on the done event (6.2): "fake-model" is a bare id -> local -> $0, priced.
     assert done["cost"]["usd"] == 0.0
     assert done["cost"]["priced"] is True
@@ -120,9 +126,9 @@ async def test_ask_blocks_attack_with_wellformed_envelope(ask_client: httpx.Asyn
 
     assert response.status_code == 200
     events = parse_sse(response.text)
-    # No deltas — the model was never called; just the well-formed bookends.
-    assert [name for name, _ in events] == ["sources", "done"]
-    _, sources = events[0]
+    # No deltas — the model was never called; just `meta` + the well-formed bookends.
+    assert [name for name, _ in events] == ["meta", "sources", "done"]
+    _, sources = events[1]
     assert sources["citations"] == []
     _, done = events[-1]
     assert done["blocked"] is True
@@ -136,3 +142,42 @@ async def test_ask_validates_request(ask_client: httpx.AsyncClient) -> None:
 
     bad_top_k = await ask_client.post("/ask", json={"question": "How did Caesar die?", "top_k": 50})
     assert bad_top_k.status_code == 422
+
+
+async def test_ask_session_cap_returns_structured_429(ask_client: httpx.AsyncClient) -> None:
+    # 6.4: with a cap of 1, the first /ask succeeds (meta shows 0 left), the second 429s
+    # with a structured body — before any model spend (the stream never opens).
+    app.state.limiter = RateLimiter(per_window=0, window_seconds=60, session_cap=1)
+    headers = {"X-Session-Id": "sess-1"}
+    try:
+        first = await ask_client.post(
+            "/ask", json={"question": "How did Caesar die?"}, headers=headers
+        )
+        assert first.status_code == 200
+        assert parse_sse(first.text)[0] == ("meta", {"limit": 1, "remaining": 0})
+
+        second = await ask_client.post(
+            "/ask", json={"question": "How did Caesar die?"}, headers=headers
+        )
+        assert second.status_code == 429
+        detail = second.json()["detail"]
+        assert detail["error"] == "session_cap_reached"
+        assert detail["limit"] == 1
+    finally:
+        del app.state.limiter
+
+
+async def test_ask_ip_rate_limit_returns_429_with_retry_after(
+    ask_client: httpx.AsyncClient,
+) -> None:
+    # 6.4: per-IP window of 1 — the second request from the same client is rate-limited.
+    app.state.limiter = RateLimiter(per_window=1, window_seconds=60, session_cap=0)
+    try:
+        first = await ask_client.post("/ask", json={"question": "How did Caesar die?"})
+        assert first.status_code == 200
+        second = await ask_client.post("/ask", json={"question": "How did Caesar die?"})
+        assert second.status_code == 429
+        assert second.json()["detail"]["error"] == "rate_limited"
+        assert int(second.headers["retry-after"]) >= 1
+    finally:
+        del app.state.limiter

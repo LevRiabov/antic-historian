@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 import ahx
+from ahx.api.limits import SessionStatus, enforce_limits, limiter_from_settings
 from ahx.config import get_settings
 from ahx.db import create_async_db_engine
 from ahx.generation.pipeline import DeltaEvent, DoneEvent, Retriever, SourcesEvent
@@ -47,10 +48,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         retriever = traced_retriever(retriever, langfuse)
 
     app.state.retriever = retriever
-    app.state.chat = chat
+    app.state.chat = chat  # CompositeChatModel when AHX_CHAT_FALLBACKS is set (6.4)
     app.state.langfuse = langfuse
     app.state.guard = guard_config_from_settings(settings)  # 6.3 security stack
     app.state.canary = settings.prompt_canary
+    app.state.limiter = limiter_from_settings(settings)  # 6.4 rate limit + session cap
     yield
     if langfuse is not None:
         langfuse.flush()  # drain the export buffer before the process exits
@@ -105,8 +107,13 @@ async def ask_route(
     langfuse: Annotated["Langfuse | None", Depends(get_langfuse)],
     guard: Annotated[DefenseConfig, Depends(get_guard)],
     canary: Annotated[str, Depends(get_canary)],
+    session: Annotated[SessionStatus, Depends(enforce_limits)],
 ) -> EventSourceResponse:
+    # enforce_limits runs as a dependency: a rate-limit / session-cap rejection raises a
+    # structured 429 BEFORE the SSE stream opens (no model spend on a rejected request).
     async def events() -> AsyncIterator[dict[str, str]]:
+        # `meta` first: the client renders "N of M left" before the answer streams (6.4).
+        yield {"event": "meta", "data": session.model_dump_json()}
         # The whole stream runs inside the root span so retrieve/chat nest under it; the
         # trace is finished with the answer on the terminal DoneEvent. The security guard
         # (6.3) wraps the pipeline: a blocked request still yields a well-formed envelope
@@ -122,6 +129,7 @@ async def ask_route(
                         usage=event.usage,
                         cost=event.cost,
                         blocked=event.blocked,
+                        served_by=event.served_by,
                     )
                 yield {"event": _EVENT_NAMES[type(event)], "data": event.model_dump_json()}
 
