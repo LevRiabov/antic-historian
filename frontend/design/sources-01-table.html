@@ -1,0 +1,375 @@
+<!-- Sources A: Data table — dense auditable corpus table, filter tabs + search, palette matches chat -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sources · Antic Historian</title>
+<style>
+:root {
+  --bg:#faf9f7; --surface:#ffffff; --ink:#1f2328; --ink-soft:#5b6168; --ink-faint:#8b9098;
+  --line:#e8e5e0; --line-strong:#d8d4cd; --accent:#8a5a2b; --accent-soft:#f3ebe1; --accent-ink:#6b4420;
+  --good:#2f7d4f; --good-soft:#e7f3ec; --amber:#c9831f; --amber-soft:#faf0dd;
+  --shadow:0 1px 2px rgba(31,35,40,.06),0 6px 24px rgba(31,35,40,.05);
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'Cascadia Code','Consolas','SF Mono',Menlo,monospace;
+}
+
+* { box-sizing:border-box; }
+html,body { margin:0; padding:0; }
+body {
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+a { color:inherit; text-decoration:none; }
+
+/* ---------- Top bar ---------- */
+.topbar {
+  position:sticky; top:0; z-index:30;
+  display:flex; align-items:center; gap:14px;
+  padding:12px 22px;
+  background:rgba(250,249,247,.85); backdrop-filter:saturate(1.4) blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-mark {
+  width:30px; height:30px; border-radius:9px;
+  background:linear-gradient(145deg,#9c6a39,#6b4420);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-family:var(--serif); font-weight:700; font-size:18px;
+  box-shadow:var(--shadow);
+}
+.brand-name { font-family:var(--serif); font-size:18px; font-weight:600; letter-spacing:.2px; }
+.nav { margin-left:auto; display:flex; align-items:center; gap:6px; }
+.nav a {
+  padding:6px 14px; border-radius:999px; font-size:14px; color:var(--ink-soft);
+  transition:background .15s, color .15s;
+}
+.nav a:hover { background:var(--accent-soft); color:var(--accent-ink); }
+.nav a.active {
+  background:var(--accent-soft); color:var(--accent-ink); font-weight:600;
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+}
+
+/* ---------- Page shell ---------- */
+.wrap { max-width:1160px; margin:0 auto; padding:30px 22px 60px; }
+
+/* ---------- Header block ---------- */
+.page-head { margin-bottom:22px; }
+.page-title { font-family:var(--serif); font-size:32px; font-weight:600; margin:0 0 8px; letter-spacing:.2px; }
+.page-intro { color:var(--ink-soft); font-size:15.5px; max-width:680px; margin:0 0 16px; }
+.summary {
+  display:inline-flex; flex-wrap:wrap; align-items:center; gap:0;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:999px; padding:7px 4px; box-shadow:var(--shadow);
+  font-size:13.5px;
+}
+.summary .stat { padding:1px 16px; color:var(--ink-soft); }
+.summary .stat b { color:var(--ink); font-weight:600; }
+.summary .stat + .stat { border-left:1px solid var(--line); }
+.summary .stat.pd b { color:var(--good); }
+
+/* ---------- Controls ---------- */
+.controls {
+  display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+  margin:22px 0 14px;
+}
+.tabs { display:flex; gap:4px; background:var(--accent-soft); padding:4px; border-radius:999px; }
+.tab {
+  border:0; cursor:pointer; font-family:var(--sans); font-size:13.5px;
+  padding:6px 15px; border-radius:999px; color:var(--accent-ink); background:transparent;
+  transition:background .15s, box-shadow .15s; white-space:nowrap;
+}
+.tab:hover { background:rgba(138,90,43,.10); }
+.tab.active { background:var(--surface); color:var(--accent-ink); font-weight:600; box-shadow:var(--shadow); }
+.tab .cnt { color:var(--ink-faint); font-weight:400; margin-left:5px; font-size:12px; }
+.tab.active .cnt { color:var(--accent); }
+
+.search-wrap { margin-left:auto; position:relative; }
+.search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--ink-faint); }
+.search {
+  width:260px; max-width:60vw; font-family:var(--sans); font-size:14px;
+  padding:9px 14px 9px 34px; border:1px solid var(--line-strong); border-radius:999px;
+  background:var(--surface); color:var(--ink); outline:none; box-shadow:var(--shadow);
+  transition:border-color .15s, box-shadow .15s;
+}
+.search:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.search::placeholder { color:var(--ink-faint); }
+
+/* ---------- Table ---------- */
+.table-scroll {
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  box-shadow:var(--shadow); overflow-x:auto; overflow-y:visible;
+}
+table { width:100%; border-collapse:collapse; min-width:920px; }
+thead th {
+  position:sticky; top:55px; z-index:10;
+  background:#f7f5f1; text-align:left; font-size:11.5px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ink-soft); font-weight:600;
+  padding:13px 16px; border-bottom:1px solid var(--line-strong); white-space:nowrap;
+}
+thead th.sortable { cursor:pointer; user-select:none; }
+thead th.sortable:hover { color:var(--accent-ink); background:#f2efe9; }
+.caret { display:inline-block; margin-left:5px; color:var(--ink-faint); font-size:10px; vertical-align:1px; }
+thead th.sort-asc .caret::after { content:"▲"; color:var(--accent); }
+thead th.sort-desc .caret::after { content:"▼"; color:var(--accent); }
+thead th.sortable:not(.sort-asc):not(.sort-desc) .caret::after { content:"⇅"; }
+
+tbody td { padding:13px 16px; border-bottom:1px solid var(--line); vertical-align:top; font-size:14px; }
+tbody tr:last-child td { border-bottom:0; }
+tbody tr:nth-child(even) { background:#fcfbf9; }
+tbody tr:hover { background:var(--accent-soft); }
+
+.c-author { font-family:var(--serif); font-size:15.5px; font-weight:600; color:var(--ink); white-space:nowrap; }
+.c-work { min-width:240px; }
+.work-title { color:var(--ink); }
+.vols-chip {
+  display:inline-block; margin-left:8px; font-size:11px; font-weight:600;
+  background:var(--accent-soft); color:var(--accent-ink);
+  padding:1px 8px; border-radius:999px; vertical-align:1px; white-space:nowrap;
+}
+.c-translator { color:var(--ink-soft); font-size:13.5px; max-width:220px; }
+
+.pill {
+  display:inline-block; font-size:11.5px; font-weight:600; padding:3px 10px;
+  border-radius:999px; white-space:nowrap;
+}
+.pill.primary { background:var(--accent-soft); color:var(--accent-ink); box-shadow:inset 0 0 0 1px var(--line-strong); }
+.pill.scholarship { background:var(--good-soft); color:var(--good); box-shadow:inset 0 0 0 1px rgba(47,125,79,.18); }
+
+.c-pd { color:var(--ink-soft); font-size:12.8px; line-height:1.45; max-width:230px; }
+.c-pd .shield { color:var(--good); margin-right:5px; }
+
+.src-chip {
+  display:inline-flex; align-items:center; gap:3px; font-size:12.5px;
+  color:var(--accent-ink); background:var(--surface);
+  border:1px solid var(--line-strong); border-radius:999px; padding:3px 11px;
+  white-space:nowrap; transition:background .15s, border-color .15s;
+}
+.src-chip:hover { background:var(--accent-soft); border-color:var(--accent); }
+.src-chip .arr { color:var(--ink-faint); font-size:11px; }
+
+.empty {
+  padding:46px 20px; text-align:center; color:var(--ink-faint); font-size:14px;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  margin-top:30px; padding-top:20px; border-top:1px solid var(--line);
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 22px;
+  font-size:13px; color:var(--ink-soft);
+}
+.footer .eu { display:inline-flex; align-items:center; gap:7px; font-weight:600; color:var(--ink); }
+.footer .eu .dot { color:var(--good); font-size:11px; }
+.footer .note { color:var(--ink-faint); max-width:640px; }
+
+@media (max-width:640px) {
+  .page-title { font-size:26px; }
+  .summary { font-size:12.5px; }
+  .summary .stat { padding:1px 11px; }
+  .controls { gap:12px; }
+  .search-wrap { margin-left:0; width:100%; }
+  .search { width:100%; max-width:100%; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Antic Historian</div>
+  </div>
+  <nav class="nav">
+    <a href="#">Chat</a>
+    <a href="#" class="active">Sources</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <div class="page-head">
+    <h1 class="page-title">The corpus</h1>
+    <p class="page-intro">Every answer is grounded in these public-domain sources — nothing else. Here is the complete dataset.</p>
+    <div class="summary" id="summary"><!-- filled by JS --></div>
+  </div>
+
+  <div class="controls">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-type="all">All <span class="cnt" id="cnt-all"></span></button>
+      <button class="tab" data-type="primary">Primary sources <span class="cnt" id="cnt-primary"></span></button>
+      <button class="tab" data-type="scholarship">Foundational scholarship <span class="cnt" id="cnt-scholarship"></span></button>
+    </div>
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+      <input class="search" id="search" type="text" placeholder="Search author or work…" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" data-key="author">Author <span class="caret"></span></th>
+          <th class="sortable" data-key="title">Work <span class="caret"></span></th>
+          <th>Translator</th>
+          <th>Type</th>
+          <th>Public-domain basis</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"><!-- filled by JS --></tbody>
+    </table>
+  </div>
+
+  <footer class="footer">
+    <span class="eu"><span class="dot">●</span> EU-hosted · GDPR-native</span>
+    <span class="note">Public-domain basis = author/translator died &gt;70 years ago (EU rule). This repo documents the basis per work.</span>
+  </footer>
+
+</main>
+
+<script>
+const SOURCES = [
+ {author:"Herodotus", title:"The Histories (with An Account of Egypt)", translator:"G. C. Macaulay", type:"primary", vols:3, pd:"Translator d.1915 · PD (life+70)", subject:"Greece / Persia", src:"Project Gutenberg"},
+ {author:"Thucydides", title:"History of the Peloponnesian War", translator:"Richard Crawley", type:"primary", vols:1, pd:"Translator d.1893 · PD", subject:"Greece", src:"Project Gutenberg"},
+ {author:"Xenophon", title:"Anabasis · Hellenica", translator:"H. G. Dakyns", type:"primary", vols:2, pd:"Translator d.1911 · PD", subject:"Greece", src:"Project Gutenberg"},
+ {author:"Plutarch", title:"Plutarch's Lives (complete, Dryden ed.)", translator:"Dryden / A. H. Clough", type:"primary", vols:1, pd:"Translator d.1861 · PD", subject:"Greece / Rome", src:"Project Gutenberg"},
+ {author:"Suetonius", title:"The Lives of the Twelve Caesars", translator:"Alexander Thomson", type:"primary", vols:1, pd:"PD by age (fl. 1796)", subject:"Rome", src:"Project Gutenberg"},
+ {author:"Polybius", title:"The Histories", translator:"Evelyn S. Shuckburgh", type:"primary", vols:2, pd:"Translator d.1906 · PD", subject:"Rome / Greece", src:"Project Gutenberg"},
+ {author:"Livy", title:"The History of Rome (Books 1–end)", translator:"Spillan · Edmonds · McDevitte (Bohn)", type:"primary", vols:4, pd:"PD by age / d.1866", subject:"Rome", src:"Project Gutenberg"},
+ {author:"Tacitus", title:"Annals · Histories · Germania & Agricola", translator:"Church & Brodribb; Brooks", type:"primary", vols:3, pd:"Translators d.1912 / d.1905 · PD", subject:"Rome", src:"Gutenberg / ICA"},
+ {author:"Julius Caesar", title:"De Bello Gallico & Other Commentaries", translator:"W. A. McDevitte", type:"primary", vols:1, pd:"PD by age (Bohn 1869)", subject:"Rome / Gaul", src:"Project Gutenberg"},
+ {author:"Arrian", title:"The Anabasis of Alexander", translator:"E. J. Chinnock", type:"primary", vols:1, pd:"Translator d.1911 · PD", subject:"Alexander / Greece", src:"Project Gutenberg"},
+ {author:"Strabo", title:"The Geography", translator:"Hamilton & Falconer", type:"primary", vols:3, pd:"Translator d.1895 · PD", subject:"Geography", src:"Project Gutenberg"},
+ {author:"Cassius Dio", title:"Dio's Rome (Roman History)", translator:"Herbert Baldwin Foster", type:"primary", vols:6, pd:"Translator d.1906 · PD", subject:"Rome", src:"Project Gutenberg"},
+ {author:"Josephus", title:"The Wars of the Jews · Antiquities of the Jews", translator:"William Whiston", type:"primary", vols:2, pd:"PD by age (d.1752)", subject:"Rome / Judaea", src:"Project Gutenberg"},
+ {author:"Ammianus Marcellinus", title:"The Roman History (Books XIV–XXXI)", translator:"Charles Duke Yonge", type:"primary", vols:1, pd:"Translator d.1891 · PD", subject:"Late Rome", src:"Project Gutenberg"},
+ {author:"Pausanias", title:"Description of Greece", translator:"A. R. Shilleto", type:"primary", vols:2, pd:"Translator d.1894 · PD", subject:"Greece", src:"Project Gutenberg"},
+ {author:"Appian", title:"The Roman History (Foreign & Civil Wars)", translator:"Horace White", type:"primary", vols:2, pd:"Translator d.1916 · PD", subject:"Rome", src:"Internet Archive"},
+ {author:"Diodorus Siculus", title:"The Historical Library, Vol. II (Books XI–XX)", translator:"G. Booth", type:"primary", vols:1, pd:"PD by age (1814 ed.)", subject:"Greece / Rome", src:"Internet Archive"},
+ {author:"Edward Gibbon", title:"The Decline and Fall of the Roman Empire", translator:"— (orig. English; Milman/Bury notes)", type:"scholarship", vols:1, pd:"Author d.1794 · PD", subject:"Rome", src:"Project Gutenberg"},
+ {author:"Theodor Mommsen", title:"The History of Rome (Vols 1–5)", translator:"William P. Dickson", type:"scholarship", vols:1, pd:"Author d.1903 · PD", subject:"Rome", src:"Project Gutenberg"},
+ {author:"William Smith", title:"A Smaller History of Rome", translator:"— (orig. English)", type:"scholarship", vols:1, pd:"Author d.1893 · PD", subject:"Rome", src:"Project Gutenberg"},
+ {author:"George Grote", title:"History of Greece", translator:"— (orig. English)", type:"scholarship", vols:12, pd:"Author d.1871 · PD", subject:"Greece", src:"Project Gutenberg"},
+ {author:"George Rawlinson", title:"The Seven Great Monarchies of the Ancient Eastern World", translator:"— (orig. English)", type:"scholarship", vols:7, pd:"Author d.1902 · PD", subject:"Near East / Persia", src:"Project Gutenberg"},
+ {author:"J. B. Bury", title:"A History of Greece to the Death of Alexander", translator:"— (orig. English)", type:"scholarship", vols:1, pd:"Author d.1927 · PD", subject:"Greece", src:"Internet Archive"},
+ {author:"James George Frazer", title:"The Golden Bough (1922 abridged)", translator:"— (orig. English)", type:"scholarship", vols:1, pd:"Author d.1941 · PD", subject:"Religion / Myth", src:"Project Gutenberg"},
+ {author:"W. Warde Fowler", title:"Social Life at Rome in the Age of Cicero", translator:"— (orig. English)", type:"scholarship", vols:1, pd:"Author d.1921 · PD", subject:"Rome / society", src:"Project Gutenberg"},
+ {author:"Samuel Dill", title:"Roman Society from Nero to Marcus Aurelius", translator:"— (orig. English)", type:"scholarship", vols:1, pd:"Author d.1924 · PD", subject:"Rome / society", src:"Project Gutenberg"},
+];
+
+// ---------- State ----------
+let activeType = "all";
+let query = "";
+let sortKey = null;       // "author" | "title" | null
+let sortDir = 1;          // 1 asc, -1 desc
+
+// ---------- Helpers ----------
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function srcChip(src){
+  return '<a class="src-chip" href="#" onclick="return false">' + esc(src) + ' <span class="arr">↗</span></a>';
+}
+
+function typePill(t){
+  if (t === "primary") return '<span class="pill primary">Primary</span>';
+  return '<span class="pill scholarship">Scholarship</span>';
+}
+
+// ---------- Summary (real counts from data) ----------
+function renderSummary(){
+  const works = SOURCES.length;
+  const vols = SOURCES.reduce((a,s)=>a+s.vols, 0);
+  const authors = new Set(SOURCES.map(s=>s.author)).size;
+  document.getElementById("summary").innerHTML =
+    '<span class="stat"><b>'+works+'</b> works</span>' +
+    '<span class="stat"><b>'+vols+'</b> volumes</span>' +
+    '<span class="stat"><b>'+authors+'</b> authors</span>' +
+    '<span class="stat pd"><b>100%</b> public domain</span>';
+}
+
+// ---------- Tab counts ----------
+function renderCounts(){
+  const prim = SOURCES.filter(s=>s.type==="primary").length;
+  const schol = SOURCES.filter(s=>s.type==="scholarship").length;
+  document.getElementById("cnt-all").textContent = SOURCES.length;
+  document.getElementById("cnt-primary").textContent = prim;
+  document.getElementById("cnt-scholarship").textContent = schol;
+}
+
+// ---------- Filter + sort + render ----------
+function currentRows(){
+  let rows = SOURCES.slice();
+  if (activeType !== "all") rows = rows.filter(s => s.type === activeType);
+  if (query) {
+    const q = query.toLowerCase();
+    rows = rows.filter(s => s.author.toLowerCase().includes(q) || s.title.toLowerCase().includes(q));
+  }
+  if (sortKey) {
+    rows.sort((a,b) => a[sortKey].localeCompare(b[sortKey]) * sortDir);
+  }
+  return rows;
+}
+
+function renderTable(){
+  const rows = currentRows();
+  const tbody = document.getElementById("tbody");
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No sources match your filter.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(s => {
+    const volChip = s.vols > 1 ? '<span class="vols-chip">'+s.vols+' vols</span>' : '';
+    return '<tr>' +
+      '<td class="c-author">'+esc(s.author)+'</td>' +
+      '<td class="c-work"><span class="work-title">'+esc(s.title)+'</span>'+volChip+'</td>' +
+      '<td class="c-translator">'+esc(s.translator)+'</td>' +
+      '<td>'+typePill(s.type)+'</td>' +
+      '<td class="c-pd"><span class="shield">✓</span>'+esc(s.pd)+'</td>' +
+      '<td>'+srcChip(s.src)+'</td>' +
+    '</tr>';
+  }).join("");
+}
+
+// ---------- Sort header UI ----------
+function updateSortHeaders(){
+  document.querySelectorAll("thead th.sortable").forEach(th => {
+    th.classList.remove("sort-asc","sort-desc");
+    if (th.dataset.key === sortKey) th.classList.add(sortDir === 1 ? "sort-asc" : "sort-desc");
+  });
+}
+
+// ---------- Wiring ----------
+document.getElementById("tabs").addEventListener("click", e => {
+  const btn = e.target.closest(".tab");
+  if (!btn) return;
+  activeType = btn.dataset.type;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === btn));
+  renderTable();
+});
+
+document.getElementById("search").addEventListener("input", e => {
+  query = e.target.value.trim();
+  renderTable();
+});
+
+document.querySelectorAll("thead th.sortable").forEach(th => {
+  th.addEventListener("click", () => {
+    const key = th.dataset.key;
+    if (sortKey === key) sortDir = -sortDir;
+    else { sortKey = key; sortDir = 1; }
+    updateSortHeaders();
+    renderTable();
+  });
+});
+
+// ---------- Init ----------
+renderSummary();
+renderCounts();
+renderTable();
+</script>
+
+</body>
+</html>

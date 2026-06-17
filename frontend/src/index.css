@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens, lifted verbatim from frontend/design/chat-05-hybrid.html.
+ * Tailwind v4 is CSS-first: names declared in @theme become utilities, so
+ *   --color-accent  ->  bg-accent / text-accent / border-accent
+ *   --font-serif    ->  font-serif
+ *   --shadow-card   ->  shadow-card
+ * Keeping the palette here (not in a JS config) means the mockups and the app
+ * share one source of truth for the sepia/bronze look.
+ */
+@theme {
+  --color-bg: #faf9f7;
+  --color-surface: #ffffff;
+  --color-ink: #1f2328;
+  --color-ink-soft: #5b6168;
+  --color-ink-faint: #8b9098;
+  --color-line: #e8e5e0;
+  --color-line-strong: #d8d4cd;
+
+  --color-accent: #8a5a2b; /* restrained sepia/bronze accent */
+  --color-accent-soft: #f3ebe1;
+  --color-accent-ink: #6b4420;
+  --color-user-bubble: #f0ede8;
+
+  --color-good: #2f7d4f;
+  --color-good-soft: #e7f3ec;
+  --color-amber: #c9831f;
+  --color-amber-soft: #faf0dd;
+  --color-refuse: #b5621f;
+  --color-refuse-soft: #fbf1e8;
+
+  /* muted data-viz hues for the agent trace */
+  --color-viz-teal: #2f9e8f;
+  --color-viz-blue: #3a86c8;
+  --color-viz-purple: #7a6cd0;
+
+  --font-serif: Georgia, "Times New Roman", Times, serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Consolas", "SF Mono", Menlo, monospace;
+
+  --shadow-card: 0 1px 2px rgba(31, 35, 40, 0.06), 0 6px 24px rgba(31, 35, 40, 0.05);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

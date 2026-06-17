@@ -35,13 +35,15 @@ documented fallback. **D3 decided** (2026-06-14): Postgres + pgvector (Neon in p
 ablation confirmed the default. **D5 lineup decided** ([ADR-003](docs/adr/003-d5-llm-lineup.md)):
 agent = deepseek-v4-pro, judge = split kimi-k2.6 + qwen3.7-max (attribution); retrieval ships
 **rerank-free** (`dense-ctx-v1` — the cohere-pro reranker was dropped). Fast-path/cheap-tier/
-fallback still open → Phase 6. D4 (frontend) — open.
+fallback still open → Phase 6. **D4 decided** ([ADR-004](docs/adr/004-d4-frontend.md)): Vite+React
+SPA, nginx-in-Docker, `/api` proxy (no CORS) — Phase 7 scaffold landed, pages next.
 
 ## Repo layout
 
 - `backend/` — Python service (`ahx` package, src layout): `ingest/`, `retrieval/`, `agent/`,
   `evals/`, `api/`, `cli.py`. All offline work (ingest, evals) goes through the typer CLI.
-- `frontend/` — TS app, Phase 7, not started.
+- `frontend/` — TS app (Phase 7): Vite+React+TS SPA, Tailwind v4, typed SSE client in `src/lib/`,
+  Dockerized (nginx + `/api` proxy). Scaffold landed; design mockups in `frontend/design/`.
 - `corpus/` — manifest committed; downloaded texts gitignored.
 - `docs/` — decision docs (above) + ADRs.
 

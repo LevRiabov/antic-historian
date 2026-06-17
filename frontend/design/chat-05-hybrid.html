@@ -1,0 +1,759 @@
+<!-- Design 5: Classic + Cockpit hybrid — light single-column chat; compact instrument chips up top; heavy trace/reasoning behind the deep-mode collapse -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Antic Historian — Classic + Cockpit</title>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --ink: #1f2328;
+    --ink-soft: #5b6168;
+    --ink-faint: #8b9098;
+    --line: #e8e5e0;
+    --line-strong: #d8d4cd;
+    --accent: #8a5a2b;          /* restrained sepia/bronze accent */
+    --accent-soft: #f3ebe1;
+    --accent-ink: #6b4420;
+    --user-bubble: #f0ede8;
+    --good: #2f7d4f;
+    --good-soft: #e7f3ec;
+    --amber: #c9831f;
+    --amber-soft: #faf0dd;
+    --refuse: #b5621f;
+    --refuse-soft: #fbf1e8;
+    /* muted data-viz hues for the trace (kept calm to match the sepia base) */
+    --viz-teal: #2f9e8f;
+    --viz-blue: #3a86c8;
+    --viz-purple: #7a6cd0;
+    --shadow: 0 1px 2px rgba(31,35,40,.06), 0 6px 24px rgba(31,35,40,.05);
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, 'Cascadia Code', 'Consolas', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 24px;
+    background: rgba(250,249,247,.85);
+    backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(145deg, #9c6a39, #6b4420);
+    color: #fff; display: grid; place-items: center;
+    font-family: var(--serif); font-weight: 700; font-size: 17px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .brand-name { font-family: var(--serif); font-weight: 700; font-size: 17px; letter-spacing: .2px; }
+  .brand-tag { font-size: 12px; color: var(--ink-faint); margin-top: 1px; }
+  .topbar-spacer { flex: 1; }
+
+  .model-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 11px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--line-strong);
+    font-size: 12.5px; color: var(--ink-soft);
+    box-shadow: var(--shadow);
+  }
+  .model-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px var(--good-soft); }
+  .model-badge.fallback .dot { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+  .model-badge code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .model-badge .served { color: var(--ink-faint); }
+
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 8px;
+    border: 1px solid var(--line-strong); background: var(--surface);
+    color: var(--ink-soft); cursor: pointer; display: grid; place-items: center;
+  }
+  .icon-btn:hover { background: var(--accent-soft); color: var(--accent-ink); }
+
+  /* ---------- Instrument chip strip (from Cockpit, distilled to chips) ---------- */
+  .instruments {
+    position: sticky; top: 55px; z-index: 25;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    padding: 9px 24px;
+    background: rgba(250,249,247,.82);
+    backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .inst-div { width: 1px; height: 20px; background: var(--line-strong); margin: 0 2px; flex: none; }
+  .inst-chip {
+    flex: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 11px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-soft); white-space: nowrap;
+  }
+  .inst-chip .ico { display: grid; place-items: center; color: var(--ink-faint); }
+  .inst-chip .k { color: var(--ink-faint); }
+  .inst-chip .v { font-family: var(--mono); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .inst-chip.cost .v { color: var(--accent-ink); }
+  .inst-chip.faith .v { color: var(--good); }
+  .inst-chip .served-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px var(--good-soft); }
+  .inst-chip.served code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .inst-chip.cap .meter { width: 46px; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .inst-chip.cap .meter > i { display: block; height: 100%; width: 30%; background: var(--accent); border-radius: 3px; }
+  .inst-stars { color: var(--amber); letter-spacing: .5px; font-size: 11px; }
+  .inst-spacer { flex: 1 1 auto; min-width: 4px; }
+  .inst-hint { flex: none; font-size: 11px; color: var(--ink-faint); display: inline-flex; align-items: center; gap: 5px; }
+
+  /* evals scorecard group — the "is it any good" trust pillar */
+  .eval-group {
+    flex: none; display: inline-flex; align-items: center; gap: 9px;
+    padding: 5px 11px 5px 9px; border-radius: 999px; cursor: pointer;
+    background: var(--good-soft); border: 1px solid #cfe6d8;
+    transition: border-color .15s, background .15s;
+  }
+  .eval-group:hover { background: #def0e6; border-color: #b6dcc4; }
+  .eval-tag {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--good); background: #fff; border: 1px solid #cfe6d8;
+    padding: 2px 7px; border-radius: 5px; white-space: nowrap;
+  }
+  .ev { font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+  .ev b { font-family: var(--mono); font-weight: 700; color: #246b41; font-variant-numeric: tabular-nums; }
+  .eval-group .caret { color: var(--good); display: grid; place-items: center; }
+
+  /* scorecard modal */
+  .eval-scrim { position: fixed; inset: 0; background: rgba(31,35,40,.28); z-index: 60; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .eval-scrim.open { opacity: 1; pointer-events: auto; }
+  .eval-modal {
+    position: fixed; z-index: 70; top: 50%; left: 50%; transform: translate(-50%, -48%) scale(.98);
+    width: 540px; max-width: 94vw; max-height: 88vh; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    box-shadow: 0 24px 70px rgba(31,35,40,.24);
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .eval-scrim.open ~ .eval-modal, .eval-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .em-head { display: flex; align-items: flex-start; gap: 12px; padding: 20px 22px 14px; border-bottom: 1px solid var(--line); }
+  .em-head .em-t { font-family: var(--serif); font-size: 19px; font-weight: 700; flex: 1; }
+  .em-head .em-sub { font-size: 12.5px; color: var(--ink-faint); margin-top: 3px; }
+  .em-n { font-size: 11px; color: var(--good); background: var(--good-soft); border: 1px solid #cfe6d8; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .em-body { padding: 18px 22px 4px; }
+  .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .score {
+    border: 1px solid var(--line); border-radius: 13px; padding: 14px; background: #fcfbf9;
+    border-top: 3px solid var(--good);
+  }
+  .score.amber-top { border-top-color: var(--amber); }
+  .score .s-k { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .05em; }
+  .score .s-v { font-family: var(--mono); font-size: 26px; font-weight: 700; margin-top: 7px; color: var(--ink); letter-spacing: -.02em; }
+  .score .s-v small { font-size: 13px; color: var(--ink-faint); font-weight: 500; }
+  .score .s-bar { height: 5px; border-radius: 3px; background: var(--line); margin-top: 9px; overflow: hidden; }
+  .score .s-bar > i { display: block; height: 100%; background: var(--good); border-radius: 3px; }
+  .score.amber-top .s-bar > i { background: var(--amber); }
+
+  .em-sec-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); font-weight: 700; margin: 22px 0 10px; }
+  .cat-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .cat {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--ink-soft);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px;
+  }
+  .cat b { font-family: var(--mono); color: var(--ink); font-weight: 600; }
+  .cat.oos { border-style: dashed; border-color: #ecd9c6; }
+  .method { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 12px 0 0; }
+  .method code { font-family: var(--mono); font-size: 12px; background: var(--accent-soft); color: var(--accent-ink); padding: 1px 6px; border-radius: 4px; }
+  .em-foot { display: flex; align-items: center; gap: 8px; padding: 14px 22px 18px; margin-top: 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-faint); }
+  .em-foot .honest { color: var(--ink-soft); }
+  .em-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; }
+  .em-close:hover { background: var(--accent-soft); color: var(--accent-ink); }
+
+  /* ---------- Layout ---------- */
+  .app { display: flex; flex-direction: column; height: 100vh; }
+  .scroll { flex: 1; overflow-y: auto; padding: 26px 24px 150px; }
+  .col { max-width: 760px; margin: 0 auto; }
+
+  /* ---------- Landing / empty state ---------- */
+  .landing { text-align: center; padding: 30px 8px 22px; }
+  .landing h1 { font-family: var(--serif); font-weight: 700; font-size: 30px; line-height: 1.2; margin: 0 0 10px; }
+  .landing p.lede { color: var(--ink-soft); font-size: 15.5px; margin: 0 auto 22px; max-width: 520px; }
+  .suggest { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 6px; }
+  .chip {
+    cursor: pointer; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink);
+    padding: 10px 14px; border-radius: 12px; font-size: 13.5px;
+    box-shadow: var(--shadow); transition: transform .08s ease, border-color .15s;
+    text-align: left; max-width: 330px;
+  }
+  .chip:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .chip .chip-k { display: block; font-size: 11px; color: var(--ink-faint); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .5px; }
+  .chip.refuse-trigger { border-style: dashed; }
+  .chip.refuse-trigger .chip-k { color: var(--refuse); }
+
+  .divider-note { display: flex; align-items: center; gap: 12px; color: var(--ink-faint); font-size: 12px; margin: 28px 0 6px; }
+  .divider-note::before, .divider-note::after { content: ""; height: 1px; background: var(--line); flex: 1; }
+
+  /* ---------- Messages ---------- */
+  .msg { margin: 26px 0; }
+  .msg-user { display: flex; justify-content: flex-end; }
+  .bubble-user {
+    background: var(--user-bubble); border: 1px solid var(--line);
+    padding: 12px 16px; border-radius: 16px 16px 4px 16px;
+    max-width: 80%; font-size: 15px; line-height: 1.5;
+  }
+  .msg-ai { display: flex; gap: 14px; align-items: flex-start; }
+  .ai-avatar {
+    flex: none; width: 30px; height: 30px; border-radius: 8px; margin-top: 2px;
+    background: linear-gradient(145deg, #9c6a39, #6b4420);
+    color: #fff; display: grid; place-items: center;
+    font-family: var(--serif); font-weight: 700; font-size: 15px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .ai-body { flex: 1; min-width: 0; }
+  .answer { font-size: 15.5px; line-height: 1.65; color: var(--ink); }
+  .answer .lat { font-style: italic; color: var(--ink-soft); }
+
+  /* inline citation chips */
+  .cite {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 4px;
+    margin: 0 1px; vertical-align: super; font-size: 10.5px; line-height: 1;
+    font-weight: 700; cursor: pointer;
+    color: var(--accent-ink); background: var(--accent-soft);
+    border: 1px solid #e4d3bf; border-radius: 5px;
+    transition: background .12s, transform .08s; position: relative; top: -1px;
+  }
+  .cite:hover { background: #e9d9c6; transform: translateY(-1px); }
+  .cite.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* answer meta row: per-answer cost + sources */
+  .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+  .meta-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--ink-soft);
+    background: var(--surface); border: 1px solid var(--line);
+    padding: 4px 9px; border-radius: 999px;
+  }
+  .meta-pill.cost b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .meta-pill .served-mini { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+  .meta-pill code { font-family: var(--mono); font-size: 11.5px; }
+  .meta-pill.sources { cursor: pointer; }
+  .meta-pill.sources:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .meta-actions { margin-left: auto; display: flex; gap: 4px; }
+  .mini-btn {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-faint);
+    border-radius: 7px; width: 28px; height: 28px; cursor: pointer; display: grid; place-items: center;
+  }
+  .mini-btn:hover { color: var(--accent-ink); border-color: var(--line-strong); }
+
+  /* ---------- Deep-mode expandable (the "large portion behind collapse") ---------- */
+  .deep { margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fcfbf9; overflow: hidden; }
+  .deep-head {
+    display: flex; align-items: center; gap: 9px; cursor: pointer;
+    padding: 10px 13px; font-size: 13px; color: var(--ink-soft); user-select: none;
+  }
+  .deep-head .deep-tag {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+    color: var(--accent-ink); background: var(--accent-soft);
+    padding: 2px 7px; border-radius: 5px; border: 1px solid #e4d3bf;
+  }
+  .deep-head .caret { margin-left: auto; transition: transform .18s; color: var(--ink-faint); }
+  .deep.open .deep-head .caret { transform: rotate(90deg); }
+  .deep-body { display: none; padding: 4px 14px 16px 14px; }
+  .deep.open .deep-body { display: block; }
+
+  /* trace sub-section header */
+  .trace-sub {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--ink-faint); font-weight: 700; margin: 10px 2px 9px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .trace-sub .rid { margin-left: auto; font-family: var(--mono); font-weight: 500; text-transform: none; letter-spacing: 0; }
+
+  /* waterfall */
+  .waterfall { display: flex; flex-direction: column; gap: 6px; }
+  .wf-row { display: grid; grid-template-columns: 90px 1fr 96px; align-items: center; gap: 10px; }
+  .wf-label { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+  .wf-track { height: 17px; background: #efeae2; border-radius: 5px; position: relative; overflow: hidden; }
+  .wf-bar {
+    position: absolute; top: 0; bottom: 0; border-radius: 5px;
+    display: flex; align-items: center; padding-left: 7px;
+    font-family: var(--mono); font-size: 10px; color: #fff; font-weight: 700;
+  }
+  .wf-bar.retrieve { left: 0%;  width: 14%; background: var(--viz-teal); }
+  .wf-bar.embed    { left: 14%; width: 6%;  background: var(--viz-blue); }
+  .wf-bar.prompt   { left: 20%; width: 8%;  background: var(--viz-purple); }
+  .wf-bar.generate { left: 28%; width: 70%; background: linear-gradient(90deg,#a06a34,#8a5a2b); }
+  .wf-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); text-align: right; }
+  .wf-meta b { color: var(--ink); font-weight: 600; }
+  .trace-axis {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 9.5px; color: var(--ink-faint);
+    margin: 3px 0 14px; padding-left: 100px;
+  }
+
+  /* token/cost callouts */
+  .callouts { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
+  .callout { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; min-width: 84px; }
+  .callout .co-k { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-faint); }
+  .callout .co-v { font-family: var(--mono); font-size: 13.5px; font-weight: 650; margin-top: 3px; color: var(--ink); }
+  .callout.cost .co-v { color: var(--accent-ink); }
+
+  /* reasoning timeline */
+  .timeline { position: relative; margin-left: 6px; padding-left: 20px; }
+  .timeline::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 6px; width: 2px; background: var(--line-strong); }
+  .step { position: relative; padding: 7px 0; font-size: 13px; line-height: 1.5; }
+  .step::before {
+    content: ""; position: absolute; left: -20px; top: 11px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--surface); border: 2px solid var(--accent);
+  }
+  .step .k { display: inline-block; font-weight: 700; font-size: 11px; letter-spacing: .4px; text-transform: uppercase; margin-right: 7px; color: var(--accent-ink); }
+  .step.thought .k { color: var(--ink-soft); }
+  .step.observation .k { color: var(--good); }
+  .step.observation::before { border-color: var(--good); }
+  .step .code { font-family: var(--mono); font-size: 12px; background: #f4f1ec; padding: 1px 6px; border-radius: 4px; color: var(--accent-ink); }
+  .step .final-arrow { color: var(--accent); font-weight: 700; }
+
+  /* refusal answer */
+  .refusal { border: 1px solid #ecd9c6; background: var(--refuse-soft); border-radius: 14px; padding: 15px 17px; }
+  .refusal .refuse-head { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 14px; color: var(--refuse); margin-bottom: 7px; }
+  .refusal .refuse-head svg { flex: none; }
+  .refusal p { margin: 0; font-size: 14.5px; line-height: 1.6; color: #5a4636; }
+  .refusal .trust-tag {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 11px;
+    font-size: 12px; color: var(--good); background: var(--good-soft);
+    border: 1px solid #cfe6d8; padding: 4px 10px; border-radius: 999px;
+  }
+
+  /* ---------- Composer ---------- */
+  .composer-wrap {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    padding: 14px 24px 18px;
+    background: linear-gradient(to top, var(--bg) 62%, rgba(250,249,247,0));
+  }
+  .composer {
+    max-width: 760px; margin: 0 auto;
+    background: var(--surface); border: 1px solid var(--line-strong);
+    border-radius: 18px; box-shadow: 0 6px 30px rgba(31,35,40,.08);
+    padding: 8px 8px 8px 16px;
+  }
+  .composer-input-row { display: flex; align-items: flex-end; gap: 10px; }
+  .composer textarea {
+    flex: 1; border: none; outline: none; resize: none; background: transparent;
+    font-family: var(--sans); font-size: 15px; line-height: 1.5; color: var(--ink);
+    padding: 8px 0; max-height: 120px;
+  }
+  .send-btn {
+    flex: none; width: 38px; height: 38px; border-radius: 11px; border: none; cursor: pointer;
+    background: var(--accent); color: #fff; display: grid; place-items: center;
+    box-shadow: 0 2px 8px rgba(138,90,43,.35);
+  }
+  .send-btn:hover { background: var(--accent-ink); }
+  .composer-bar { display: flex; align-items: center; gap: 14px; padding: 4px 4px 2px 2px; margin-top: 2px; border-top: 1px solid var(--line); padding-top: 8px; }
+
+  /* deep toggle switch */
+  .toggle { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }
+  .switch { position: relative; width: 38px; height: 22px; border-radius: 999px; background: var(--line-strong); transition: background .18s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .18s; }
+  .toggle.on .switch { background: var(--accent); }
+  .toggle.on .switch::after { transform: translateX(16px); }
+  .toggle .tlabel { font-size: 13px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
+  .toggle.on .tlabel { color: var(--accent-ink); font-weight: 600; }
+  .toggle .thint { font-size: 11px; color: var(--ink-faint); }
+  .composer-foot { flex: 1; text-align: right; font-size: 11.5px; color: var(--ink-faint); }
+  .composer-foot .gdpr { display: inline-flex; align-items: center; gap: 6px; }
+  .composer-foot .gdpr .lock { color: var(--good); }
+
+  /* ---------- Drawer ---------- */
+  .scrim { position: fixed; inset: 0; background: rgba(31,35,40,.28); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 430px; max-width: 92vw; z-index: 50;
+    background: var(--surface); border-left: 1px solid var(--line);
+    box-shadow: -12px 0 40px rgba(31,35,40,.14);
+    transform: translateX(100%); transition: transform .26s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .drawer-head .dh-title { font-family: var(--serif); font-weight: 700; font-size: 16px; flex: 1; }
+  .drawer-head .dh-sub { font-size: 12px; color: var(--ink-faint); }
+  .drawer-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; }
+  .drawer-close:hover { background: var(--accent-soft); color: var(--accent-ink); }
+  .drawer-body { padding: 18px; overflow-y: auto; }
+  .source-card { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: #fcfbf9; }
+  .source-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; font-size: 12px; font-weight: 700; background: var(--accent); color: #fff; margin-bottom: 12px; }
+  .source-title { font-family: var(--serif); font-size: 17px; font-weight: 700; line-height: 1.3; }
+  .source-locator { font-size: 12.5px; color: var(--accent-ink); margin-top: 4px; display: inline-flex; align-items: center; gap: 6px; }
+  .source-locator code { font-family: var(--mono); }
+  .quote { margin: 15px 0 4px; padding: 14px 16px; border-left: 3px solid var(--accent); background: #fff; border-radius: 0 10px 10px 0; font-family: var(--serif); font-size: 15px; line-height: 1.7; color: #2b2620; }
+  .quote::before { content: "\201C"; font-size: 30px; color: var(--line-strong); line-height: 0; vertical-align: -8px; margin-right: 2px; }
+  .source-meta { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-faint); display: flex; flex-direction: column; gap: 7px; }
+  .source-meta .row { display: flex; align-items: center; gap: 8px; }
+  .source-meta .pd-badge { display: inline-flex; align-items: center; gap: 5px; color: var(--good); background: var(--good-soft); border: 1px solid #cfe6d8; padding: 2px 8px; border-radius: 999px; }
+  .drawer-foot { margin-top: auto; padding: 13px 18px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-faint); display: flex; align-items: center; gap: 7px; }
+  .drawer-foot .lock { color: var(--good); }
+
+  @media (max-width: 560px) {
+    .landing h1 { font-size: 25px; }
+    .topbar { padding: 10px 14px; }
+    .instruments { padding: 8px 14px; top: 53px; }
+    .scroll { padding: 18px 14px 160px; }
+    .composer-wrap { padding: 12px 14px 16px; }
+    .brand-tag { display: none; }
+    .inst-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="brand-name">Antic Historian</div>
+        <div class="brand-tag">Grounded answers with citations you can verify</div>
+      </div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="model-badge" title="Model serving this session — primary online">
+      <span class="dot"></span>
+      <span class="served">served by</span>
+      <code>deepseek-v4-pro</code>
+    </div>
+    <button class="icon-btn" title="New conversation" aria-label="New conversation">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </header>
+
+  <!-- INSTRUMENT CHIP STRIP (cockpit metrics, distilled to chips) -->
+  <div class="instruments" title="Live session instruments">
+    <span class="inst-chip cost" title="Total spend this session">
+      <span class="ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+      <span class="k">session</span><span class="v">$0.0024</span>
+    </span>
+    <span class="inst-chip" title="Average end-to-end latency">
+      <span class="ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
+      <span class="k">avg</span><span class="v">3.8s</span>
+    </span>
+    <span class="inst-chip served" title="Active model · primary healthy">
+      <span class="served-dot"></span><span class="k">served by</span><code>deepseek-v4-pro</code>
+    </span>
+    <span class="inst-chip cap" title="Per-session query cap — keeps the public demo inside free tiers">
+      <span class="ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg></span>
+      <span class="k">queries</span><span class="v">3<span style="color:var(--ink-faint);font-weight:500"> of 10</span></span>
+      <span class="meter"><i></i></span>
+    </span>
+
+    <span class="inst-div"></span>
+
+    <!-- Evals scorecard — golden-set quality metrics, click to expand -->
+    <span class="eval-group" onclick="openEvals()" title="Click for the full golden-set scorecard & methodology">
+      <span class="eval-tag">Evals · n=50</span>
+      <span class="ev">Faithful <b>4.40</b></span>
+      <span class="ev">Complete <b>4.62</b></span>
+      <span class="ev">Refusal <b>96%</b></span>
+      <span class="caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+    </span>
+
+    <span class="inst-spacer"></span>
+    <span class="inst-hint" title="The full per-request trace lives inside each answer's Deep mode panel">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      full trace in Deep mode
+    </span>
+  </div>
+
+  <!-- CONVERSATION -->
+  <main class="scroll">
+    <div class="col">
+
+      <!-- LANDING / EMPTY STATE -->
+      <section class="landing">
+        <h1>Ask the ancient world.</h1>
+        <p class="lede">Every answer is drawn strictly from public-domain primary sources, with inline citations you can open and read. No invented history.</p>
+        <div class="suggest">
+          <button class="chip" onclick="return false"><span class="chip-k">Try this</span>Did Caesar cross the Rubicon, and what did he say?</button>
+          <button class="chip" onclick="return false"><span class="chip-k">Try this</span>How did the Battle of Cannae unfold?</button>
+          <button class="chip" onclick="return false"><span class="chip-k">Try this</span>Why did the Roman Republic fall?</button>
+          <button class="chip refuse-trigger" onclick="return false"><span class="chip-k">See a refusal</span>What did Caesar think of the printing press?</button>
+        </div>
+      </section>
+
+      <div class="divider-note">Conversation</div>
+
+      <!-- Q1 -->
+      <div class="msg msg-user">
+        <div class="bubble-user">Did Caesar cross the Rubicon, and what did he say?</div>
+      </div>
+
+      <div class="msg msg-ai">
+        <div class="ai-avatar">A</div>
+        <div class="ai-body">
+          <div class="answer">
+            Caesar crossed the Rubicon in 49&nbsp;BC, an act of war against the Senate.<span class="cite" data-src="1" tabindex="0" role="button">1</span>
+            As he crossed he is said to have declared <span class="lat">&ldquo;the die is cast&rdquo; (alea iacta est)</span>.<span class="cite" data-src="2" tabindex="0" role="button">2</span>
+          </div>
+
+          <!-- META ROW (compact, always visible) -->
+          <div class="meta-row">
+            <span class="meta-pill cost" title="Total cost of producing this answer">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              this answer cost <b>$0.0008</b>
+            </span>
+            <span class="meta-pill" title="End-to-end latency"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg> 4.1s</span>
+            <span class="meta-pill sources" onclick="openDrawer('1')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              2 cited · 3 retrieved
+            </span>
+            <div class="meta-actions">
+              <button class="mini-btn" title="Copy" aria-label="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button class="mini-btn" title="Good answer" aria-label="Good answer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>
+            </div>
+          </div>
+
+          <!-- DEEP MODE (collapsed) — holds the heavy trace + reasoning -->
+          <div class="deep" id="deep1">
+            <div class="deep-head" onclick="toggleDeep('deep1')">
+              <span class="deep-tag">Deep mode</span>
+              <span>Pipeline trace &amp; agent reasoning · 4 steps · 3 passages</span>
+              <svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+            <div class="deep-body">
+
+              <!-- pipeline trace waterfall -->
+              <div class="trace-sub">Pipeline trace<span class="rid">req_8f3a1 · total 4.1s</span></div>
+              <div class="waterfall">
+                <div class="wf-row"><span class="wf-label">retrieve</span><div class="wf-track"><div class="wf-bar retrieve">412ms</div></div><span class="wf-meta"><b>3</b> passages</span></div>
+                <div class="wf-row"><span class="wf-label">embed q</span><div class="wf-track"><div class="wf-bar embed">180ms</div></div><span class="wf-meta">qwen3 · 1024d</span></div>
+                <div class="wf-row"><span class="wf-label">build prompt</span><div class="wf-track"><div class="wf-bar prompt">240ms</div></div><span class="wf-meta"><b>19,240</b> tok</span></div>
+                <div class="wf-row"><span class="wf-label">generate</span><div class="wf-track"><div class="wf-bar generate">3,268ms</div></div><span class="wf-meta"><b>286</b> tok out</span></div>
+              </div>
+              <div class="trace-axis"><span>0s</span><span>1s</span><span>2s</span><span>3s</span><span>4.1s</span></div>
+
+              <!-- token/cost callouts -->
+              <div class="callouts">
+                <div class="callout"><div class="co-k">retrieve</div><div class="co-v">412 ms</div></div>
+                <div class="callout"><div class="co-k">passages</div><div class="co-v">3</div></div>
+                <div class="callout"><div class="co-k">prompt tok</div><div class="co-v">19,240</div></div>
+                <div class="callout"><div class="co-k">completion</div><div class="co-v">286</div></div>
+                <div class="callout cost"><div class="co-k">cost</div><div class="co-v">$0.0008</div></div>
+                <div class="callout"><div class="co-k">total</div><div class="co-v">4.1 s</div></div>
+              </div>
+
+              <!-- agent reasoning timeline -->
+              <div class="trace-sub">Agent reasoning · ReAct</div>
+              <div class="timeline">
+                <div class="step thought"><span class="k">Thought</span>I need primary sources on the Rubicon crossing and any recorded quotation.</div>
+                <div class="step action"><span class="k">Action</span><span class="code">search_corpus("Caesar crossing the Rubicon quote")</span></div>
+                <div class="step observation"><span class="k">Observation</span>3 passages — Suetonius §31–32, Plutarch <i>Caesar</i> §32, Appian <i>Civil Wars</i> 2.35</div>
+                <div class="step thought"><span class="k">Thought</span>Plutarch records the quotation directly; Suetonius corroborates the crossing.</div>
+                <div class="step"><span class="final-arrow">→</span> Composed final answer citing Suetonius&nbsp;[1] and Plutarch&nbsp;[2].</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q2: REFUSAL -->
+      <div class="msg msg-user">
+        <div class="bubble-user">What did Caesar think of the printing press?</div>
+      </div>
+
+      <div class="msg msg-ai">
+        <div class="ai-avatar">A</div>
+        <div class="ai-body">
+          <div class="refusal">
+            <div class="refuse-head">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+              No source in the corpus
+            </div>
+            <p>I don&rsquo;t have a source for that. The printing press postdates Caesar by roughly fifteen centuries, and nothing in the corpus connects the two — so rather than invent a quotation or speculate, I&rsquo;m declining to answer.</p>
+            <span class="trust-tag">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              This is the system working as intended — grounded or silent.
+            </span>
+          </div>
+
+          <div class="meta-row">
+            <span class="meta-pill cost"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> this answer cost <b>$0.0002</b></span>
+            <span class="meta-pill" title="End-to-end latency"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg> 0.9s</span>
+            <span class="meta-pill" title="No passages met the grounding threshold">0 passages above threshold</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- COMPOSER -->
+  <div class="composer-wrap">
+    <div class="composer">
+      <div class="composer-input-row">
+        <textarea rows="1" placeholder="Ask about the ancient Greco-Roman world…"></textarea>
+        <button class="send-btn" title="Send" aria-label="Send"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+      </div>
+      <div class="composer-bar">
+        <div class="toggle on" id="deepToggle" onclick="toggleDeepMode()">
+          <span class="switch"></span>
+          <span class="tlabel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z"/><path d="M9 21h6"/></svg> Deep mode</span>
+          <span class="thint">streams the trace &amp; the agent&rsquo;s reasoning</span>
+        </div>
+        <div class="composer-foot">
+          <span class="gdpr"><span class="lock">●</span> EU-hosted · GDPR-native</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SCRIM + DRAWER -->
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div>
+      <div class="dh-title" id="drawerTitle">Source</div>
+      <div class="dh-sub">Verified primary-source passage</div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="drawer-body" id="drawerBody"><!-- filled by JS --></div>
+  <div class="drawer-foot"><span class="lock">●</span> Quoted verbatim from EU-hosted public-domain corpus</div>
+</aside>
+
+<!-- EVALS SCORECARD MODAL -->
+<div class="eval-scrim" id="evalScrim" onclick="closeEvals()"></div>
+<div class="eval-modal" id="evalModal" role="dialog" aria-modal="true" aria-hidden="true">
+  <button class="em-close" onclick="closeEvals()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <div class="em-head">
+    <div>
+      <div class="em-t">How good is it, really?</div>
+      <div class="em-sub">Measured on a curated golden set — not vibes.</div>
+    </div>
+    <span class="em-n">n = 50 questions</span>
+  </div>
+  <div class="em-body">
+    <div class="score-grid">
+      <div class="score">
+        <div class="s-k">Faithfulness</div>
+        <div class="s-v">4.40<small>/5</small></div>
+        <div class="s-bar"><i style="width:88%"></i></div>
+      </div>
+      <div class="score">
+        <div class="s-k">Completeness</div>
+        <div class="s-v">4.62<small>/5</small></div>
+        <div class="s-bar"><i style="width:92%"></i></div>
+      </div>
+      <div class="score amber-top">
+        <div class="s-k">Refusal accuracy</div>
+        <div class="s-v">96<small>%</small></div>
+        <div class="s-bar"><i style="width:96%"></i></div>
+      </div>
+    </div>
+
+    <div class="em-sec-title">Question categories</div>
+    <div class="cat-row">
+      <span class="cat">Literal <b>10</b></span>
+      <span class="cat">Synonym <b>10</b></span>
+      <span class="cat">Multi-hop <b>10</b></span>
+      <span class="cat">Synthesis <b>10</b></span>
+      <span class="cat oos">Out-of-scope <b>10</b></span>
+    </div>
+
+    <div class="em-sec-title">Methodology</div>
+    <p class="method">
+      Each answer is scored by an LLM judge (<code>kimi-k2.6</code> + <code>qwen3.7-max</code>, attribution split) against a hand-authored 50-question golden set spanning literal recall, synonym, multi-hop, synthesis, and deliberate out-of-scope questions. <b>Faithfulness</b> = every claim traceable to a cited passage; <b>completeness</b> = the answer covers what the sources support; <b>refusal accuracy</b> = correctly declining the out-of-scope set instead of inventing.
+    </p>
+  </div>
+  <div class="em-foot">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg>
+    <span class="honest">Golden-set results, n=50 and curated — expandable, and reported with their limits. Not live per-query scores.</span>
+  </div>
+</div>
+
+<script>
+  const SOURCES = {
+    "1": {
+      title: "The Life of Julius Caesar", author: "Suetonius", locator: "§31–32",
+      quote: "Then Caesar overtook his cohorts at the river Rubicon, which was the boundary of his province. He paused for a while, and… &lsquo;Let us go,&rsquo; said he, &lsquo;whither the omens of the Gods and the iniquity of our enemies call us. The die is now cast.&rsquo;",
+      pd: "Public domain — EU (author died before 200 AD; translation pre-1900)"
+    },
+    "2": {
+      title: "Life of Caesar", author: "Plutarch", locator: "§32",
+      quote: "He said in Greek with a loud voice to those who were present &lsquo;Let the die be cast,&rsquo; and led the army across.",
+      pd: "Public domain — EU (author died before 200 AD; translation pre-1900)"
+    }
+  };
+
+  const drawer = document.getElementById('drawer');
+  const scrim  = document.getElementById('scrim');
+  const body   = document.getElementById('drawerBody');
+  const title  = document.getElementById('drawerTitle');
+
+  function renderSource(id){
+    const s = SOURCES[id];
+    if(!s) return '';
+    return `
+      <div class="source-card">
+        <div class="source-num">${id}</div>
+        <div class="source-title">${s.title}</div>
+        <div class="source-locator"><strong>${s.author}</strong><span>·</span><code>${s.locator}</code></div>
+        <blockquote class="quote">${s.quote}</blockquote>
+        <div class="source-meta">
+          <div class="row">
+            <span class="pd-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Public domain</span>
+            <span>${s.pd}</span>
+          </div>
+          <div class="row">Retrieved by dense semantic search · contextualized passage</div>
+        </div>
+      </div>`;
+  }
+
+  function openDrawer(id){
+    body.innerHTML = renderSource(id);
+    title.textContent = 'Citation [' + id + ']';
+    drawer.classList.add('open'); scrim.classList.add('open');
+    drawer.setAttribute('aria-hidden','false');
+    document.querySelectorAll('.cite').forEach(c => c.classList.toggle('active', c.dataset.src === id));
+  }
+  function closeDrawer(){
+    drawer.classList.remove('open'); scrim.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+    document.querySelectorAll('.cite').forEach(c => c.classList.remove('active'));
+  }
+
+  document.querySelectorAll('.cite').forEach(c => {
+    c.addEventListener('click', () => openDrawer(c.dataset.src));
+    c.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDrawer(c.dataset.src);} });
+  });
+  // evals scorecard modal
+  const evalModal = document.getElementById('evalModal');
+  const evalScrim = document.getElementById('evalScrim');
+  function openEvals(){ evalModal.classList.add('open'); evalScrim.classList.add('open'); evalModal.setAttribute('aria-hidden','false'); }
+  function closeEvals(){ evalModal.classList.remove('open'); evalScrim.classList.remove('open'); evalModal.setAttribute('aria-hidden','true'); }
+
+  document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeDrawer(); closeEvals(); } });
+
+  // deep-mode expandable in a message
+  function toggleDeep(id){ document.getElementById(id).classList.toggle('open'); }
+  // composer deep-mode switch (visual)
+  function toggleDeepMode(){ document.getElementById('deepToggle').classList.toggle('on'); }
+
+  const ta = document.querySelector('.composer textarea');
+  ta.addEventListener('input', () => { ta.style.height='auto'; ta.style.height = Math.min(ta.scrollHeight,120)+'px'; });
+</script>
+</body>
+</html>

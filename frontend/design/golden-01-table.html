@@ -1,0 +1,514 @@
+<!-- Golden A: Expandable result table — one row per question, expand for detail; filters + failures toggle; palette matches chat -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Golden set — Antic Historian</title>
+<style>
+:root{--bg:#faf9f7;--surface:#ffffff;--ink:#1f2328;--ink-soft:#5b6168;--ink-faint:#8b9098;--line:#e8e5e0;--line-strong:#d8d4cd;--accent:#8a5a2b;--accent-soft:#f3ebe1;--accent-ink:#6b4420;--good:#2f7d4f;--good-soft:#e7f3ec;--amber:#c9831f;--amber-soft:#faf0dd;--refuse:#b5621f;--refuse-soft:#fbf1e8;--shadow:0 1px 2px rgba(31,35,40,.06),0 6px 24px rgba(31,35,40,.05);--serif:Georgia,'Times New Roman',Times,serif;--sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,'Cascadia Code','Consolas','SF Mono',Menlo,monospace;}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+
+/* ---- top bar ---- */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(250,249,247,.88);backdrop-filter:saturate(160%) blur(10px);border-bottom:1px solid var(--line);}
+.topbar-inner{max-width:1180px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:16px;}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink);}
+.brand-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(145deg,#9c6a39,#6b4420);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-size:18px;font-weight:700;box-shadow:var(--shadow);flex:none;}
+.brand-name{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.2px;}
+.nav{margin-left:auto;display:flex;align-items:center;gap:4px;}
+.nav a{text-decoration:none;color:var(--ink-soft);font-size:14px;font-weight:500;padding:7px 13px;border-radius:8px;}
+.nav a:hover{color:var(--ink);background:var(--surface);}
+.nav a.active{color:var(--accent-ink);background:var(--accent-soft);font-weight:600;}
+
+/* ---- page shell ---- */
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 56px;}
+.page-head h1{font-family:var(--serif);font-size:30px;line-height:1.18;font-weight:600;margin:6px 0 8px;letter-spacing:.2px;}
+.page-head .intro{color:var(--ink-soft);font-size:15.5px;max-width:760px;margin:0;}
+.sample-note{display:inline-block;margin-top:12px;font-size:11.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--line-strong);padding:3px 9px;border-radius:999px;}
+
+/* ---- aggregate stat bar ---- */
+.statbar{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0 8px;}
+.stat{flex:1 1 150px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow);}
+.stat .label{font-size:11.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);}
+.stat .num{font-family:var(--mono);font-size:24px;font-weight:600;margin-top:4px;line-height:1.1;}
+.stat .sub{font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+.num.good{color:var(--good);}.num.amber{color:var(--amber);}.num.refuse{color:var(--refuse);}
+
+/* ---- per-category aggregate table ---- */
+.cat-aggs{margin:18px 0 4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+.cat-aggs .cah{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);}
+.cat-aggs .cah h3{margin:0;font-size:13px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--ink-soft);}
+.cat-aggs .cah .hint{font-size:12px;color:var(--ink-faint);}
+.cat-aggs .cah .grp-key{display:flex;gap:14px;font-size:11px;color:var(--ink-faint);}
+.cat-aggs .cah .grp-key b{color:var(--ink-soft);}
+.catscroll{overflow-x:auto;}
+table.catagg{width:100%;border-collapse:collapse;min-width:720px;}
+table.catagg th,table.catagg td{padding:9px 14px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;}
+table.catagg thead th{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);background:#f6f4f0;}
+table.catagg thead tr.grphead th{padding-top:9px;padding-bottom:4px;border-bottom:0;color:var(--ink-soft);}
+table.catagg thead tr.grphead th.gr-ret{color:#3a6ea5;}
+table.catagg thead tr.grphead th.gr-judge{color:var(--accent-ink);}
+table.catagg thead tr.subhead th{padding-top:2px;}
+table.catagg td.catname{text-align:left;font-weight:600;font-size:13px;}
+table.catagg td.catname .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle;}
+table.catagg tbody tr:hover{background:#fcfbf9;}
+table.catagg tbody tr.overall{background:#f6f4f0;font-weight:700;}
+table.catagg tbody tr.overall td.catname{font-weight:700;}
+table.catagg .grp-sep{border-left:1px solid var(--line-strong);}
+
+/* ---- control row ---- */
+.controls{position:sticky;top:55px;z-index:30;background:rgba(250,249,247,.92);backdrop-filter:saturate(160%) blur(8px);padding:14px 0 12px;margin-top:14px;border-bottom:1px solid var(--line);}
+.tabs{display:flex;flex-wrap:wrap;gap:7px;}
+.tab{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);font-size:13px;font-weight:500;padding:6px 12px;border-radius:999px;cursor:pointer;user-select:none;transition:border-color .12s,background .12s;}
+.tab:hover{border-color:var(--line-strong);color:var(--ink);}
+.tab.active{background:var(--accent-soft);border-color:var(--accent-ink);color:var(--accent-ink);font-weight:600;}
+.tab .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+.tab .cnt{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);}
+.tab.active .cnt{color:var(--accent-ink);}
+
+.row2{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:11px;}
+.search{flex:1 1 280px;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 12px;box-shadow:var(--shadow);}
+.search svg{flex:none;color:var(--ink-faint);}
+.search input{border:0;outline:0;background:transparent;font-family:var(--sans);font-size:14px;color:var(--ink);width:100%;}
+.search input::placeholder{color:var(--ink-faint);}
+.toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none;font-size:13.5px;font-weight:500;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);padding:7px 13px;border-radius:9px;box-shadow:var(--shadow);}
+.toggle:hover{border-color:var(--line-strong);}
+.toggle .sw{width:34px;height:19px;border-radius:999px;background:var(--line-strong);position:relative;transition:background .15s;flex:none;}
+.toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s;}
+.toggle.on{color:var(--refuse);border-color:var(--refuse);}
+.toggle.on .sw{background:var(--refuse);}
+.toggle.on .sw::after{transform:translateX(15px);}
+.showing{font-size:12.5px;color:var(--ink-faint);margin-left:auto;font-family:var(--mono);}
+
+/* ---- table ---- */
+.tablewrap{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.scrollx{overflow-x:auto;}
+table.qtable{width:100%;border-collapse:collapse;min-width:1060px;}
+table.qtable thead th{background:#f6f4f0;text-align:left;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);padding:10px 12px;border-bottom:1px solid var(--line-strong);}
+table.qtable thead tr.grphead th{padding:9px 12px 4px;border-bottom:0;text-align:center;}
+table.qtable thead tr.grphead th.gr-ret{color:#3a6ea5;}
+table.qtable thead tr.grphead th.gr-judge{color:var(--accent-ink);}
+table.qtable thead tr.colhead th{padding-top:4px;}
+thead th.c{text-align:center;}
+thead th.grp-sep,td.grp-sep{border-left:1px solid var(--line-strong);}
+tbody tr.qrow{border-bottom:1px solid var(--line);cursor:pointer;transition:background .1s;}
+tbody tr.qrow:nth-child(4n+3){background:#fcfbf9;} /* zebra accounting for detail rows */
+tbody tr.qrow:hover{background:var(--accent-soft);}
+tbody tr.qrow.open{background:var(--accent-soft);}
+td{padding:13px 12px;vertical-align:middle;}
+td.exp{width:30px;color:var(--ink-faint);text-align:center;}
+.caret{display:inline-block;transition:transform .15s;font-size:11px;}
+tr.qrow.open .caret{transform:rotate(90deg);}
+td.id{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);white-space:nowrap;}
+td.qcell{max-width:1px;width:100%;}
+td.qcell .qtext{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;color:var(--ink);}
+td.metric{text-align:center;white-space:nowrap;}
+
+/* category badge */
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid transparent;}
+.badge .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+
+/* metric chips */
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:46px;font-family:var(--mono);font-size:12.5px;font-weight:600;padding:3px 8px;border-radius:7px;border:1px solid transparent;}
+.chip.good{background:var(--good-soft);color:var(--good);border-color:#cfe6d8;}
+.chip.amber{background:var(--amber-soft);color:#a96c14;border-color:#eed8b0;}
+.chip.refuse{background:var(--refuse-soft);color:var(--refuse);border-color:#eecfb8;}
+.chip.muted{background:transparent;color:var(--ink-faint);border-color:transparent;min-width:0;font-weight:500;}
+.refusalchip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:8px;border:1px solid transparent;}
+.refusalchip.good{background:var(--good-soft);color:var(--good);border-color:#cfe6d8;}
+.refusalchip.refuse{background:var(--refuse-soft);color:var(--refuse);border-color:#eecfb8;}
+
+/* detail panel */
+tr.detail td{padding:0;border-bottom:1px solid var(--line);}
+.panel{background:#fcfbf9;padding:0 0 0 0;display:none;}
+tr.detail.open .panel{display:block;}
+.panel-in{padding:18px 22px 20px;display:grid;grid-template-columns:1fr 320px;gap:26px;}
+.panel .lbl{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px;}
+.panel .ideal{font-family:var(--serif);font-size:15.5px;line-height:1.55;color:var(--ink);}
+.answerblock{margin-top:6px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;font-size:14.5px;line-height:1.6;color:var(--ink);}
+.answerblock .acite{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;margin:0 1px;vertical-align:super;font-size:10px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);border:1px solid #e4d3bf;border-radius:4px;position:relative;top:-1px;}
+.answerblock.refused{border-left-color:var(--refuse);color:var(--ink-soft);}
+.block-gap{margin-top:16px;}
+.srcchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
+.srcchip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--line-strong);padding:4px 10px;border-radius:7px;font-family:var(--mono);}
+.srcchip::before{content:"§";color:var(--accent);font-weight:700;}
+.metric-readout{margin-top:18px;}
+.mr-item{display:flex;align-items:baseline;gap:10px;padding:8px 0;border-top:1px solid var(--line);}
+.mr-item:first-child{border-top:0;}
+.mr-val{flex:none;}
+.mr-name{font-size:13.5px;font-weight:600;color:var(--ink);}
+.mr-gloss{font-size:12.5px;color:var(--ink-soft);}
+.oos-note{font-family:var(--serif);font-size:15.5px;color:var(--ink-soft);line-height:1.5;}
+.oos-verdict{margin-top:14px;}
+
+.sidecard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;align-self:start;}
+.sidecard .catline{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.sidecard .catdesc{font-size:13px;color:var(--ink-soft);line-height:1.5;}
+
+.empty{padding:40px;text-align:center;color:var(--ink-faint);font-size:14px;}
+
+/* footer */
+.footnote{margin-top:18px;font-size:12.5px;color:var(--ink-faint);line-height:1.6;}
+.footnote b{color:var(--ink-soft);font-weight:600;}
+.sitefoot{max-width:1180px;margin:30px auto 0;padding:18px 24px 30px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;}
+.sitefoot .gdot{width:9px;height:9px;border-radius:50%;background:var(--good);flex:none;}
+
+@media(max-width:760px){
+  .panel-in{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#">
+      <span class="brand-mark">A</span>
+      <span class="brand-name">Antic Historian</span>
+    </a>
+    <nav class="nav">
+      <a href="#">Chat</a>
+      <a href="#">Sources</a>
+      <a href="#" class="active">Golden set</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="page-head">
+    <h1>Golden set — how it performs, measured</h1>
+    <p class="intro">Every retrieval and generation decision in this project is justified against this question set. Browse all 140 — including the hard categories and the failures.</p>
+    <div><span class="sample-note">Illustrative sample data</span></div>
+  </div>
+
+  <!-- aggregate stat bar -->
+  <section class="statbar" id="statbar"></section>
+
+  <!-- per-category aggregates -->
+  <section class="cat-aggs">
+    <div class="cah">
+      <h3>Per-category results</h3>
+      <span class="grp-key"><span><b>Retrieval</b> recall@5 · recall@20 · MRR</span><span><b>Judge</b> faithful · complete · attribution</span></span>
+    </div>
+    <div class="catscroll">
+      <table class="catagg" id="catAggTable"></table>
+    </div>
+  </section>
+
+  <!-- controls -->
+  <section class="controls">
+    <div class="tabs" id="tabs"></div>
+    <div class="row2">
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input id="search" type="text" placeholder="Search by id or question…" autocomplete="off">
+      </label>
+      <div class="toggle" id="failToggle" role="switch" aria-checked="false">
+        <span class="sw"></span><span>Failures only</span>
+      </div>
+      <span class="showing" id="showing"></span>
+    </div>
+  </section>
+
+  <!-- table -->
+  <div class="tablewrap">
+    <div class="scrollx">
+      <table class="qtable">
+        <thead>
+          <tr class="grphead">
+            <th></th><th></th><th></th><th></th>
+            <th class="gr-ret grp-sep" colspan="3">Retrieval</th>
+            <th class="gr-judge grp-sep" colspan="3">Judge</th>
+          </tr>
+          <tr class="colhead">
+            <th class="exp"></th>
+            <th style="width:88px;">ID</th>
+            <th style="width:132px;">Category</th>
+            <th>Question</th>
+            <th class="c grp-sep" style="width:66px;">R@5</th>
+            <th class="c" style="width:66px;">R@20</th>
+            <th class="c" style="width:64px;">MRR</th>
+            <th class="c grp-sep" style="width:70px;">Faithful</th>
+            <th class="c" style="width:74px;">Complete</th>
+            <th class="c" style="width:78px;">Attrib.</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="footnote">
+    <b>Two metric tiers:</b> retrieval (recall@k, free, run constantly) and judge (faithfulness/completeness/refusal, LLM-judged at phase boundaries). Numbers shown are illustrative sample data.
+  </p>
+</main>
+
+<footer class="sitefoot">
+  <span class="gdot"></span><span>EU-hosted · GDPR-native</span>
+</footer>
+
+<script>
+const CAT_META = {
+  "literal":       {color:"#3a6ea5", desc:"Answer sits verbatim in one passage."},
+  "synonym":       {color:"#6b8e23", desc:"Modern wording vs Victorian translation (vocabulary mismatch)."},
+  "multi-hop":     {color:"#8a5a2b", desc:"Combine facts from different passages."},
+  "synthesis":     {color:"#a05a8a", desc:"Distributed answer within one work."},
+  "cross-book":    {color:"#2f8f8f", desc:"Synthesis across two or more works."},
+  "contradiction": {color:"#b5621f", desc:"Sources disagree; the answer must attribute each version."},
+  "out-of-scope":  {color:"#8b9098", desc:"Not in the corpus — an honest refusal is the correct answer."}
+};
+const CAT_ORDER = ["literal","synonym","multi-hop","synthesis","cross-book","contradiction","out-of-scope"];
+
+// full-set aggregates (illustrative)
+const AGG = {n:140, recall:78, r20:91, mrr:0.66, faith:4.40, comp:4.62, attrib:4.55, refusal:96};
+const CAT_AGG = {
+  "literal":      {recall:92, r20:98, mrr:0.74, faith:4.7, comp:4.6, attrib:null},
+  "synonym":      {recall:71, r20:86, mrr:0.56, faith:4.1, comp:4.0, attrib:null},
+  "multi-hop":    {recall:64, r20:81, mrr:0.42, faith:3.6, comp:3.7, attrib:null},
+  "synthesis":    {recall:74, r20:88, mrr:0.57, faith:4.3, comp:4.6, attrib:null},
+  "cross-book":   {recall:70, r20:87, mrr:0.52, faith:4.2, comp:4.4, attrib:4.2},
+  "contradiction":{recall:88, r20:97, mrr:0.78, faith:4.5, comp:4.6, attrib:4.6},
+  "out-of-scope": {refusal:96}
+};
+// overall row for the per-category table
+const CAT_AGG_OVERALL = {recall:AGG.recall, r20:AGG.r20, mrr:AGG.mrr, faith:AGG.faith, comp:AGG.comp, attrib:AGG.attrib};
+
+// attrib = attribution score /5 (correctly crediting each competing version to the right
+// source); null where not applicable (single-fact categories). answer = the produced model
+// answer (distinct from ideal); [n] markers are inline citations.
+const GOLDEN=[
+ {id:"lit-001",cat:"literal",q:"How many wounds did Julius Caesar receive when he was assassinated?",ideal:"Twenty-three wounds (Suetonius), corroborated across Appian, Plutarch, Livy and Smith.",answer:"Julius Caesar received twenty-three wounds. Suetonius records he was “stabbed with three and twenty wounds,”[1] and Plutarch and Appian give the same count from independent narratives.[2][3]",sources:["Suetonius, Julius 82","Appian, Civil Wars 2.117","Plutarch, Caesar 66","Livy, Periochae 116"],recall:100,r20:100,mrr:0.95,faith:4.8,comp:4.9,attrib:null},
+ {id:"lit-005",cat:"literal",q:"Whom did the Athenians send as a runner to Sparta before Marathon, and what happened on the way?",ideal:"Pheidippides; the god Pan met him on Mt Parthenion and reproached the Athenians for neglecting him.",answer:"The Athenians sent Pheidippides, a professional long-distance runner. On the way, by Mount Parthenion above Tegea, the god Pan met him and asked why the Athenians paid him no honour.[1]",sources:["Herodotus 6.105","Grote, vol. IV","Pausanias 1.28","Bury, History of Greece"],recall:100,r20:100,mrr:0.88,faith:4.7,comp:4.6,attrib:null},
+ {id:"lit-019",cat:"literal",q:"What did Maharbal say to Hannibal after Cannae?",ideal:"“You know how to conquer, Hannibal, but you do not know how to make use of your victory.”",answer:"After Cannae, when Hannibal hesitated to march on Rome, his cavalry commander Maharbal rebuked him: “You know how to conquer, Hannibal; but you do not know how to make use of your victory.”[1]",sources:["Livy 22.51"],recall:100,r20:100,mrr:1.00,faith:5.0,comp:4.7,attrib:null},
+ {id:"syn-003",cat:"synonym",q:"Which “falling sickness” was Julius Caesar reported to suffer from?",ideal:"Epilepsy — ancient writers describe Caesar's “falling sickness” (morbus comitialis).",answer:"The “falling sickness” was epilepsy. Plutarch and Suetonius both report that Caesar was subject to it, noting he was first seized by it at Corduba.[1][2]",sources:["Plutarch, Caesar 17","Suetonius, Julius 45"],recall:80,r20:90,mrr:0.62,faith:4.2,comp:4.0,attrib:null},
+ {id:"syn-007",cat:"synonym",q:"What did Herodotus call the “river-horse” of the Nile?",ideal:"The “horse of the river” (hippopotamus), among the sacred animals of Egypt.",answer:"Herodotus describes the “horse of the river” — the hippopotamus — among the sacred animals of Egypt, though his physical description is notably inaccurate.[1]",sources:["Herodotus 2.71"],recall:67,r20:83,mrr:0.51,faith:3.9,comp:3.8,attrib:null},
+ {id:"mh-002",cat:"multi-hop",q:"From where did the lawgiver who served as guardian to a Spartan king bring Sparta's institutions?",ideal:"Lycurgus, guardian of the king, brought Sparta's laws from Crete (per Herodotus).",answer:"The lawgiver was Lycurgus, guardian of the Spartan king. Herodotus reports the Lacedaemonians said he brought their institutions from Crete.[1]",sources:["Herodotus 1.65","Plutarch, Lycurgus 4"],recall:60,r20:80,mrr:0.40,faith:3.6,comp:3.5,attrib:null},
+ {id:"mh-006",cat:"multi-hop",q:"Which general won at Zama, and which earlier Roman defeat had he survived as a young man?",ideal:"Scipio Africanus won Zama; he had survived the disaster at Cannae years earlier.",answer:"Scipio Africanus defeated Hannibal at Zama.[1] He had served in Rome's earlier campaigns against Carthage before taking the command in Africa.",sources:["Livy 30.35","Polybius 15.14","Livy 22.49"],recall:50,r20:70,mrr:0.33,faith:3.3,comp:3.6,attrib:null},
+ {id:"syn-syn-002",cat:"synthesis",q:"How does Caesar portray the Gauls in his commentaries?",ideal:"Brave but impulsive and politically fractious — quick to war, fond of novelty, prone to faction.",answer:"Caesar portrays the Gauls as brave and warlike but impulsive and politically divided — quick to take up arms,[1] eager for revolution and news,[2] and riven by faction down to the household level.[3]",sources:["Caesar, BG 1.1","Caesar, BG 4.5","Caesar, BG 6.11"],recall:75,r20:88,mrr:0.58,faith:4.4,comp:4.7,attrib:null},
+ {id:"syn-syn-005",cat:"synthesis",q:"How does Tacitus characterise the Germans' way of life?",ideal:"Free, warlike and tribal; valuing honour and shield, disdaining settled luxury (Germania).",answer:"Tacitus presents the Germans as a free, warlike, tribal people for whom the greatest disgrace is to abandon one's shield,[1] who prize their chiefs' valour[2] and disdain settled wealth.[3]",sources:["Tacitus, Germania 6","Germania 14","Germania 22"],recall:71,r20:85,mrr:0.55,faith:4.3,comp:4.5,attrib:null},
+ {id:"cb-003",cat:"cross-book",q:"How do Greek and Roman sources together describe Hannibal's crossing of the Alps?",ideal:"Polybius and Livy both narrate the brutal passage with heavy losses; surviving-army figures differ.",answer:"Polybius and Livy both describe a brutal Alpine passage with heavy losses from cold, terrain and native attacks.[1][2] Polybius cites Hannibal's own Lacinian inscription for the surviving numbers; Livy notes the figures are disputed.[2]",sources:["Polybius 3.50","Livy 21.35","Appian, Hannibalic War"],recall:67,r20:83,mrr:0.49,faith:4.1,comp:4.3,attrib:4.0},
+ {id:"cb-008",cat:"cross-book",q:"What do the sources collectively report about Alexander founding cities in his own and his horse's name?",ideal:"Arrian and Plutarch record Alexandria and Bucephala, named for Alexander and his horse Bucephalas.",answer:"Arrian records that Alexander founded Bucephala in memory of his horse Bucephalas,[1] and the sources together attest the many Alexandrias named for the king himself.[2]",sources:["Arrian 5.19","Plutarch, Alexander","Bury, History of Greece"],recall:75,r20:92,mrr:0.60,faith:4.5,comp:4.4,attrib:4.3},
+ {id:"con-001",cat:"contradiction",q:"How did Romulus die?",ideal:"Sources disagree: carried to heaven as Quirinus (Livy/Plutarch) vs torn apart by the senators — attribute both.",answer:"The sources disagree. Livy and Plutarch give the official version — Romulus was caught up to heaven in a storm and worshipped as Quirinus[1][2] — but both also preserve a rumour that the senators tore him to pieces;[1][2] Appian states the contradiction in one clause.[3]",sources:["Livy 1.16","Plutarch, Romulus","Appian, Foreign Wars"],recall:100,r20:100,mrr:0.82,faith:4.6,comp:4.8,attrib:4.7},
+ {id:"con-016",cat:"contradiction",q:"How many Romans were killed at the battle of Cannae?",ideal:"Polybius ~70,000 dead; Livy 40,000 foot + 2,700 horse — give both figures with attribution.",answer:"The figures differ by source. Polybius puts the Roman dead at about seventy thousand,[1] while Livy gives a smaller toll of forty thousand foot and two thousand seven hundred horse.[2]",sources:["Polybius 3.117","Livy 22.49"],recall:100,r20:100,mrr:0.90,faith:4.7,comp:4.6,attrib:4.8},
+ {id:"con-002",cat:"contradiction",q:"How did Themistocles die?",ideal:"Thucydides: disease (suicide a rumor); Plutarch: bull's-blood suicide as the usual story — attribute both.",answer:"Thucydides says disease was the real cause, noting the poison-suicide only as a rumour.[1] Plutarch gives the dramatic bull's-blood suicide as “the usual story,” while allowing a fast-acting poison as an alternative.[2]",sources:["Thucydides 1.138","Plutarch, Themistocles","Bury, History of Greece"],recall:83,r20:100,mrr:0.71,faith:4.4,comp:4.5,attrib:4.2},
+ {id:"oos-001",cat:"out-of-scope",q:"What did Caesar think of the printing press?",ideal:null,answer:"I don't have a source for that in the corpus. The printing press postdates Caesar by roughly fifteen centuries, so rather than speculate, I'm declining to answer.",sources:[],refusal:"pass"},
+ {id:"oos-004",cat:"out-of-scope",q:"Who painted the ceiling of the Sistine Chapel?",ideal:null,answer:"That falls outside this corpus of ancient Greco-Roman sources — I have no passage to cite, so I won't answer.",sources:[],refusal:"pass"},
+ {id:"oos-009",cat:"out-of-scope",q:"What does the Bayeux Tapestry depict about the Battle of Hastings?",ideal:null,answer:"I don't have a source for that. The corpus covers Greco-Roman antiquity and contains nothing on the Bayeux Tapestry or Hastings, so I'm declining to answer.",sources:[],refusal:"pass"},
+ {id:"oos-014",cat:"out-of-scope",q:"How did Augustus reform the Roman postal telegraph system?",ideal:null,answer:"Augustus organised the cursus publicus, a relay courier system with stations along the main roads, to speed official messages.[1]  ⚠ The question's “telegraph” framing is anachronistic — the model should have flagged this and refused rather than answering.",sources:[],refusal:"fail"},
+];
+
+const TOTAL = 140;
+
+// ---- color rule helpers ----
+function recallClass(r){ return r>=85 ? "good" : r>=60 ? "amber" : "refuse"; }
+function scoreClass(s){ return s>=4.5 ? "good" : s>=3.5 ? "amber" : "refuse"; }
+function mrrClass(m){ return m>=0.70 ? "good" : m>=0.45 ? "amber" : "refuse"; }
+function fmtScore(s){ return s.toFixed(1); }
+function fmtMrr(m){ return m.toFixed(2); }
+// a metric chip, or a muted em-dash when the metric doesn't apply
+function chip(cls,val){ return `<span class="chip ${cls}">${val}</span>`; }
+function naChip(){ return `<span class="chip muted">—</span>`; }
+function isFailure(item){
+  if(item.cat==="out-of-scope") return item.refusal==="fail";
+  return item.faith<3.5 || item.recall<60;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+// ---- render stat bar ----
+function renderStats(){
+  const tiles=[
+    {label:"Questions", num:AGG.n, cls:"", sub:"7 categories · 20 each"},
+    {label:"Recall@5", num:AGG.recall+"%", cls:recallClass(AGG.recall), sub:"gold reqs in top 5"},
+    {label:"Recall@20", num:AGG.r20+"%", cls:recallClass(AGG.r20), sub:"gold reqs in top 20"},
+    {label:"MRR", num:fmtMrr(AGG.mrr), cls:mrrClass(AGG.mrr), sub:"rank of first gold hit"},
+    {label:"Faithfulness", num:fmtScore(AGG.faith)+"/5", cls:scoreClass(AGG.faith), sub:"claims traceable to source"},
+    {label:"Completeness", num:fmtScore(AGG.comp)+"/5", cls:scoreClass(AGG.comp), sub:"all required facts present"},
+    {label:"Attribution", num:fmtScore(AGG.attrib)+"/5", cls:scoreClass(AGG.attrib), sub:"each version credited right"},
+    {label:"Refusal accuracy", num:AGG.refusal+"%", cls:recallClass(AGG.refusal), sub:"out-of-scope handled"},
+  ];
+  document.getElementById("statbar").innerHTML = tiles.map(t=>
+    `<div class="stat"><div class="label">${t.label}</div><div class="num ${t.cls}">${t.num}</div><div class="sub">${t.sub}</div></div>`
+  ).join("");
+}
+
+// ---- per-category aggregate table (labeled columns) ----
+function catAggRow(label, m, dotColor, isOverall){
+  // metric cells; out-of-scope only has refusal accuracy → show it under R@5 with the rest dashed
+  let cells;
+  if(m.refusal!==undefined){
+    cells = `<td class="grp-sep">${chip(recallClass(m.refusal), m.refusal+"%")}<div style="font-size:10px;color:var(--ink-faint);margin-top:2px;">refusal</div></td>`
+          + `<td>${naChip()}</td><td>${naChip()}</td>`
+          + `<td class="grp-sep">${naChip()}</td><td>${naChip()}</td><td>${naChip()}</td>`;
+  } else {
+    cells = `<td class="grp-sep">${chip(recallClass(m.recall), m.recall+"%")}</td>`
+          + `<td>${chip(recallClass(m.r20), m.r20+"%")}</td>`
+          + `<td>${chip(mrrClass(m.mrr), fmtMrr(m.mrr))}</td>`
+          + `<td class="grp-sep">${chip(scoreClass(m.faith), fmtScore(m.faith))}</td>`
+          + `<td>${chip(scoreClass(m.comp), fmtScore(m.comp))}</td>`
+          + `<td>${m.attrib!=null ? chip(scoreClass(m.attrib), fmtScore(m.attrib)) : naChip()}</td>`;
+  }
+  const dot = dotColor ? `<span class="dot" style="background:${dotColor}"></span>` : "";
+  return `<tr${isOverall?' class="overall"':''}><td class="catname">${dot}${label}</td>${cells}</tr>`;
+}
+function renderCatAggs(){
+  const head = `<thead>
+      <tr class="grphead"><th></th><th class="gr-ret grp-sep" colspan="3">Retrieval</th><th class="gr-judge grp-sep" colspan="3">Judge</th></tr>
+      <tr class="subhead"><th style="text-align:left;">Category</th><th class="grp-sep">R@5</th><th>R@20</th><th>MRR</th><th class="grp-sep">Faithful</th><th>Complete</th><th>Attrib.</th></tr>
+    </thead>`;
+  const body = `<tbody>`
+    + CAT_ORDER.map(cat=>catAggRow(cat, CAT_AGG[cat], CAT_META[cat].color, false)).join("")
+    + catAggRow("overall", CAT_AGG_OVERALL, null, true)
+    + `</tbody>`;
+  document.getElementById("catAggTable").innerHTML = head + body;
+}
+
+// ---- filter tabs ----
+let activeCat = "all";
+function catCount(cat){ return cat==="all" ? GOLDEN.length : GOLDEN.filter(g=>g.cat===cat).length; }
+function renderTabs(){
+  const tabs=[{key:"all",label:"All",color:null}].concat(CAT_ORDER.map(c=>({key:c,label:c,color:CAT_META[c].color})));
+  document.getElementById("tabs").innerHTML = tabs.map(t=>{
+    const dot = t.color ? `<span class="dot" style="background:${t.color}"></span>` : `<span class="dot" style="background:linear-gradient(135deg,#9c6a39,#6b4420)"></span>`;
+    return `<div class="tab${t.key==='all'?' active':''}" data-cat="${t.key}">${dot}<span>${t.label}</span><span class="cnt">${catCount(t.key)}</span></div>`;
+  }).join("");
+  document.querySelectorAll(".tab").forEach(el=>{
+    el.addEventListener("click",()=>{
+      activeCat = el.dataset.cat;
+      document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===el));
+      render();
+    });
+  });
+}
+
+// render a produced answer, turning [n] markers into citation pills
+function renderAnswer(text){ return esc(text).replace(/\[(\d+)\]/g, '<span class="acite">$1</span>'); }
+// one row of the metric readout
+function mrItem(cls, val, name, gloss){
+  return `<div class="mr-item"><span class="mr-val"><span class="chip ${cls}">${val}</span></span><span><span class="mr-name">${name}</span> <span class="mr-gloss">— ${gloss}</span></span></div>`;
+}
+
+// ---- detail panel builder ----
+function buildPanel(item){
+  const meta=CAT_META[item.cat];
+  const sidecard = `<div class="sidecard"><div class="catline"><span class="badge" style="background:${meta.color}1a;color:${meta.color};border-color:${meta.color}40"><span class="dot" style="background:${meta.color}"></span>${item.cat}</span></div><div class="catdesc">${meta.desc}</div></div>`;
+
+  if(item.cat==="out-of-scope"){
+    const pass = item.refusal==="pass";
+    const verdict = pass
+      ? `<span class="refusalchip good">✓ Refused correctly</span>`
+      : `<span class="refusalchip refuse">✗ Failed to refuse</span>`;
+    return `<div class="panel-in"><div>
+        <div class="lbl">Model answer</div>
+        <div class="answerblock refused">${renderAnswer(item.answer)}</div>
+        <div class="block-gap lbl">Expected behaviour</div>
+        <div class="oos-note">No source in corpus — the correct behaviour is to refuse.</div>
+        <div class="oos-verdict"><div class="lbl">Verdict</div>${verdict}</div>
+      </div>${sidecard}</div>`;
+  }
+
+  const srcs = item.sources.map(s=>`<span class="srcchip">${esc(s)}</span>`).join("");
+  const attribRow = item.attrib!=null
+    ? mrItem(scoreClass(item.attrib), fmtScore(item.attrib), "Attribution", "each competing version credited to the right source")
+    : `<div class="mr-item"><span class="mr-val">${naChip()}</span><span><span class="mr-name">Attribution</span> <span class="mr-gloss">— not applicable (single-source factual question)</span></span></div>`;
+  const readout = `
+    <div class="block-gap lbl">Results</div>
+    <div class="metric-readout">
+      ${mrItem(recallClass(item.recall), item.recall+"%", "Recall@5", "share of gold requirements retrieved in the top 5")}
+      ${mrItem(recallClass(item.r20), item.r20+"%", "Recall@20", "share retrieved in the top 20")}
+      ${mrItem(mrrClass(item.mrr), fmtMrr(item.mrr), "MRR", "mean reciprocal rank of the first gold passage")}
+      ${mrItem(scoreClass(item.faith), fmtScore(item.faith), "Faithfulness", "every claim traceable to a cited source")}
+      ${mrItem(scoreClass(item.comp), fmtScore(item.comp), "Completeness", "all required facts present in the answer")}
+      ${attribRow}
+    </div>`;
+
+  return `<div class="panel-in"><div>
+      <div class="lbl">Model answer</div>
+      <div class="answerblock">${renderAnswer(item.answer)}</div>
+      <div class="block-gap lbl">Ideal answer</div>
+      <div class="ideal">${esc(item.ideal)}</div>
+      <div class="block-gap lbl">Gold sources</div>
+      <div class="srcchips">${srcs}</div>
+      ${readout}
+    </div>${sidecard}</div>`;
+}
+
+// ---- main table render ----
+let failuresOnly = false;
+let searchQ = "";
+function getFiltered(){
+  const q = searchQ.trim().toLowerCase();
+  return GOLDEN.filter(item=>{
+    if(activeCat!=="all" && item.cat!==activeCat) return false;
+    if(failuresOnly && !isFailure(item)) return false;
+    if(q && !(item.id.toLowerCase().includes(q) || item.q.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function render(){
+  const rows = getFiltered();
+  const tbody = document.getElementById("tbody");
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty">No questions match these filters.</div></td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(item=>{
+      const meta=CAT_META[item.cat];
+      const badge = `<span class="badge" style="background:${meta.color}1a;color:${meta.color};border-color:${meta.color}40"><span class="dot" style="background:${meta.color}"></span>${item.cat}</span>`;
+      let metricCells;
+      if(item.cat==="out-of-scope"){
+        const pass=item.refusal==="pass";
+        const rc = pass ? `<span class="refusalchip good">Refusal ✓</span>` : `<span class="refusalchip refuse">Refusal ✗</span>`;
+        metricCells = `<td class="metric grp-sep" colspan="6">${rc}</td>`;
+      } else {
+        metricCells =
+          `<td class="metric grp-sep">${chip(recallClass(item.recall), item.recall+"%")}</td>`+
+          `<td class="metric">${chip(recallClass(item.r20), item.r20+"%")}</td>`+
+          `<td class="metric">${chip(mrrClass(item.mrr), fmtMrr(item.mrr))}</td>`+
+          `<td class="metric grp-sep">${chip(scoreClass(item.faith), fmtScore(item.faith))}</td>`+
+          `<td class="metric">${chip(scoreClass(item.comp), fmtScore(item.comp))}</td>`+
+          `<td class="metric">${item.attrib!=null ? chip(scoreClass(item.attrib), fmtScore(item.attrib)) : naChip()}</td>`;
+      }
+      return `<tr class="qrow" data-id="${item.id}">
+          <td class="exp"><span class="caret">▸</span></td>
+          <td class="id">${item.id}</td>
+          <td>${badge}</td>
+          <td class="qcell"><div class="qtext" title="${esc(item.q)}">${esc(item.q)}</div></td>
+          ${metricCells}
+        </tr>
+        <tr class="detail" data-detail="${item.id}"><td colspan="10"><div class="panel">${buildPanel(item)}</div></td></tr>`;
+    }).join("");
+
+    // wire row expand
+    tbody.querySelectorAll("tr.qrow").forEach(tr=>{
+      tr.addEventListener("click",()=>{
+        const id=tr.dataset.id;
+        const det=tbody.querySelector(`tr.detail[data-detail="${CSS.escape(id)}"]`);
+        const willOpen = !tr.classList.contains("open");
+        tr.classList.toggle("open",willOpen);
+        det.classList.toggle("open",willOpen);
+      });
+    });
+  }
+  document.getElementById("showing").textContent = `Showing ${rows.length} of ${TOTAL} sample questions`;
+}
+
+// ---- wire controls ----
+document.getElementById("search").addEventListener("input",e=>{ searchQ=e.target.value; render(); });
+const ft = document.getElementById("failToggle");
+ft.addEventListener("click",()=>{
+  failuresOnly=!failuresOnly;
+  ft.classList.toggle("on",failuresOnly);
+  ft.setAttribute("aria-checked",String(failuresOnly));
+  render();
+});
+
+renderStats();
+renderCatAggs();
+renderTabs();
+render();
+</script>
+</body>
+</html>

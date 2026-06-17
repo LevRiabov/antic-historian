@@ -1,0 +1,43 @@
+# Rendered by the nginx image's envsubst at startup (${API_UPSTREAM} is filled
+# from the env). Serves the SPA and proxies /api to the FastAPI backend so the
+# browser only ever talks to one origin (no CORS) — same contract as the Vite
+# dev proxy in vite.config.ts.
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Hashed Vite assets are immutable — cache them hard.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # API proxy. Strip the /api prefix so the backend keeps its bare routes
+    # (/ask, /health), matching the dev proxy's rewrite.
+    location /api/ {
+        proxy_pass http://${API_UPSTREAM}/;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # SSE: /ask streams tokens. Buffering would batch them and break the
+        # live "watch it search" UX, so disable it and allow a long-lived stream.
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 3600s;
+        chunked_transfer_encoding off;
+    }
+
+    # SPA fallback: every non-asset, non-API path renders the app shell so
+    # client-side routes (/sources, /evals, ...) survive a hard refresh.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

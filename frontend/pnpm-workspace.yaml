@@ -1,0 +1,4 @@
+# esbuild ships a platform binary via a postinstall script that Vite needs, so
+# it's allowed to run build scripts. Everything else stays sandboxed.
+allowBuilds:
+  esbuild: true
