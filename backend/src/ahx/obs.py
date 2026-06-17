@@ -139,7 +139,13 @@ class RequestTrace:
         self._span = span
 
     def finish(
-        self, *, answer: str, refused: bool, usage: Usage | None, cost: Cost | None = None
+        self,
+        *,
+        answer: str,
+        refused: bool,
+        usage: Usage | None,
+        cost: Cost | None = None,
+        blocked: bool = False,
     ) -> None:
         if self._span is None:
             return
@@ -147,6 +153,7 @@ class RequestTrace:
             output=answer,
             metadata={
                 "refused": refused,
+                "blocked": blocked,  # 6.3: a security block is visible in the trace
                 "completion_tokens": usage.completion_tokens if usage else None,
                 "prompt_tokens": usage.prompt_tokens if usage else None,
                 "cost_usd": cost.usd if cost else None,

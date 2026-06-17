@@ -137,6 +137,20 @@ class Settings(BaseSettings):
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None
 
+    # Security lab (Phase 6.3-lab) — a tripwire token seeded into the system prompt
+    # so prompt-extraction is a deterministic test (did it appear in the output?).
+    # Carries no real secret — "assume the prompt leaks" is the production posture;
+    # the canary just instruments leakage and the output-filter defense keys on it.
+    prompt_canary: str = "AHX-CANARY-3f9a2c-do-not-reveal"
+
+    # Security guard (Phase 6.3) — the deterministic defense stack on the live API
+    # (ahx/guard.py). Measured ablation: baseline 15% ASR -> stack 0% (deepseek).
+    # Output validation defaults ON (low false-positive); grounding defaults OFF — it
+    # refuses any uncited in-scope answer, so measure its false-refusal cost first.
+    guard_input_blocklist: bool = True  # D3 — regex pre-filter (blocks before the model)
+    guard_output_validation: bool = True  # D2' — redact a leaked prompt in the output
+    guard_enforce_grounding: bool = False  # D5 — refuse ungrounded answers (opt-in)
+
 
 @lru_cache
 def get_settings() -> Settings:

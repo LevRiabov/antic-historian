@@ -47,6 +47,9 @@ class DoneEvent(BaseModel):
     # Generation cost (6.2). Optional/defaulted so non-API callers and the agent
     # path stay valid; the single-shot pipeline always fills it.
     cost: Cost | None = None
+    # Set by the security guard (6.3) when a request was blocked/redacted — distinct
+    # from a content `refused` so the client + traces can flag a security event.
+    blocked: bool = False
 
 
 AskEvent = SourcesEvent | DeltaEvent | DoneEvent

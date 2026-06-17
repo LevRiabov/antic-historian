@@ -815,6 +815,100 @@ def pricing_show() -> None:
     console.print(out)
 
 
+security_app = typer.Typer(help="Security ablations (Phase 6.3-lab): red-team + ASR.")
+app.add_typer(security_app, name="security")
+
+
+@security_app.command(name="run")
+def security_run(
+    label: str = typer.Option("security-baseline", help="Run label for the record filename."),
+    defense: str = typer.Option(
+        "baseline",
+        help="Defense arm: baseline | harden-prompt (D1) | output-filter (D2) | defense-stack.",
+    ),
+    retriever: str = typer.Option("dense-ctx-v1", help="Retrieval path the attacks run through."),
+    top_k: int = typer.Option(5, help="Chunks stuffed into the prompt."),
+    concurrency: int = typer.Option(4, help="Attacks in flight at once (provider-rate-bound)."),
+) -> None:
+    """Run the attack corpus through the real pipeline and report Attack-Success-Rate.
+
+    Costs query-time money when the chat model is hosted (one /ask per attack). Pin
+    `concurrency` across compared arms for reproducibility.
+    """
+    import sys
+
+    from ahx.config import get_settings
+    from ahx.evals.security import (
+        AttackResult,
+        load_attacks,
+        run_security_eval,
+        save_security_run,
+    )
+
+    settings = get_settings()
+    attacks_dir = Path(__file__).resolve().parents[2] / "evals" / "attacks"
+    attacks = load_attacks(attacks_dir)
+    console.print(
+        f"Running {len(attacks)} attacks · defense={defense} · model={settings.chat_model}"
+    )
+
+    def progress(result: AttackResult) -> None:
+        mark = "[red]HIT[/red]" if result.succeeded else "[green]ok [/green]"
+        console.print(f"  {mark} {result.id:<10} {result.category:<16} {result.latency_ms:>6}ms")
+
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    run = asyncio.run(
+        run_security_eval(
+            settings,
+            attacks,
+            label=label,
+            defense=defense,
+            retriever_name=retriever,
+            top_k=top_k,
+            concurrency=concurrency,
+            on_result=progress,
+        ),
+        loop_factory=loop_factory,
+    )
+
+    table = Table(title=f"Security ASR — {run.label} · {run.chat_model} · defense={run.defense}")
+    for column in ("category", "attacks", "successes", "ASR"):
+        table.add_column(column)
+    for category, agg in run.aggregates.by_category.items():
+        table.add_row(category, str(agg.count), str(agg.successes), f"{agg.asr:.0%}")
+    table.add_row(
+        "[bold]overall[/bold]",
+        str(run.aggregates.attacks),
+        str(run.aggregates.successes),
+        f"[bold]{run.aggregates.asr:.0%}[/bold]",
+    )
+    console.print(table)
+
+    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "security_runs"
+    path = save_security_run(run, runs_dir)
+    console.print(f"Run record: {path}")
+
+
+@security_app.command(name="rescore")
+def security_rescore(
+    record: Annotated[Path, typer.Argument(help="Path to a saved security run record (JSON).")],
+) -> None:
+    """Re-classify a saved run's frozen answers with the current classifier, in place —
+    isolates a classifier fix from model nondeterminism (no model calls; rule #5)."""
+    from ahx.config import get_settings
+    from ahx.evals.security import SecurityRun, rescore_run
+
+    settings = get_settings()
+    run = SecurityRun.model_validate_json(record.read_text(encoding="utf-8"))
+    before = run.aggregates.asr
+    rescored = rescore_run(run, settings.prompt_canary)
+    record.write_text(rescored.model_dump_json(indent=2), encoding="utf-8")
+    console.print(
+        f"{record.name}: overall ASR {before:.0%} -> [bold]{rescored.aggregates.asr:.0%}[/bold] "
+        f"({rescored.aggregates.successes}/{rescored.aggregates.attacks})"
+    )
+
+
 mcp_app = typer.Typer(help="MCP server over the corpus (golden-set authoring).")
 app.add_typer(mcp_app, name="mcp")
 

@@ -24,7 +24,8 @@ from sse_starlette.sse import EventSourceResponse
 import ahx
 from ahx.config import get_settings
 from ahx.db import create_async_db_engine
-from ahx.generation.pipeline import DeltaEvent, DoneEvent, Retriever, SourcesEvent, ask
+from ahx.generation.pipeline import DeltaEvent, DoneEvent, Retriever, SourcesEvent
+from ahx.guard import DefenseConfig, guard_config_from_settings, guarded_events
 from ahx.llm import ChatModel, chat_model_from_settings
 from ahx.obs import init_langfuse, trace_request, traced_chat, traced_retriever
 from ahx.retrieval.dense import dense_retrieve_async
@@ -48,6 +49,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app.state.retriever = retriever
     app.state.chat = chat
     app.state.langfuse = langfuse
+    app.state.guard = guard_config_from_settings(settings)  # 6.3 security stack
+    app.state.canary = settings.prompt_canary
     yield
     if langfuse is not None:
         langfuse.flush()  # drain the export buffer before the process exits
@@ -71,6 +74,16 @@ def get_langfuse(request: Request) -> "Langfuse | None":
     return getattr(request.app.state, "langfuse", None)
 
 
+def get_guard(request: Request) -> DefenseConfig:
+    # Default to an all-off config when lifespan hasn't run (ASGITransport tests):
+    # the guard is then a no-op and the route behaves like the raw pipeline.
+    return getattr(request.app.state, "guard", DefenseConfig())
+
+
+def get_canary(request: Request) -> str:
+    return getattr(request.app.state, "canary", "")
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "version": ahx.__version__}
@@ -90,18 +103,25 @@ async def ask_route(
     retriever: Annotated[Retriever, Depends(get_retriever)],
     chat: Annotated[ChatModel, Depends(get_chat)],
     langfuse: Annotated["Langfuse | None", Depends(get_langfuse)],
+    guard: Annotated[DefenseConfig, Depends(get_guard)],
+    canary: Annotated[str, Depends(get_canary)],
 ) -> EventSourceResponse:
     async def events() -> AsyncIterator[dict[str, str]]:
-        # The whole stream runs inside the root span so retrieve/chat nest under
-        # it; the trace is finished with the answer on the terminal DoneEvent.
+        # The whole stream runs inside the root span so retrieve/chat nest under it; the
+        # trace is finished with the answer on the terminal DoneEvent. The security guard
+        # (6.3) wraps the pipeline: a blocked request still yields a well-formed envelope
+        # (empty sources + a blocked done) without touching retrieval or the model.
         async with trace_request(langfuse, question=body.question, top_k=body.top_k) as trace:
-            async for event in ask(body.question, retriever, chat, top_k=body.top_k):
+            async for event in guarded_events(
+                body.question, retriever, chat, guard, canary, top_k=body.top_k
+            ):
                 if isinstance(event, DoneEvent):
                     trace.finish(
                         answer=event.answer,
                         refused=event.refused,
                         usage=event.usage,
                         cost=event.cost,
+                        blocked=event.blocked,
                     )
                 yield {"event": _EVENT_NAMES[type(event)], "data": event.model_dump_json()}
 
