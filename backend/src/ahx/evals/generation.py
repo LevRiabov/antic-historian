@@ -39,6 +39,7 @@ from ahx.generation.citations import Citation
 from ahx.generation.pipeline import DoneEvent, SourcesEvent, ask, collect
 from ahx.generation.prompt import PROMPT_VERSION
 from ahx.llm import ChatMessage, ChatModel, chat_model_from_settings
+from ahx.obs import init_langfuse, trace_request, traced_chat
 from ahx.retrieval.embedding import EmbeddingClient
 
 
@@ -67,6 +68,7 @@ class GenQuestionResult(BaseModel):
     latency_ms: int
     prompt_tokens: int | None
     completion_tokens: int | None
+    trace_id: str | None = None  # Langfuse trace for this question (6.1); None when untraced
 
 
 class GenCategoryAggregate(BaseModel):
@@ -615,7 +617,16 @@ async def run_generation_eval(
     from ahx.retrieval.factory import build_async_retriever, is_rerank_label
 
     engine = create_async_db_engine(settings.database_url)
-    chat = chat_model_from_settings(settings)
+    # A measurement uses ONE model: disable the serving fallback lineup (6.4) so a mid-run
+    # 429 storm can't silently fall over to a different provider and confound the numbers
+    # (deepseek's own 5x retry still absorbs transient 429s; a true outage becomes a visible
+    # error_result, not a different model's answer). Tracing (6.1) is wired in here too —
+    # opt-in (None unless AHX_LANGFUSE_* is set); when on, each question gets a Langfuse trace
+    # whose id lands in the record (trace_id) so a failure links straight to its trace.
+    chat = chat_model_from_settings(settings.model_copy(update={"chat_fallbacks": []}))
+    langfuse = init_langfuse(settings)
+    if langfuse is not None:
+        chat = traced_chat(chat, langfuse)
 
     # Pick the engine. Agent and single-shot both produce (SourcesEvent, DoneEvent),
     # so everything downstream (scoring, judge, record) is identical.
@@ -669,18 +680,41 @@ async def run_generation_eval(
     ) -> GenQuestionResult:
         async with sem:
             started = time.perf_counter()
-            try:
-                sources, done = await run_one(question.question)
-                latency_ms = round((time.perf_counter() - started) * 1000)
-                result = score_generation(question, spans, sources, done, latency_ms)
-                if judge is not None:
-                    await judge_question(judge, result, sources.citations, attribution_judge)
-            except Exception as exc:
-                # One question's failure (HTTP/DB/parse) must not abort the whole
-                # concurrent run — record it as a failed refusal and carry on. Since
-                # this never re-raises, gather can't cascade-cancel siblings.
-                latency_ms = round((time.perf_counter() - started) * 1000)
-                result = _error_result(question, spans, exc, latency_ms)
+            # One trace per question (no-op when langfuse is off): the agent's per-step
+            # chat calls nest under it, so a failed question's reasoning is inspectable.
+            # Concurrent questions are separate asyncio tasks -> separate OTEL contexts,
+            # so traces don't tangle.
+            async with trace_request(
+                langfuse,
+                question=question.question,
+                top_k=top_k,
+                name=f"eval:{question.id}",
+                metadata={
+                    "question_id": question.id,
+                    "category": question.category,
+                    "label": label,
+                },
+            ) as trace:
+                try:
+                    sources, done = await run_one(question.question)
+                    latency_ms = round((time.perf_counter() - started) * 1000)
+                    result = score_generation(question, spans, sources, done, latency_ms)
+                    if judge is not None:
+                        await judge_question(judge, result, sources.citations, attribution_judge)
+                    trace.finish(
+                        answer=done.answer,
+                        refused=done.refused,
+                        usage=done.usage,
+                        cost=done.cost,
+                        served_by=done.served_by,
+                    )
+                except Exception as exc:
+                    # One question's failure (HTTP/DB/parse) must not abort the whole
+                    # concurrent run — record it as a failed refusal and carry on. Since
+                    # this never re-raises, gather can't cascade-cancel siblings.
+                    latency_ms = round((time.perf_counter() - started) * 1000)
+                    result = _error_result(question, spans, exc, latency_ms)
+            result.trace_id = trace.trace_id  # readable after the span closes
         if on_result is not None:
             on_result(result)  # fires on completion (out of order) — progress only
         return result
@@ -696,6 +730,8 @@ async def run_generation_eval(
         )
     finally:
         await engine.dispose()
+        if langfuse is not None:
+            langfuse.flush()  # drain the trace export buffer before returning
 
     return GenerationRun(
         created_at=datetime.now(UTC).isoformat(timespec="seconds"),

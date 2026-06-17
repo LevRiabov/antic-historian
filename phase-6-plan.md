@@ -121,20 +121,44 @@ a new `meta` SSE event. Verified by tests (fallover `served_by` + mid-stream-pro
 limiter arithmetic + reject-without-consume, route 429s); no golden-set run — not a quality lever.
 **Commit `1ed986a`.**
 
-## Workstream 6.5 — Model routing (cheap/expensive) — through the ablation door
-A **measured 2-tier switch** (quality vs cheap), NOT a clever query-complexity router (that's an
-unmeasured technique and a regression risk). Run the golden set on each tier (single-shot +
-agent), publish the cost/quality table, and pick the public-default tier with a keep/reject
-note. The table is the deliverable — it's the "I measured before I shipped" case-study moment.
-**Exit:** eval-log entry with the cost/quality table; the public default tier chosen with a note.
+## Workstream 6.5 — Model routing (cheap/expensive) ✅ DONE — REJECTED cheap tier + router (2026-06-17)
+Resolved without a new run: the cost/quality table this workstream asks for **already exists** as
+the D5 entry (2026-06-15 gemma-12b agent vs deepseek-v4-pro agent, same split judge) — pro wins the
+strength-bound categories (completeness +0.28, attribution +0.36, OOS abstention 73–77%→100%), and
+gemma's losses were *model-strength* limits, not prompt gaps. deepseek-v4-pro is the cheapest model
+at its (≈Sonnet) tier (~$0.01/deep query, ≈$0.002–0.003/single-shot), and **6.4 already caps the
+abuse** that motivated a cheap tier — so the cost-of-a-query risk is gone. A per-query complexity
+**router was rejected** as an unmeasured technique with a regression surface and no measured gap to
+exploit; the quality/cost lever is the existing **fast (single-shot) vs deep (agent)** mode. An
+informal flash-on-hard-subset probe (fine on simple, ~50/50 on complex; ⚠ unlogged) corroborates but
+isn't a recorded measurement. **Public default = deepseek-v4-pro, single-shot.** Receipts:
+[eval-log 2026-06-17](docs/eval-log.md). No code change.
 
-## Workstream 6.6 — Prompt caching (conditional on D5)
-Only worthwhile if the D5 lineup includes a provider with explicit cache control (e.g. Anthropic
-`cache_control` on the static system/rubric block — retrieved context changes per query, so only
-the system prompt caches). Modest token-cost win; a few lines if supported, skipped otherwise.
-Measure the token-cost delta if built.
-**Exit:** either a measured token-cost delta, or a one-line note that the chosen lineup doesn't
-support it (rejection-with-receipts).
+> **Original plan (for the record):** a *measured 2-tier switch* (quality vs cheap), NOT a clever
+> query-complexity router; run the golden set on each tier, publish the cost/quality table, pick the
+> public default with a keep/reject note. The decision above IS that note — it just leans on the
+> already-recorded D5 table rather than spending on a re-run, since the cheap end was already measured.
+
+## Workstream 6.6 — Prompt caching ✅ DONE — N/A, auto-caching already on (2026-06-17)
+The conditional fails (rejection-with-receipts, as anticipated): the shipped lineup (deepseek/kimi/
+qwen via OpenRouter) uses **automatic prefix caching**, NOT Anthropic-style explicit `cache_control`
+— so there is nothing to implement to enable it, and it is already active (**~25% cache hit observed
+in the OpenRouter console**, dominated by the served agent re-sending its ~1500-token system prompt
+each loop turn). Our prompts already earn the free hits: single-shot puts the stable `SYSTEM_PROMPT`
+first (caches across queries); the agent's system prompt + `Question:` are identical turn-to-turn.
+**Not changed (deliberately):** the agent's per-turn budget line sits before the scratchpad and
+breaks the prefix there, but moving it is a prompt edit (= ablation door + a paid re-run) for an
+uncertain gain that agent-v5 compaction undercuts anyway — the scratchpad is rewritten each turn, so
+it isn't prefix-cacheable regardless, and the measured −11% token cut already beats what caching
+would save there. Judge caching is irrelevant (eval-time only, never on the served path).
+**Deferred (optional, not built):** cache-aware cost *accounting* — `cost_for()` prices all prompt
+tokens at the full input rate, so the readout is ~20% overstated on the agent path; pricing the ~25%
+cache-reads at the (already-captured, 6.2) cache-read rate would correct it. That is cost-reporting
+polish, not caching. **Verdict: nothing to build — auto-caching captures the win at zero code.**
+
+> **Original plan (for the record):** worthwhile only if the lineup had explicit cache control
+> (Anthropic `cache_control` on the static system block); a few lines if supported, skipped otherwise.
+> The lineup is automatic-caching, so the "skipped otherwise / one-line note" branch is the outcome.
 
 ## Workstream 6.7 — Stream the agent ("deep mode" over the API) ✅ DONE (2026-06-17)
 `mode: "deep"` on `/ask` streams the ReAct loop live then the cited answer — order: `meta → step*

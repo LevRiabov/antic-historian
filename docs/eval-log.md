@@ -1266,3 +1266,107 @@ re-scored the 4 records → deepseek defense-stack 2%→**0%**, baselines unchan
 170 tests green. **Guard shipped to `/ask`** (input-blocklist + output-validation ON, enforce-grounding
 OFF/opt-in; a D3 block returns a well-formed SSE envelope without calling the model). Streaming caveat:
 output defenses verdict on the final answer. Full write-up: phase-6-3-security-plan.md.
+
+---
+
+## 2026-06-17 — Phase 6.5 model routing: cheap served tier + per-query router REJECTED (receipts)
+
+**Decision:** the public default is **deepseek-v4-pro, single-shot fast path** — no separate cheap
+served tier and no query-complexity router. This is a rejection-with-receipts, NOT a new ablation:
+the measurement that decides it already exists. No new eval run; no code change.
+
+**The recorded cost/quality table (what 6.5 asks for) already exists — it's the D5 entry.** The
+2026-06-15 `gen-agent-v3-deepseek-pro` row vs the gemma agent baseline (same kimi+qwen split judge)
+IS a cheap-vs-expensive *served-model* comparison: gemma-12b (local, $0) → deepseek-v4-pro. Pro:
+completeness +0.28, attribution +0.36, and **OOS source-absent abstention 73–77% → 100%**. Gemma's
+losses were named there as **model-strength** limits (namesake/date conflation; substituting
+secondary material for an absent named work) — exactly the hard, multi-step categories, and not
+prompt-fixable (prompt-v2 recovered 1/8). The cheap end was measured and loses precisely where it
+matters; cheaper models are *usable on literal/synonym, unreliable on synthesis/multi-hop*.
+
+**Cost side (why pro is cheap enough to be the default):** deepseek-v4-pro = $0.435/$0.870 per M
+(`pricing_snapshot` 2026-06-16) — the cheapest model at its (≈Sonnet) quality tier. A live deep-mode
+query measured **$0.0101** (20.7k prompt + 1.2k completion, the 6.7 verification); the single-shot
+default is one ~5k-token call, ≈$0.002–0.003/query. deepseek-v4-flash is ~4.4× cheaper
+($0.098/$0.196), but on a *capped* demo the absolute saving is fractions of a cent/query.
+
+**Why no router:** a per-query complexity classifier is an unmeasured technique with a regression
+surface (a misrouted hard question gets the weak model) plus an extra call's latency/cost — and
+there is no measured gap to exploit once pro is the default. The quality/cost lever the product
+already exposes is **fast (single-shot) vs deep (agent) mode**, user-chosen and measured end-to-end.
+
+**Why no new run:** 6.5's original motivation — an uncapped public demo running up money — was
+removed by **6.4** (IP rate limit + per-session cap) combined with pro's negligible per-query cost.
+A flash-as-served arm (~$2–5) would only confirm a known shape.
+
+⚠ **Exploratory, UNLOGGED observation (not a measured claim):** an informal probe of deepseek-v4-flash
+on a subset of hard questions read "fine on simple, ~50/50 (≈4/5 avg) on complex/multi-step — usable
+but clearly below pro." No saved run record, so this is corroborating color only; the *recorded*
+cheap-tier measurement remains the gemma-vs-pro D5 table above.
+
+**Verdict:** ship **deepseek-v4-pro** as the public default (single-shot fast path; agent on opt-in
+deep mode). 6.5 closed as rejection-with-receipts — the cost/quality evidence is the D5 table plus
+the pricing/cost above; the cheap tier and the router are both rejected.
+
+---
+
+## 2026-06-17 — agent-v6 (quote-pinned finalize): answers 100%, but FROZEN — prompt tuning plateaued
+
+**What changed (one variable, prompt-text only):** agent-v6 = the agent-v5/v5.1 prompt + a
+**quote-pinned finalize** — load-bearing specifics (numbers, names, places, the DIRECTION of a
+relationship, outcomes) must be grounded in the passage's EXACT words (quote the key phrase verbatim
+with its chunk id) or OMITTED. Aimed at the agent-v4 audit's 23 faithfulness-3s (source-detail
+garbling + parametric supply of a true-but-unsourced fact). Config identical to the v5 baseline:
+deepseek-v4-pro, `dense-ctx-v1` (no rerank), split judge (kimi-k2.6 + qwen3.7-max), judge-v3.3,
+max-steps 8, concurrency 8, 161 Q. **Fallbacks OFF** (eval = one model; the serving composite would
+confound). Gen cost **$2.05** (4.03M prompt + 334k completion tokens, deepseek pricing 2026-06-16) +
+split judge ≈ $2–4 (⚠ est., judge tokens not recorded); mean latency 75.5s.
+**Run record:** `backend/evals/runs/2026-06-17T14-09-09Z-gen-agent-v6.json` (first run with a Langfuse
+`trace_id` on every result — 161/161 — so a failed question links straight to its trace; eval harness
+now traced, opt-in via AHX_LANGFUSE_*).
+
+### Coverage-first table (the load-bearing metric) — v4 / v5 / v6, all deepseek-pro, same split judge
+
+| version | in-scope answered | faith=5 | faith≥4 | faith≤3 | faith=1 | faithfulness | attribution |
+|---|---|---|---|---|---|---|---|
+| agent-v4 (judge-v3.2) | 131/135 (97.0%) | 90 | 106 | 23 | 0 | 4.52 | 4.71 |
+| agent-v5 (judge-v3.3) | 125/135 (92.6%) | 91 | 105 | 20 | 1 | 4.55 | 4.76 |
+| **agent-v6 (judge-v3.3)** | **135/135 (100%)** | **98** | **109** | 26 | 1 | 4.52 | 4.64 |
+
+**Findings:**
+
+1. **v6 answers EVERY in-scope question (0 false-refusals) — the milestone** — and delivers the most
+   perfectly-faithful answers (faith=5: 98) and the most faith≥4 (109). On the 119 questions all three
+   runs answered, faithfulness is flat (v4 4.51 / v5 4.55 / **v6 4.56**, within judge noise). By the
+   metric that matters — questions actually answered, faithfully — v6 is the best of the three.
+2. **The 0% false-refusal is the v5.1 RE-ROLL fix, not the prompt (confound, noted).** v6 bundles the
+   v5.1 runtime fixes (re-roll a malformed grammar call before refusing) — never before run on the full
+   set — with the quote-pinned finalize. The re-roll killed v5's zero-retrieval refusals exactly as the
+   v5.1 entry predicted (7.4% → 0%). KEEP that fix.
+3. **The quote-pinned finalize FAILED its goal and backfired.** Faithfulness flat on the common set, and
+   it INDUCED quote-fabrication: faith≤3 questions flagged for an invented/fabricated direct quote went
+   v5 **3 → v6 10** (same judge). 9 questions faith-5 in BOTH v4 and v5 dropped to ≤3 in v6, almost all
+   "invents a direct quote"; **synth-005 collapsed 5→5→1** (multiple fabricated extended quotations).
+   Telling the model to quote verbatim, with no mechanism to verify the quote is real, makes it
+   confabulate authoritative-looking quotes. The quote-pinning is a wash-to-negative; a revert to the
+   v5.1 finalize text is a $0 option if the fabrication ever bites.
+
+### Full failure inventory — 35 / 161, and ZERO are retrieval misses or false refusals
+
+| type | n | mechanism |
+|---|---|---|
+| faithfulness ≤3 | 26 (1 at faith-1) | **parametric embellishment** — grounded answer + ONE invented specific (a quote, name, number, date, place). Model can't suppress parametric knowledge overlapping the sources. |
+| attribution ≤2 | 11 | **cross-source misattribution** — right facts, wrong source label (con-017 Appian↔Polybius, cb-019 Smith↔Mommsen, syn-012 Belus↔Nebo). Concentrated in multi-source categories. |
+| completeness ≤3 | 4 | scattered (lit-007 omits what Augustus *did*; con-002 omits Thucydides' version) |
+| OOS leak | 2 | oos-023 (Sappho — substituted Grote's footnote, genuine leak); oos-010 (Roman concrete — answered the real pozzolana part, over-reached the "vs modern" framing, borderline) |
+| false refusal | **0** | — every in-scope question answered |
+
+**The two residual mechanisms (embellishment + misattribution) are MODEL-STRENGTH limits, not
+prompt-reachable** — agent-v6 is the direct proof (its anti-embellishment quote-pinning didn't move
+faithfulness and added a fabrication flavor). The remaining headroom is architectural (co-locating
+distributed evidence for synthesis/multi-hop/cross-book) or a stronger model, not the prompt.
+
+**Verdict: FREEZE agent-v6 as the standing prompt; STOP prompt tuning.** Coverage-first, v6 is the best
+of v4/v5/v6 (100% answered, most faith=5), the differences across them are tradeoff redistribution
+within noise, and the v3→v4→v5→v6 saga shows each edit slides along a fixed coverage/faithfulness
+frontier set by the model+retrieval rather than moving it. The agent prompt is done.

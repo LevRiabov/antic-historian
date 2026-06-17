@@ -138,6 +138,13 @@ class RequestTrace:
     def __init__(self, span: Any | None) -> None:
         self._span = span
 
+    @property
+    def trace_id(self) -> str | None:
+        """The Langfuse trace id for this request — None when tracing is off. Lets an eval
+        record carry the id (6.1) so a failed question links straight to its trace. SDK v4
+        exposes `trace_id` on the span object; getattr keeps it robust across SDK versions."""
+        return getattr(self._span, "trace_id", None) if self._span is not None else None
+
     def finish(
         self,
         *,
@@ -166,20 +173,27 @@ class RequestTrace:
 
 @contextlib.asynccontextmanager
 async def trace_request(
-    langfuse: Langfuse | None, *, question: str, top_k: int
+    langfuse: Langfuse | None,
+    *,
+    question: str,
+    top_k: int,
+    name: str = "ask",
+    metadata: dict[str, Any] | None = None,
 ) -> AsyncGenerator[RequestTrace]:
-    """One root span per API request. Child spans (retrieve, chat) created
-    inside the `with` block nest under it via OTEL context. The root span's
-    name/input/output stand in for trace-level fields (version-robust — no
-    reliance on trace-mutation helpers that move between SDK releases).
+    """One root span per request. Child spans (retrieve, chat) created inside the
+    `with` block nest under it via OTEL context. The root span's name/input/output
+    stand in for trace-level fields (version-robust — no reliance on trace-mutation
+    helpers that move between SDK releases). `name`/`metadata` let the eval label a
+    trace by question id + category (the API uses the defaults).
 
-    No-op when tracing is off, so the route reads identically either way."""
+    No-op when tracing is off, so the caller reads identically either way."""
     if langfuse is None:
         yield RequestTrace(None)
         return
     with langfuse.start_as_current_observation(
         as_type="span",
-        name="ask",
+        name=name,
         input={"question": question, "top_k": top_k},
+        metadata=metadata,
     ) as span:
         yield RequestTrace(span)

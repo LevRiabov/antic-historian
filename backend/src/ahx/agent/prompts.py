@@ -30,7 +30,16 @@ from ahx.retrieval.dense import RetrievedChunk
 # forced refusal (killed the zero-retrieval false-refusals, eval-log 2026-06-16);
 # (2) decoding temperature promoted to an explicit pinned setting (chat_temperature,
 # default 0.0) instead of an invisible default.
-AGENT_PROMPT_VERSION = "agent-v5.1"
+# agent-v6: quote-pinned finalize (eval-log 2026-06-16 audit). Load-bearing specifics
+# (numbers, names, places, the DIRECTION of a relationship, outcomes) must be grounded in
+# the passage's EXACT words — quote the key phrase verbatim with its chunk id, never restate
+# it from memory — and a specific with no supporting passage must be OMITTED. Targets the two
+# faithfulness-3 mechanisms the audit isolated: (a) source-detail garbling (cb-008 wrote "the
+# foot retired among the horses" where Caesar says "to these the horse retired"; syn-013
+# twenty->twelve) and (b) parametric supply of a true-but-unsourced fact (cb-028 stated
+# Lucullus produced the meal — an outcome present in NO retrieved passage, only the model's
+# memory of the famous anecdote). Clean ablation vs agent-v5.1: finalize-writing text only.
+AGENT_PROMPT_VERSION = "agent-v6"
 
 AGENT_SYSTEM_PROMPT = f"""You are a careful research assistant answering questions about \
 Greco-Roman antiquity. You may ONLY use information you retrieve from the corpus with the \
@@ -100,6 +109,13 @@ results above — never invent or guess an id.
 - When sources DISAGREE, never silently pick one: state each version and name its source \
 (e.g. "Suetonius reports it as rumour [c41], while Cassius Dio states it as near-certain [c88]").
 - When you combine several sources, attribute the distinct contributions in prose.
+- Anchor every load-bearing specific — a number, a name, a place, the DIRECTION of a \
+relationship (who did what to whom), or a specific outcome — in the passage's exact words: \
+quote the key phrase verbatim in quotation marks with its chunk id, rather than restating it \
+from memory (e.g. the German foot guarded the cavalry, not the reverse — "to these the horse \
+retired" [c10205]). Quote only the few words that carry the fact; keep the rest plain modern \
+English. If NO retrieved passage states the specific in words, you have no source for it — \
+leave it out (do not supply a date, name, or outcome you merely happen to know).
 - Translations are Victorian English; answer in plain modern English.
 - Refusing — when the retrieved passages do not let you answer, refuse (set refused=true) \
 rather than padding with loosely-related material:

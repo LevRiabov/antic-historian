@@ -13,13 +13,14 @@ from typing import Any
 
 from ahx.config import Settings
 from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent, TextDelta, Usage
-from ahx.obs import init_langfuse, traced_chat, traced_retriever
+from ahx.obs import init_langfuse, trace_request, traced_chat, traced_retriever
 from ahx.retrieval.dense import RetrievedChunk
 
 
 class FakeSpan:
     def __init__(self) -> None:
         self.updates: list[dict[str, Any]] = []
+        self.trace_id = "trace-fake"  # SDK v4 exposes this; RequestTrace.trace_id reads it
 
     def update(self, **kwargs: Any) -> None:
         self.updates.append(kwargs)
@@ -112,6 +113,19 @@ async def test_traced_chat_complete_passthrough() -> None:
     assert result.text == "done"
     assert lf.observations == [("generation", "chat.complete")]
     assert lf.spans[0].updates == [{"output": "done", "usage_details": {"input": 5, "output": 2}}]
+
+
+async def test_trace_request_exposes_trace_id_and_none_when_off() -> None:
+    # The eval reads RequestTrace.trace_id to land a clickable trace link in each record.
+    lf = FakeLangfuse()
+    async with trace_request(lf, question="q", top_k=5, name="eval:q-001") as trace:  # type: ignore[arg-type]
+        pass
+    assert trace.trace_id == "trace-fake"
+    assert lf.observations == [("span", "eval:q-001")]  # the eval label flows through
+
+    async with trace_request(None, question="q", top_k=5) as off:
+        pass
+    assert off.trace_id is None  # tracing off -> no id, no error
 
 
 async def test_traced_retriever_passthrough_and_records_hits() -> None:
