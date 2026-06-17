@@ -1,0 +1,26 @@
+{
+  "fetched_at": "2026-06-16",
+  "source": "OpenRouter https://openrouter.ai/api/v1/models",
+  "models": {
+    "qwen/qwen3.7-max": {
+      "input_per_m": 1.25,
+      "output_per_m": 3.75,
+      "cache_read_per_m": 0.25
+    },
+    "deepseek/deepseek-v4-pro": {
+      "input_per_m": 0.435,
+      "output_per_m": 0.87,
+      "cache_read_per_m": 0.003625
+    },
+    "deepseek/deepseek-v4-flash": {
+      "input_per_m": 0.098,
+      "output_per_m": 0.196,
+      "cache_read_per_m": 0.02
+    },
+    "moonshotai/kimi-k2.6": {
+      "input_per_m": 0.6799999999999999,
+      "output_per_m": 3.41,
+      "cache_read_per_m": 0.33999999999999997
+    }
+  }
+}

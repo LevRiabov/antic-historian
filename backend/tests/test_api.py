@@ -99,6 +99,10 @@ async def test_ask_streams_sources_deltas_done(ask_client: httpx.AsyncClient) ->
     assert done["refused"] is False
     assert done["markers"] == {"used": [1], "dangling": []}
     assert done["usage"] == {"prompt_tokens": 40, "completion_tokens": 7}
+    # Cost on the done event (6.2): "fake-model" is a bare id -> local -> $0, priced.
+    assert done["cost"]["usd"] == 0.0
+    assert done["cost"]["priced"] is True
+    assert done["cost"]["input_tokens"] == 40
 
 
 async def test_ask_validates_request(ask_client: httpx.AsyncClient) -> None:

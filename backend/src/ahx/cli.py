@@ -737,6 +737,84 @@ def rejudge(
     console.print(f"Run record: {path}")
 
 
+pricing_app = typer.Typer(help="Model price table (Phase 6.2 cost tracking).")
+app.add_typer(pricing_app, name="pricing")
+
+
+@pricing_app.command(name="refresh")
+def pricing_refresh(
+    models: str = typer.Option(
+        "", "--models", help="Comma-separated extra model ids to price, beyond lineup + config."
+    ),
+) -> None:
+    """Fetch the lineup's prices from OpenRouter and write data/pricing.json (dated).
+
+    Verified-claims discipline (rule #6): prices come from a live, dated fetch, never
+    hand-typed. Prices the ADR-003 lineup plus any hosted model in Settings, plus --model.
+    """
+    from datetime import date
+
+    from ahx.config import get_settings
+    from ahx.pricing import LINEUP_MODELS, PriceTable, fetch_prices, write_price_table
+
+    settings = get_settings()
+    # Hosted models from config (a "/" id = provider/model; bare = local, free).
+    configured = {
+        m
+        for m in (
+            settings.chat_model,
+            settings.embed_model,
+            settings.enrich_model,
+            settings.judge_model,
+            settings.attrib_judge_model,
+        )
+        if m and "/" in m
+    }
+    extra = {m.strip() for m in models.split(",") if m.strip()}
+    wanted = set(LINEUP_MODELS) | configured | extra
+    console.print(f"Fetching {len(wanted)} model prices from {settings.embed_base_url}/models ...")
+
+    found = fetch_prices(settings.embed_base_url, settings.embed_api_key, wanted)
+    missing = wanted - found.keys()
+    table = PriceTable(
+        fetched_at=date.today().isoformat(),
+        source=f"OpenRouter {settings.embed_base_url}/models",
+        models=found,
+    )
+    path = write_price_table(table)
+
+    out = Table(title=f"Prices fetched {table.fetched_at}")
+    for column in ("model", "input $/M", "output $/M", "cache-read $/M"):
+        out.add_column(column)
+    for mid, price in sorted(found.items()):
+        cache = f"{price.cache_read_per_m:.3f}" if price.cache_read_per_m is not None else "—"
+        out.add_row(mid, f"{price.input_per_m:.3f}", f"{price.output_per_m:.3f}", cache)
+    console.print(out)
+    if missing:
+        console.print(
+            f"[yellow]Not found on OpenRouter (unpriced): {', '.join(sorted(missing))}[/yellow]"
+        )
+    console.print(f"Wrote {path}")
+
+
+@pricing_app.command(name="show")
+def pricing_show() -> None:
+    """Print the committed price snapshot (or note that none exists yet)."""
+    from ahx.pricing import load_price_table
+
+    table = load_price_table()
+    if table is None:
+        console.print("[yellow]No price table — run `ahx pricing refresh`.[/yellow]")
+        raise typer.Exit(code=1)
+    out = Table(title=f"{table.source} · fetched {table.fetched_at}")
+    for column in ("model", "input $/M", "output $/M", "cache-read $/M"):
+        out.add_column(column)
+    for mid, price in sorted(table.models.items()):
+        cache = f"{price.cache_read_per_m:.3f}" if price.cache_read_per_m is not None else "—"
+        out.add_row(mid, f"{price.input_per_m:.3f}", f"{price.output_per_m:.3f}", cache)
+    console.print(out)
+
+
 mcp_app = typer.Typer(help="MCP server over the corpus (golden-set authoring).")
 app.add_typer(mcp_app, name="mcp")
 

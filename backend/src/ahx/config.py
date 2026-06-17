@@ -129,7 +129,10 @@ class Settings(BaseSettings):
     def corpus_normalized_dir(self) -> Path:
         return self.corpus_dir / "normalized"
 
-    # Observability (Phase 6) — optional until wired.
+    # Observability (Phase 6.1) — tracing is OPT-IN: all three must be set or
+    # init_langfuse returns None and the API runs untraced (obs.py). For a local
+    # self-hosted instance the host is http://localhost:3000; keys come from the
+    # project's settings page (or LANGFUSE_INIT_* if the stack was bootstrapped).
     langfuse_host: str | None = None
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None

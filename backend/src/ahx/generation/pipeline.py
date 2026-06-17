@@ -22,6 +22,7 @@ from ahx.generation.citations import (
 )
 from ahx.generation.prompt import PROMPT_VERSION, REFUSAL_TEXT, build_messages
 from ahx.llm import ChatModel, TextDelta, Usage
+from ahx.pricing import Cost, cost_for, load_price_table
 from ahx.retrieval.dense import RetrievedChunk
 
 
@@ -43,6 +44,9 @@ class DoneEvent(BaseModel):
     refused: bool
     markers: MarkerAudit
     usage: Usage | None
+    # Generation cost (6.2). Optional/defaulted so non-API callers and the agent
+    # path stay valid; the single-shot pipeline always fills it.
+    cost: Cost | None = None
 
 
 AskEvent = SourcesEvent | DeltaEvent | DoneEvent
@@ -73,6 +77,7 @@ async def ask(
         refused=_is_refusal(answer),
         markers=extract_markers(answer, {c.marker for c in citations}),
         usage=usage,
+        cost=cost_for(chat.model_name, usage, load_price_table()),
     )
 
 

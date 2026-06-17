@@ -38,6 +38,7 @@ from ahx.generation.pipeline import (
     _is_refusal,  # pyright: ignore[reportPrivateUsage]
 )
 from ahx.llm import ChatModel, Usage, chat_model_from_settings
+from ahx.pricing import cost_for, load_price_table
 from ahx.retrieval.dense import RetrievedChunk
 from ahx.retrieval.embedding import EmbeddingClient
 from ahx.retrieval.factory import build_async_retriever
@@ -57,7 +58,9 @@ def _dedup(chunks: list[RetrievedChunk]) -> dict[int, RetrievedChunk]:
     return by_id
 
 
-def build_agent_events(state: AgentState) -> tuple[SourcesEvent, DoneEvent]:
+def build_agent_events(
+    state: AgentState, model_name: str | None = None
+) -> tuple[SourcesEvent, DoneEvent]:
     final = state["final"]
     assert final is not None  # the graph always terminates with a final result
 
@@ -100,15 +103,18 @@ def build_agent_events(state: AgentState) -> tuple[SourcesEvent, DoneEvent]:
         for (cid, chunk), marker in zip(relevant.items(), marker_of.values(), strict=True)
     ]
     sources = SourcesEvent(citations=citations, prompt_version=AGENT_PROMPT_VERSION)
+    # Summed across every think call — the agent's total generation tokens.
+    usage = Usage(
+        prompt_tokens=state["prompt_tokens"], completion_tokens=state["completion_tokens"]
+    )
     # `used` = the prose [c<id>] markers — the comparable, single-shot-style signal.
     done = DoneEvent(
         answer=rewritten,
         refused=_is_refusal(rewritten),
         markers=extract_markers(rewritten, set(marker_of.values())),
-        # Summed across every think call — the agent's total generation cost.
-        usage=Usage(
-            prompt_tokens=state["prompt_tokens"], completion_tokens=state["completion_tokens"]
-        ),
+        usage=usage,
+        # Model name only known at the call site (the graph hides it); None -> no cost.
+        cost=cost_for(model_name, usage, load_price_table()) if model_name else None,
     )
     return sources, done
 
@@ -131,7 +137,7 @@ def make_agent_engine(
 
     async def run_one(question: str) -> tuple[SourcesEvent, DoneEvent]:
         state = await invoke_agent(graph, question, max_steps)
-        return build_agent_events(state)
+        return build_agent_events(state, chat.model_name)
 
     return run_one
 
@@ -154,7 +160,7 @@ async def run_agent(
         toolbox = Toolbox(settings=settings, engine=engine, embedder=embedder, retriever=retriever)
         graph = build_agent_graph(chat, toolbox, max_steps)
         final_state = await invoke_agent(graph, question, max_steps)
-        sources, done = build_agent_events(final_state)
+        sources, done = build_agent_events(final_state, chat.model_name)
         return sources, done, final_state
     finally:
         await engine.dispose()
