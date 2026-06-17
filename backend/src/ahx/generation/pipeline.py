@@ -39,6 +39,22 @@ class DeltaEvent(BaseModel):
     text: str
 
 
+class StepEvent(BaseModel):
+    """One live ReAct step of the agent's "deep mode" (6.7) — emitted by the agent
+    runner as the loop runs so the client can render the search->read->cite loop.
+    Defined here to keep every SSE event model (and the guard wrapper over them) in
+    one vocabulary; this module imports no agent code. Not part of `AskEvent` — the
+    eval path never produces it."""
+
+    index: int  # 1-based step number in the loop
+    thought: str
+    tool: str  # "search" | "read" | "list_sources"
+    args: dict[str, object]
+    observation: str
+    chunk_ids: list[int] | None = None  # ids a search returned (rank order); None otherwise
+    searches_left: int
+
+
 class DoneEvent(BaseModel):
     answer: str
     refused: bool

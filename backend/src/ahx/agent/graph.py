@@ -29,7 +29,7 @@ is the runner's job, deliberately kept out of here.
 # package stays strict.
 # pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false
 
-from collections.abc import Callable, Sequence
+from collections.abc import AsyncIterator, Callable, Sequence
 from typing import Any, cast
 
 from langchain_core.runnables import RunnableConfig
@@ -52,6 +52,11 @@ from ahx.generation.prompt import REFUSAL_TEXT
 from ahx.llm import ChatMessage, ChatModel, Usage
 
 DEFAULT_MAX_STEPS = 8
+
+# The compiled-graph type, named once so the runner adapter can annotate the graph it
+# drives without re-spelling LangGraph's 4-arg generic. The framework type still lives
+# only on this boundary side (graph.py + the agent adapter), never in eval/API code.
+type AgentGraph = CompiledStateGraph[AgentState, None, AgentState, AgentState]
 
 # A grammar reply that won't parse is a TRANSIENT generation failure, not proof the
 # question is unanswerable: on hosted providers `response_format` is best-effort (not
@@ -235,3 +240,28 @@ async def invoke_agent(
     think-node's own forced-finalize bound."""
     config: RunnableConfig = {"recursion_limit": max_steps * 2 + 5}
     return cast(AgentState, await graph.ainvoke(initial_state(question), config))
+
+
+async def astream_agent(
+    graph: AgentGraph,
+    question: str,
+    max_steps: int = DEFAULT_MAX_STEPS,
+) -> AsyncIterator[Step | AgentState]:
+    """The streaming twin of invoke_agent (6.7 deep mode): yields each completed
+    ReAct `Step` as it lands, then the final `AgentState` last. Consumes
+    `graph.astream(stream_mode="values")` — each snapshot is the full merged state
+    after a node — and emits whatever history entries are newly appended, so the
+    LangGraph boundary stays inside this file (ADR-001). invoke_agent (the eval
+    path) is untouched; this is purely additive."""
+    config: RunnableConfig = {"recursion_limit": max_steps * 2 + 5}
+    emitted = 0
+    final_state: AgentState | None = None
+    async for snapshot in graph.astream(initial_state(question), config, stream_mode="values"):
+        state = cast(AgentState, snapshot)
+        final_state = state
+        history = state["history"]
+        while emitted < len(history):
+            yield history[emitted]
+            emitted += 1
+    assert final_state is not None  # astream always yields at least the final state
+    yield final_state

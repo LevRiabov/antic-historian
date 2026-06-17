@@ -32,7 +32,7 @@ from pydantic import BaseModel
 
 from ahx.config import Settings
 from ahx.generation.citations import MarkerAudit
-from ahx.generation.pipeline import AskEvent, DoneEvent, Retriever, SourcesEvent, ask
+from ahx.generation.pipeline import AskEvent, DoneEvent, Retriever, SourcesEvent, StepEvent, ask
 from ahx.generation.prompt import PROMPT_VERSION, REFUSAL_TEXT, SYSTEM_PROMPT
 from ahx.llm import ChatModel
 
@@ -146,6 +146,26 @@ def guard_config_from_settings(settings: Settings) -> DefenseConfig:
     )
 
 
+async def guard_stream(
+    question: str,
+    events: AsyncIterator[AskEvent | StepEvent],
+    cfg: DefenseConfig,
+    canary: str,
+    prompt_version: str,
+) -> AsyncIterator[AskEvent | StepEvent]:
+    """Wrap ANY ask-event stream in the deterministic guard — single-shot OR the deep
+    agent. A D3 input block short-circuits to a well-formed envelope WITHOUT iterating
+    `events` (generators are lazy, so retrieval/model never start); otherwise each
+    DoneEvent is output-validated and everything else (incl. agent StepEvents) passes
+    through. `prompt_version` labels the block envelope's sources."""
+    if cfg.input_blocklist and input_blocklist_hit(question):
+        yield SourcesEvent(citations=[], prompt_version=prompt_version)
+        yield refusal_done(SECURITY_REDACTION)
+        return
+    async for event in events:
+        yield apply_output_defenses(event, cfg, canary) if isinstance(event, DoneEvent) else event
+
+
 async def guarded_events(
     question: str,
     retriever: Retriever,
@@ -153,13 +173,10 @@ async def guarded_events(
     cfg: DefenseConfig,
     canary: str,
     top_k: int = 5,
-) -> AsyncIterator[AskEvent]:
-    """The served pipeline wrapped in the deterministic guard. A D3 block short-circuits
-    to a well-formed SSE envelope (empty sources + a blocked done) with NO retrieval/model
-    call; otherwise the normal stream runs and the done event is output-validated."""
-    if cfg.input_blocklist and input_blocklist_hit(question):
-        yield SourcesEvent(citations=[], prompt_version=PROMPT_VERSION)
-        yield refusal_done(SECURITY_REDACTION)
-        return
-    async for event in ask(question, retriever, chat, top_k):
-        yield apply_output_defenses(event, cfg, canary) if isinstance(event, DoneEvent) else event
+) -> AsyncIterator[AskEvent | StepEvent]:
+    """Single-shot served pipeline wrapped in the guard (the fast-path convenience over
+    guard_stream). Deep mode wraps make_agent_streamer's output the same way in app.py."""
+    async for event in guard_stream(
+        question, ask(question, retriever, chat, top_k), cfg, canary, PROMPT_VERSION
+    ):
+        yield event

@@ -21,20 +21,29 @@ handles semantic refusals downstream, exactly as for single-shot.
 """
 
 import re
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from ahx.agent.graph import DEFAULT_MAX_STEPS, build_agent_graph, invoke_agent
+from ahx.agent.graph import (
+    DEFAULT_MAX_STEPS,
+    AgentGraph,
+    astream_agent,
+    build_agent_graph,
+    invoke_agent,
+)
 from ahx.agent.prompts import AGENT_PROMPT_VERSION
-from ahx.agent.state import AgentState
+from ahx.agent.state import AgentState, Step
 from ahx.agent.tools import Toolbox
 from ahx.config import Settings
 from ahx.db import create_async_db_engine
 from ahx.generation.citations import Citation, extract_markers
 from ahx.generation.pipeline import (
+    AskEvent,
+    DeltaEvent,
     DoneEvent,
     SourcesEvent,
+    StepEvent,
     _is_refusal,  # pyright: ignore[reportPrivateUsage]
 )
 from ahx.llm import ChatModel, Usage, chat_model_from_settings
@@ -115,8 +124,85 @@ def build_agent_events(
         usage=usage,
         # Model name only known at the call site (the graph hides it); None -> no cost.
         cost=cost_for(model_name, usage, load_price_table()) if model_name else None,
+        # served_by (6.4): the nominal chat model. A mid-run provider fallover prices
+        # the whole run at this id (the graph doesn't track per-call served_by) — a
+        # documented approximation, acceptable since fallover is the rare path.
+        served_by=model_name,
     )
     return sources, done
+
+
+# A per-question deep-mode event source (6.7). Returns the lazy async iterator so a
+# caller (the guard) can decide NOT to start it — e.g. on a blocked input.
+AgentStreamer = Callable[[str], AsyncIterator[AskEvent | StepEvent]]
+
+
+def _answer_deltas(answer: str) -> list[str]:
+    """Split the already-decided answer into word-sized pieces for a typing effect.
+    Cosmetic ONLY — the text is byte-identical to what the eval/judge scored
+    (eval==served); deep mode just displays it progressively (trailing space kept
+    with each word so the pieces re-join exactly)."""
+    return re.findall(r"\S+\s*", answer)
+
+
+async def stream_agent_events(
+    graph: AgentGraph,
+    question: str,
+    model_name: str | None = None,
+    max_steps: int = DEFAULT_MAX_STEPS,
+) -> AsyncIterator[AskEvent | StepEvent]:
+    """Deep-mode event stream (6.7): a `StepEvent` per live ReAct step, then the SAME
+    SourcesEvent / DeltaEvent* / DoneEvent the single-shot path emits (built by
+    build_agent_events) — so eval==served holds: the answer text is exactly what the
+    judge scored, the deltas are a cosmetic display stream of it. The finalize step is
+    suppressed (it's conveyed by the sources + streamed answer that follow)."""
+    index = 0
+    final_state: AgentState | None = None
+    async for item in astream_agent(graph, question, max_steps):
+        if isinstance(item, Step):
+            if item.action == "finalize":
+                continue
+            index += 1
+            yield StepEvent(
+                index=index,
+                thought=item.thought,
+                tool=item.action,
+                args=item.args,
+                observation=item.observation,
+                chunk_ids=item.chunk_ids,
+                searches_left=max(0, max_steps - index),
+            )
+        else:
+            final_state = item
+    assert final_state is not None
+    sources, done = build_agent_events(final_state, model_name)
+    yield sources
+    for piece in _answer_deltas(done.answer):
+        yield DeltaEvent(text=piece)
+    yield done
+
+
+def make_agent_streamer(
+    settings: Settings,
+    engine: AsyncEngine,
+    chat: ChatModel,
+    retriever_name: str,
+    max_steps: int = DEFAULT_MAX_STEPS,
+) -> AgentStreamer:
+    """Build the deep-mode agent ONCE over an externally-managed engine (the API
+    lifespan seam) and return a per-question streaming callable. Mirrors
+    make_agent_engine but yields the live step stream; the compiled graph stays hidden
+    in the closure (thin-waist rule). `chat` is the API's traced+composite model, so
+    deep-mode steps are traced and fall over across providers for free."""
+    embedder = EmbeddingClient(settings)
+    retriever = build_async_retriever(settings, engine, embedder, retriever_name)
+    toolbox = Toolbox(settings=settings, engine=engine, embedder=embedder, retriever=retriever)
+    graph = build_agent_graph(chat, toolbox, max_steps)
+
+    def run_one(question: str) -> AsyncIterator[AskEvent | StepEvent]:
+        return stream_agent_events(graph, question, chat.model_name, max_steps)
+
+    return run_one
 
 
 def make_agent_engine(

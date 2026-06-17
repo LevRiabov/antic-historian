@@ -9,8 +9,10 @@ import httpx
 import pytest
 
 import ahx
-from ahx.api.app import app, get_chat, get_guard, get_retriever
+from ahx.api.app import app, get_agent_streamer, get_chat, get_guard, get_retriever
 from ahx.api.limits import RateLimiter
+from ahx.generation.citations import Citation, MarkerAudit
+from ahx.generation.pipeline import DeltaEvent, DoneEvent, SourcesEvent, StepEvent
 from ahx.guard import SECURITY_REDACTION, DefenseConfig
 from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent, TextDelta, Usage
 from ahx.retrieval.dense import RetrievedChunk
@@ -165,6 +167,79 @@ async def test_ask_session_cap_returns_structured_429(ask_client: httpx.AsyncCli
         assert detail["limit"] == 1
     finally:
         del app.state.limiter
+
+
+def fake_agent_streamer(question: str) -> AsyncIterator[object]:
+    """Deep-mode (6.7) stand-in: yields a live step, then the same sources/deltas/done a
+    real agent run would. No LangGraph/DB — exercises only the route wiring + guard."""
+
+    async def gen() -> AsyncIterator[object]:
+        yield StepEvent(
+            index=1,
+            thought="search the corpus",
+            tool="search",
+            args={"query": "caesar"},
+            observation="2 hits",
+            chunk_ids=[101, 102],
+            searches_left=7,
+        )
+        yield SourcesEvent(
+            citations=[
+                Citation(
+                    marker=1,
+                    chunk_id=101,
+                    pg_id=1,
+                    author="Suetonius",
+                    work_title="Lives",
+                    locator=["1", "1"],
+                    text="t",
+                    score=0.8,
+                    char_start=0,
+                    char_end=10,
+                )
+            ],
+            prompt_version="agent-v5",
+        )
+        yield DeltaEvent(text="Stabbed ")
+        yield DeltaEvent(text="23 times [1].")
+        yield DoneEvent(
+            answer="Stabbed 23 times [1].",
+            refused=False,
+            markers=MarkerAudit(used=[1], dangling=[]),
+            usage=Usage(prompt_tokens=100, completion_tokens=20),
+            served_by="deepseek/deepseek-v4-pro",
+        )
+
+    return gen()
+
+
+async def test_ask_deep_mode_streams_steps_then_answer(ask_client: httpx.AsyncClient) -> None:
+    # 6.7: mode=deep streams a `step` event during the loop, then sources -> delta* -> done.
+    app.dependency_overrides[get_agent_streamer] = lambda: fake_agent_streamer
+    try:
+        response = await ask_client.post(
+            "/ask", json={"question": "How did Caesar die?", "mode": "deep"}
+        )
+    finally:
+        app.dependency_overrides.pop(get_agent_streamer, None)
+
+    assert response.status_code == 200
+    events = parse_sse(response.text)
+    assert [name for name, _ in events] == ["meta", "step", "sources", "delta", "delta", "done"]
+    step = events[1][1]
+    assert step["tool"] == "search" and step["index"] == 1 and step["chunk_ids"] == [101, 102]
+    done = events[-1][1]
+    assert done["answer"] == "Stabbed 23 times [1]."
+    assert done["served_by"] == "deepseek/deepseek-v4-pro"
+
+
+async def test_ask_deep_mode_503_when_agent_unavailable(ask_client: httpx.AsyncClient) -> None:
+    # No agent_streamer on app.state (lifespan didn't run) -> deep mode 503s rather than
+    # silently downgrading to fast.
+    response = await ask_client.post(
+        "/ask", json={"question": "How did Caesar die?", "mode": "deep"}
+    )
+    assert response.status_code == 503
 
 
 async def test_ask_ip_rate_limit_returns_429_with_retry_after(

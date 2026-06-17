@@ -96,6 +96,12 @@ class Settings(BaseSettings):
     # the SSE indicator + trace. JSON-encoded list of ChatEndpoint via AHX_CHAT_FALLBACKS.
     chat_fallbacks: list[ChatEndpoint] = []
 
+    # Deep mode (6.7) — the agent served as opt-in "deep mode" over /ask (streams its
+    # search->read->cite loop). Retrieval = the D5 KEEP (dense-ctx-v1, NO paid reranker
+    # on the served path); max_steps matches the eval default so served == measured.
+    agent_retriever: str = "dense-ctx-v1"
+    agent_max_steps: int = 8
+
     # Rate limiting + per-session cap (6.4) — load-bearing for a public, abusable demo
     # where every query is hosted spend (phase-6-plan §cost-of-a-query). In-memory,
     # single-instance (api/limits.py); Redis is the documented scale path. Both limits

@@ -18,12 +18,12 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from ahx.agent.actions import Decision, Finalize, Search
-from ahx.agent.graph import build_agent_graph, invoke_agent
-from ahx.agent.runner import build_agent_events
-from ahx.agent.state import AgentResult, AgentState
+from ahx.agent.graph import astream_agent, build_agent_graph, invoke_agent
+from ahx.agent.runner import build_agent_events, stream_agent_events
+from ahx.agent.state import AgentResult, AgentState, Step
 from ahx.agent.tools import Toolbox, execute
 from ahx.config import Settings
-from ahx.generation.pipeline import Retriever
+from ahx.generation.pipeline import DeltaEvent, DoneEvent, Retriever, SourcesEvent, StepEvent
 from ahx.generation.prompt import REFUSAL_TEXT
 from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent, Usage
 from ahx.retrieval.dense import RetrievedChunk
@@ -340,3 +340,67 @@ async def test_execute_rejects_finalize() -> None:
     tb = fake_toolbox(make_retriever([]))
     with pytest.raises(ValueError):
         await execute(Finalize(tool="finalize", answer="x"), tb)
+
+
+# --- deep-mode streaming (6.7) ---
+
+
+async def test_astream_agent_emits_steps_then_final_state() -> None:
+    # The streaming twin of invoke_agent: each completed Step lands as it happens, the
+    # final AgentState comes last (so the runner can build the same events as single-shot).
+    chat = FakeChat(
+        [
+            Decision(thought="search", action=Search(tool="search", query="caesar")),
+            Decision(thought="answer", action=Finalize(tool="finalize", answer="Stabbed [c101].")),
+        ]
+    )
+    graph = build_agent_graph(chat, fake_toolbox(make_retriever([chunk(101)])), max_steps=8)
+    items = [item async for item in astream_agent(graph, "q", 8)]
+
+    steps = [i for i in items if isinstance(i, Step)]
+    assert [s.action for s in steps] == ["search", "finalize"]
+    final = items[-1]
+    assert not isinstance(final, Step)  # final AgentState last
+    assert final["final"] is not None and final["final"].answer == "Stabbed [c101]."
+
+
+async def test_stream_agent_events_steps_then_eval_identical_answer() -> None:
+    # Deep mode emits a StepEvent per live step, then the SAME sources/deltas/done as
+    # single-shot. The finalize step is suppressed; the streamed deltas re-join to the
+    # exact (renumbered) answer build_agent_events produced — eval==served.
+    chat = FakeChat(
+        [
+            Decision(
+                thought="search the corpus",
+                keep_ids=[101],
+                action=Search(tool="search", query="caesar"),
+            ),
+            Decision(
+                thought="enough",
+                action=Finalize(tool="finalize", answer="Stabbed 23 times [c101]."),
+            ),
+        ]
+    )
+    graph = build_agent_graph(chat, fake_toolbox(make_retriever([chunk(101)])), max_steps=8)
+    events = [e async for e in stream_agent_events(graph, "q", "fake-model", 8)]
+
+    names = [type(e).__name__ for e in events]
+    assert names[0] == "StepEvent"  # live step first
+    assert names[1] == "SourcesEvent"
+    assert names[-1] == "DoneEvent"
+
+    steps = [e for e in events if isinstance(e, StepEvent)]
+    assert len(steps) == 1  # the search; the finalize step is suppressed
+    assert steps[0].tool == "search" and steps[0].index == 1 and steps[0].searches_left == 7
+    assert steps[0].chunk_ids == [101]
+
+    sources = next(e for e in events if isinstance(e, SourcesEvent))
+    assert [c.chunk_id for c in sources.citations] == [101]
+
+    done = events[-1]
+    assert isinstance(done, DoneEvent)
+    assert done.answer == "Stabbed 23 times [1]."  # renumbered, eval-identical
+    assert done.served_by == "fake-model"
+
+    deltas = "".join(e.text for e in events if isinstance(e, DeltaEvent))
+    assert deltas == done.answer  # cosmetic stream re-joins to the exact answer
