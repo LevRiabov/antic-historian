@@ -102,16 +102,24 @@ asserting refusal fires when sources are empty. **No heavyweight guardrails fram
 > production playbook (uploads/sensitive-tools/trifecta) as an appendix. 6.3 stays lean; the lab
 > is where the security *learning* lives.
 
-## Workstream 6.4 — Fallback chain + visible indicator
-`CompositeChatModel` implementing the `ChatModel` Protocol, wrapping an ordered lineup (from
-D5). Per-model retry/backoff already exists ([llm.py](backend/src/ahx/llm.py#L29)); this is the
-cross-provider layer above it. **Fall over on initial failure, before the first delta** — once
-tokens ship you can't switch mid-stream. Record `served_by` → SSE indicator → UI badge. Pair
-with **rate limiting + per-session caps** (slowapi or a small custom middleware on the API): a
-global/IP limit (abuse) + a per-session query cap (free-tier protection, surfaced as "N of M
-left"). In-memory is fine for single-instance free-tier; Redis is the documented scale path.
-Returns a structured 429.
-**Exit:** a forced primary outage shows the fallback indicator; rate limit + cap demonstrable.
+## Workstream 6.4 — Fallback chain + visible indicator ✅ DONE (2026-06-17)
+`CompositeChatModel` ([llm.py](backend/src/ahx/llm.py)) wraps the D5 lineup `[primary,
+*AHX_CHAT_FALLBACKS]` and **falls over only before the first delta** (peek-the-first-stream-
+event; once tokens ship a mid-stream failure propagates, can't switch) — the cross-provider
+layer above each model's own retry/backoff. `served_by` rides on `StreamEnd`/`ChatResult` (NOT
+shared instance state — the composite is shared across concurrent requests): each model stamps
+its own id, the composite passes the served one through, and the pipeline prices cost + labels
+the SSE `done` event + Langfuse trace by the model that ACTUALLY served. Lineup config (ADR-003):
+served primary = deepseek-v4-pro, backups kimi-k2.6 + qwen3.7-max (distinct families; shared
+OpenRouter gateway, noted as the residual single-point). **Rate limit + per-session cap**
+([api/limits.py](backend/src/ahx/api/limits.py)): a small CUSTOM in-memory limiter (not slowapi —
+the per-session "N of M left" counter is bespoke) behind a `RateLimiter` interface (Redis = the
+documented scale path); an IP sliding window (abuse) + a lifetime session cap (free-tier, keyed on
+a client `X-Session-Id` header) enforced as an `/ask` dependency → a structured **429** (+
+`Retry-After`) BEFORE the stream opens (no model spend on a rejected request). "N of M left" rides
+a new `meta` SSE event. Verified by tests (fallover `served_by` + mid-stream-propagate + all-down,
+limiter arithmetic + reject-without-consume, route 429s); no golden-set run — not a quality lever.
+**Commit `1ed986a`.**
 
 ## Workstream 6.5 — Model routing (cheap/expensive) — through the ablation door
 A **measured 2-tier switch** (quality vs cheap), NOT a clever query-complexity router (that's an
@@ -128,14 +136,25 @@ Measure the token-cost delta if built.
 **Exit:** either a measured token-cost delta, or a one-line note that the chosen lineup doesn't
 support it (rejection-with-receipts).
 
-## Workstream 6.7 — Stream the agent ("deep mode" over the API)
-Today [runner.py](backend/src/ahx/agent/runner.py) returns a finished `(SourcesEvent, DoneEvent)`
-— no deltas. To serve the agent in the chat UI as a streamed "watch it search" experience, emit
-step events (thought / action / observation) over SSE plus a final token-streamed synthesis.
-Keep the eval path unchanged (it consumes the finished tuple). New SSE event types alongside
-`sources`/`delta`/`done`.
-**Exit:** `/ask?mode=deep` (or equivalent) streams the agent's reasoning steps then its cited
-answer; single-shot remains the default.
+## Workstream 6.7 — Stream the agent ("deep mode" over the API) ✅ DONE (2026-06-17)
+`mode: "deep"` on `/ask` streams the ReAct loop live then the cited answer — order: `meta → step*
+→ sources → delta* → done`, with a new `step` SSE event (`thought`/`tool`/`args`/`observation`/
+`chunk_ids`/`searches_left`). `astream_agent` ([graph.py](backend/src/ahx/agent/graph.py)) drives
+`graph.astream(stream_mode="values")`, yielding each completed `Step` as it lands then the final
+`AgentState` — the LangGraph type stays inside the boundary file (new `AgentGraph` alias);
+`invoke_agent` (the eval path) is untouched. `stream_agent_events` + `make_agent_streamer`
+([runner.py](backend/src/ahx/agent/runner.py)) emit the `StepEvent`s then reuse the existing
+`build_agent_events` for the SAME `sources`/`done` as single-shot — so **eval == served**: the
+answer is the grammar-decided text the judge scored, and the deltas are a *cosmetic* word-stream of
+it (true token-streaming was the rejected option — it would diverge served from measured + need a
+paid re-validation). The guard was factored into `guard_stream`, shared by both paths (input block
+short-circuits BEFORE the expensive loop; output validation on the final answer). Built once in
+`lifespan` over the traced+composite chat → deep steps are traced and fall over across providers;
+served on `dense-ctx-v1` (the D5 KEEP, no paid reranker); `served_by` + `cost` ride the agent
+`done` event (6.4/6.2); a `503` fires if deep is requested when unavailable. **Verified live** (one
+deepseek-v4-pro deep query): streamed `search`/`read`/`list_sources` steps, 14 citations across 6
+authors, `served_by=deepseek/deepseek-v4-pro`, `cost=$0.0101` priced, 369 deltas re-joining exactly
+to the answer. Tests: `astream_agent`, `stream_agent_events`, deep-mode route + 503. **Commit `588bbdf`.**
 
 ---
 
