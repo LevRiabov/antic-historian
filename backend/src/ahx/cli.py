@@ -68,6 +68,20 @@ def db_ensure_fts() -> None:
     console.print("[green]FTS column + GIN index ensured (hybrid BM25 ready).[/green]")
 
 
+@db_app.command(name="ensure-source-metadata")
+def db_ensure_source_metadata() -> None:
+    """Add the public-facing provenance columns (pd_basis, landing_url) in place, then
+    re-run `ahx ingest load` to backfill them from the manifest — no re-embed (Phase 7)."""
+    from ahx.config import get_settings
+    from ahx.db import create_sync_engine, ensure_source_metadata
+
+    ensure_source_metadata(create_sync_engine(get_settings().database_url))
+    console.print(
+        "[green]Source provenance columns ensured. "
+        "Run `ahx ingest load` to backfill from the manifest.[/green]"
+    )
+
+
 @ingest_app.command()
 def download(force: bool = typer.Option(False, help="Re-download even if cached.")) -> None:
     """Fetch every manifest entry into corpus/raw/ (idempotent)."""
@@ -169,7 +183,7 @@ def load() -> None:
     import time
 
     from ahx.config import get_settings
-    from ahx.db import create_sync_engine
+    from ahx.db import create_sync_engine, ensure_source_metadata
     from ahx.ingest.manifest import parse_manifest
     from ahx.ingest.pipeline import load_one
     from ahx.retrieval.embedding import EmbeddingClient
@@ -177,6 +191,9 @@ def load() -> None:
     settings = get_settings()
     entries = parse_manifest(settings.manifest_path)
     engine = create_sync_engine(settings.database_url)
+    # Idempotent guard so a reload on a pre-Phase-7 DB has the provenance columns the
+    # source `merge` writes (no-op on a fresh `ahx db init` DB, which already has them).
+    ensure_source_metadata(engine)
     embedder = EmbeddingClient(settings)
     chunks_dir = settings.corpus_dir / "chunks"
 
@@ -479,11 +496,17 @@ def validate() -> None:
 def eval_run(
     retriever: str = typer.Option("dense-v1", help="Retriever variant label for the run record."),
     top_k: int = typer.Option(20, help="Retrieval depth."),
+    smoke: bool = typer.Option(
+        False,
+        "--smoke",
+        help="Tag the record -smoke (a throwaway run, never published by the API).",
+    ),
 ) -> None:
     """Run retrieval-tier eval (recall@k, MRR) and save a versioned run record."""
     from ahx.config import get_settings
     from ahx.evals.golden import CATEGORIES, load_golden_set
     from ahx.evals.retrieval import K_VALUES, run_retrieval_eval, save_run
+    from ahx.evals.runs import RAG_TAG, SMOKE_TAG
 
     settings = get_settings()
     golden_dir = Path(__file__).resolve().parents[2] / "evals" / "golden"
@@ -517,8 +540,7 @@ def eval_run(
     )
     console.print(table)
 
-    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
-    path = save_run(run, runs_dir)
+    path = save_run(run, settings.eval_runs_dir, tag=SMOKE_TAG if smoke else RAG_TAG)
     console.print(f"Run record: {path}")
 
 
@@ -544,6 +566,9 @@ def generate(
         "bottleneck, so raise this to shorten the run; complete() retries 429s with "
         "backoff. Pin it across compared runs for reproducibility.",
     ),
+    smoke: bool = typer.Option(
+        False, "--smoke", help="Tag the record -smoke (never published by the API)."
+    ),
 ) -> None:
     """Run the generation-tier eval (full ask pipeline over the golden set)."""
     import sys
@@ -555,6 +580,7 @@ def generate(
         save_generation_run,
     )
     from ahx.evals.golden import CATEGORIES, load_golden_set
+    from ahx.evals.runs import AGENT_TAG, SMOKE_TAG
     from ahx.llm import attribution_judge_from_settings, judge_model_from_settings
 
     settings = get_settings()
@@ -672,8 +698,14 @@ def generate(
         f"mean completion tokens: {aggregates.mean_completion_tokens or 0:.0f}"
     )
 
-    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
-    path = save_generation_run(run, runs_dir)
+    # A partial pass (--limit / --ids) is a dry run by definition: tag it -smoke so it
+    # can't become "the latest agent run" the API publishes. --smoke forces it too.
+    is_smoke = smoke or bool(limit) or bool(ids)
+    path = save_generation_run(
+        run, settings.eval_runs_dir, tag=SMOKE_TAG if is_smoke else AGENT_TAG
+    )
+    if is_smoke:
+        console.print("[dim]tagged -smoke (partial/dry run; not published)[/dim]")
     console.print(f"Run record: {path}")
 
 
@@ -684,6 +716,9 @@ def rejudge(
     concurrency: int = typer.Option(
         8, help="Frozen answers re-scored in parallel (provider-rate-bound; retries 429s)."
     ),
+    smoke: bool = typer.Option(
+        False, "--smoke", help="Tag the record -smoke (never published by the API)."
+    ),
 ) -> None:
     """Re-judge a saved run's frozen answers with the current rubric —
     isolates judge changes from generation nondeterminism."""
@@ -691,6 +726,7 @@ def rejudge(
 
     from ahx.config import get_settings
     from ahx.evals.generation import GenQuestionResult, rejudge_run, save_generation_run
+    from ahx.evals.runs import AGENT_TAG, SMOKE_TAG
     from ahx.llm import attribution_judge_from_settings, judge_model_from_settings
 
     settings = get_settings()
@@ -732,8 +768,7 @@ def rejudge(
         f"attrib={score(run.aggregates.attribution)} "
         f"(judge {run.judge_model}, rubric {run.judge_rubric})"
     )
-    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "runs"
-    path = save_generation_run(run, runs_dir)
+    path = save_generation_run(run, settings.eval_runs_dir, tag=SMOKE_TAG if smoke else AGENT_TAG)
     console.print(f"Run record: {path}")
 
 
@@ -884,8 +919,7 @@ def security_run(
     )
     console.print(table)
 
-    runs_dir = Path(__file__).resolve().parents[2] / "evals" / "security_runs"
-    path = save_security_run(run, runs_dir)
+    path = save_security_run(run, settings.security_runs_dir)
     console.print(f"Run record: {path}")
 
 

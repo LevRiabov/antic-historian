@@ -45,6 +45,7 @@ from ahx.evals.golden import (
     ResolvedSpan,
     resolve_span,
 )
+from ahx.evals.runs import RAG_TAG, tagged_stem
 from ahx.retrieval.dense import RetrievedChunk
 from ahx.retrieval.embedding import EmbeddingClient
 
@@ -258,9 +259,9 @@ def run_retrieval_eval(
     )
 
 
-def save_run(run: RetrievalRun, runs_dir: Path) -> Path:
+def save_run(run: RetrievalRun, runs_dir: Path, tag: str = RAG_TAG) -> Path:
     runs_dir.mkdir(parents=True, exist_ok=True)
     stamp = run.created_at.replace(":", "-").replace("+00-00", "Z")
-    path = runs_dir / f"{stamp}-{run.retriever}.json"
+    path = runs_dir / f"{tagged_stem(f'{stamp}-{run.retriever}', tag)}.json"
     path.write_text(run.model_dump_json(indent=2), encoding="utf-8")
     return path

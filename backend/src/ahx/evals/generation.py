@@ -35,6 +35,7 @@ from ahx.evals.golden import (
     ResolvedSpan,
     resolve_span,
 )
+from ahx.evals.runs import AGENT_TAG, tagged_stem
 from ahx.generation.citations import Citation
 from ahx.generation.pipeline import DoneEvent, SourcesEvent, ask, collect
 from ahx.generation.prompt import PROMPT_VERSION
@@ -841,9 +842,9 @@ async def rejudge_run(
     return run
 
 
-def save_generation_run(run: GenerationRun, runs_dir: Path) -> Path:
+def save_generation_run(run: GenerationRun, runs_dir: Path, tag: str = AGENT_TAG) -> Path:
     runs_dir.mkdir(parents=True, exist_ok=True)
     stamp = run.created_at.replace(":", "-").replace("+00-00", "Z")
-    path = runs_dir / f"{stamp}-{run.label}.json"
+    path = runs_dir / f"{tagged_stem(f'{stamp}-{run.label}', tag)}.json"
     path.write_text(run.model_dump_json(indent=2), encoding="utf-8")
     return path

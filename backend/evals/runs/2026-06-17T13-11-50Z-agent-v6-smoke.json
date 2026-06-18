@@ -1,0 +1,166 @@
+{
+  "created_at": "2026-06-17T13:11:50+00:00",
+  "label": "agent-v6-smoke",
+  "chat_model": "deepseek/deepseek-v4-pro",
+  "embed_model": "qwen/qwen3-embedding-8b",
+  "chunking_version": "structural-v1",
+  "prompt_version": "agent-v6",
+  "top_k": 5,
+  "engine": "agent",
+  "agent_max_steps": 8,
+  "retriever": "dense-ctx-v1",
+  "rerank_model": null,
+  "rerank_pool_n": null,
+  "judge_model": "moonshotai/kimi-k2.6",
+  "attribution_judge_model": "qwen/qwen3.7-max",
+  "judge_rubric": "judge-v3.3",
+  "aggregates": {
+    "questions": 3,
+    "refusal_accuracy_oos": 1.0,
+    "false_refusal_rate": 0.0,
+    "citation_span_recall": 0.5333333333333333,
+    "citation_precision": 0.8333333333333333,
+    "faithfulness": 5.0,
+    "completeness": 5.0,
+    "attribution": 5.0,
+    "mean_latency_ms": 49677,
+    "mean_completion_tokens": 1434.0,
+    "by_category": {
+      "literal": {
+        "count": 1,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.4,
+        "citation_precision": 0.6666666666666666,
+        "faithfulness": 5.0,
+        "completeness": 5.0,
+        "attribution": 5.0,
+        "mean_latency_ms": 21431
+      },
+      "contradiction": {
+        "count": 1,
+        "refused": 0,
+        "refusal_correct": 1.0,
+        "citation_span_recall": 0.6666666666666666,
+        "citation_precision": 1.0,
+        "faithfulness": 5.0,
+        "completeness": 5.0,
+        "attribution": 5.0,
+        "mean_latency_ms": 112725
+      },
+      "out-of-scope": {
+        "count": 1,
+        "refused": 1,
+        "refusal_correct": 1.0,
+        "citation_span_recall": null,
+        "citation_precision": null,
+        "faithfulness": null,
+        "completeness": null,
+        "attribution": null,
+        "mean_latency_ms": 14876
+      }
+    }
+  },
+  "results": [
+    {
+      "question_id": "lit-001",
+      "category": "literal",
+      "question": "How many wounds did Julius Caesar receive when he was assassinated?",
+      "ideal_answer": "According to Suetonius, Caesar was stabbed with twenty-three wounds. He uttered a groan at the first wound but no cry, though some report that he said \"And you too, my son?\" to Marcus Brutus.",
+      "answer": "Julius Caesar received twenty-three wounds when he was assassinated. Suetonius reports \"he was stabbed with three and twenty wounds\" [2], and Appian gives the same count: \"he had received twenty-three wounds\" [3] (also paraphrasing Suetonius as \"stabbed with twenty-three wounds\" [1]). Among these, only the second wound — the one he received in the breast — was deemed mortal by the physician Antistius [2][1].",
+      "refused": false,
+      "refused_semantic": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        3,
+        1
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        21311,
+        4501,
+        21310
+      ],
+      "cited_chunk_ids": [
+        4501,
+        21310,
+        21311
+      ],
+      "citation_span_recall": 0.4,
+      "citation_precision": 0.6666666666666666,
+      "faithfulness": 5,
+      "completeness": 5,
+      "attribution": 5,
+      "judge_notes": "faithfulness: All claims, including the count of twenty-three wounds, the mortal wound to the breast, and the attributions to Suetonius and Appian, are directly supported by the provided source passages. | completeness: The answer fully and directly states that Caesar received twenty-three wounds, completely addressing the question asked, and extra correct detail about the mortal wound does not reduce its completeness score. | attribution: The sources agree on the number of wounds and the details of the mortal wound, and the answer correctly attributes the information to the respective sources without any misattribution.",
+      "latency_ms": 21431,
+      "prompt_tokens": 6807,
+      "completion_tokens": 564,
+      "trace_id": "08b0c83818098c090743617ebb022363"
+    },
+    {
+      "question_id": "con-012",
+      "category": "contradiction",
+      "question": "How was the city of Nineveh captured and the Assyrian empire brought to an end?",
+      "ideal_answer": "The accounts disagree on how Nineveh fell. In the version Herodotus and Rawlinson follow, it was taken by a Median assault: Cyaxares, allied with the Babylonian Nabopolassar, pressed the siege until the Assyrian king's means of resistance were exhausted and he burned himself in his palace. A rival tradition, reported from Ctesias, has the walls breached not by storm but by nature — an unusually wet season swelled the Tigris until it burst in and swept away more than two miles of wall, after which the king set fire to himself. Both traditions end with the king's self-immolation, but differ on whether the city fell to siege or to flood.",
+      "answer": "Nineveh was captured and the Assyrian empire brought to an end through a combined assault by the Medes and Babylonians. Our sources preserve two distinct traditions of how this happened.\n\nAccording to the account of Ctesias (preserved via Diodorus Siculus and summarised by George Rawlinson), the Median commander Arbaces and the Babylonian Belesys led a coalition that also included Persians and Arabs, numbering four hundred thousand men. After a series of defeats, the allied army received reinforcements from Bactria, surprised the Assyrian camp, and forced the Assyrian king Sardanapalus back into Nineveh. The city was strongly fortified and well provisioned, and \"the siege...had lasted two full years, and the third year had commenced—success seemed still far off—when an unusually rainy season so swelled the waters of the Tigris that they burst into the city, sweeping away more than two miles of the wall.\" With this \"vast breach...impossible to repair,\" Sardanapalus \"brought the struggle to an end by burning himself, with his concubines and eunuchs and all his chief wealth, in his palace\" [2].\n\nA second historical reconstruction, also given by Rawlinson, focuses on the betrayal of Nabopolassar. The last Assyrian king, Saracus, divided his forces to face simultaneous threats from the Medes under Cyaxares and from an enemy advancing by sea. He entrusted a portion of his army to his general Nabopolassar, sending him to Babylon, while he himself prepared to confront the Medes. But \"the faithless Nabopolassar saw in his sovereign's difficulty his own opportunity\" and \"secretly negotiated an arrangement with Cyaxares, agreed to become his ally against the Assyrians, and obtained the Median king's daughter as a bride for Nebuchadnezzar, his eldest son.\" The two then attacked Nineveh together. Saracus, \"unable to resist them, took counsel of his despair, and, after all means of resistance were exhausted, burned himself in his palace\" [4].\n\nBoth traditions agree on the final outcome: an alliance of Medes and Babylonians (with other allies in the Ctesias version) besieged Nineveh, and the Assyrian monarch ended his own life by fire in his palace. The differences lie in the role of the Tigris flood and the identity of the king (Sardanapalus vs. Saracus). Rawlinson expresses scepticism about Ctesias, noting that \"we cannot feel sure, with regard to any statement made solely by that writer, that it has any other source than his imagination\" [4].",
+      "refused": false,
+      "refused_semantic": false,
+      "refusal_expected": false,
+      "refusal_correct": true,
+      "markers_used": [
+        2,
+        4
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        17023,
+        42007,
+        34409,
+        41845,
+        16941,
+        22767
+      ],
+      "cited_chunk_ids": [
+        42007,
+        41845
+      ],
+      "citation_span_recall": 0.6666666666666666,
+      "citation_precision": 1.0,
+      "faithfulness": 5,
+      "completeness": 5,
+      "attribution": 5,
+      "judge_notes": "faithfulness: All claims, including the two competing traditions, specific details, and direct quotations, are fully supported by passages [2] and [4], with no invented facts, names, or outcomes. | completeness: It fully answers the question by detailing both traditions of Nineveh's fall (the flood-breach and the siege-betrayal accounts) and the king's self-immolation that ended Assyrian resistance, omitting nothing the question asks. | attribution: The answer correctly surfaces the differing historical traditions regarding the fall of Nineveh and clearly attributes each distinct account to its respective source in prose.",
+      "latency_ms": 112725,
+      "prompt_tokens": 52134,
+      "completion_tokens": 3108,
+      "trace_id": "609102d9ddb00313257646fbe126e990"
+    },
+    {
+      "question_id": "oos-024",
+      "category": "out-of-scope",
+      "question": "What natural wonders does Pliny the Elder describe in his Natural History?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain Pliny the Elder's Natural History. I cannot report what he describes from the sources here.",
+      "refused": false,
+      "refused_semantic": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "attribution": null,
+      "judge_notes": "refusal=True: The answer explicitly states that the provided sources do not contain Pliny the Elder's Natural History and therefore declines to supply the requested description.",
+      "latency_ms": 14876,
+      "prompt_tokens": 6435,
+      "completion_tokens": 630,
+      "trace_id": "ece0e5435426250b253ef4b528368b7c"
+    }
+  ]
+}

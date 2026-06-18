@@ -9,8 +9,23 @@ import httpx
 import pytest
 
 import ahx
-from ahx.api.app import app, get_agent_streamer, get_chat, get_guard, get_retriever
+from ahx.api.app import (
+    app,
+    get_agent_streamer,
+    get_chat,
+    get_eval_agent,
+    get_eval_rag,
+    get_guard,
+    get_retriever,
+    get_security_baseline,
+    get_security_defended,
+    get_sources,
+)
 from ahx.api.limits import RateLimiter
+from ahx.api.sources import SourceOut, source_label
+from ahx.evals.generation import GenAggregates, GenerationRun
+from ahx.evals.retrieval import Aggregates, RetrievalRun
+from ahx.evals.security import CategoryASR, SecurityAggregates, SecurityRun
 from ahx.generation.citations import Citation, MarkerAudit
 from ahx.generation.pipeline import DeltaEvent, DoneEvent, SourcesEvent, StepEvent
 from ahx.guard import SECURITY_REDACTION, DefenseConfig
@@ -83,6 +98,181 @@ async def test_health() -> None:
         response = await client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "version": ahx.__version__}
+
+
+def test_source_label_maps_known_hosts_and_falls_back() -> None:
+    assert source_label("https://www.gutenberg.org/ebooks/2707") == "Project Gutenberg"
+    assert source_label("https://archive.org/details/romanhistory") == "Internet Archive"
+    assert (
+        source_label("https://classics.mit.edu/Tacitus/annals.html") == "Internet Classics Archive"
+    )
+    # Unknown host -> bare host (no www.); empty -> "Unknown".
+    assert source_label("https://example.org/x") == "example.org"
+    assert source_label("") == "Unknown"
+
+
+async def test_sources_route_returns_corpus_listing() -> None:
+    listing = [
+        SourceOut(
+            pg_id=2707,
+            author="Herodotus",
+            title="The History of Herodotus, Vol. I (of 2)",
+            translator="G. C. Macaulay",
+            category="primary",
+            pd_basis="Macaulay d.1915 (+70=1985)",
+            source="Project Gutenberg",
+            landing_url="https://www.gutenberg.org/ebooks/2707",
+            chunks=412,
+        )
+    ]
+    app.dependency_overrides[get_sources] = lambda: lambda: _async_value(listing)
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/sources")
+    finally:
+        app.dependency_overrides.pop(get_sources, None)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body[0]["author"] == "Herodotus"
+    assert body[0]["source"] == "Project Gutenberg"
+    assert body[0]["pd_basis"] == "Macaulay d.1915 (+70=1985)"
+    assert body[0]["chunks"] == 412
+
+
+async def test_sources_route_503_when_unavailable() -> None:
+    # No provider on app.state (lifespan didn't run) -> 503 rather than a 500 from a DB call.
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/sources")
+    assert response.status_code == 503
+
+
+async def _async_value(value: Any) -> Any:
+    return value
+
+
+def _fake_rag_run() -> RetrievalRun:
+    return RetrievalRun(
+        created_at="2026-06-14T20-24-19Z",
+        retriever="dense-ctx-v1",
+        embed_model="qwen/qwen3-embedding-8b",
+        chunking_version="chunk-v1",
+        top_k=20,
+        aggregates=Aggregates(recall={5: 0.78, 20: 0.91}, mrr=0.66, by_category={}),
+        results=[],
+    )
+
+
+def _fake_agent_run() -> GenerationRun:
+    return GenerationRun(
+        created_at="2026-06-17T14-09-09Z",
+        label="gen-agent-v6",
+        chat_model="deepseek/deepseek-v4-pro",
+        embed_model="qwen/qwen3-embedding-8b",
+        chunking_version="chunk-v1",
+        prompt_version="agent-v6",
+        top_k=5,
+        judge_model="moonshotai/kimi-k2.6",
+        aggregates=GenAggregates(
+            questions=161,
+            refusal_accuracy_oos=0.96,
+            false_refusal_rate=0.0,
+            citation_span_recall=0.78,
+            citation_precision=0.9,
+            faithfulness=4.4,
+            completeness=4.6,
+            attribution=4.5,
+            mean_latency_ms=1200,
+            mean_completion_tokens=180.0,
+            by_category={},
+        ),
+        results=[],
+    )
+
+
+async def test_evals_rag_route_returns_latest_retrieval_run() -> None:
+    app.dependency_overrides[get_eval_rag] = _fake_rag_run
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/evals/rag")
+    finally:
+        app.dependency_overrides.pop(get_eval_rag, None)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["retriever"] == "dense-ctx-v1"
+    assert body["aggregates"]["recall"]["5"] == 0.78
+
+
+async def test_evals_agent_route_returns_latest_generation_run() -> None:
+    app.dependency_overrides[get_eval_agent] = _fake_agent_run
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/evals/agent")
+    finally:
+        app.dependency_overrides.pop(get_eval_agent, None)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["label"] == "gen-agent-v6"
+    assert body["aggregates"]["questions"] == 161
+    assert body["aggregates"]["faithfulness"] == 4.4
+
+
+async def test_evals_routes_503_when_no_run_available() -> None:
+    # Lifespan didn't run -> no run on app.state -> 503 for both tiers.
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        assert (await client.get("/evals/rag")).status_code == 503
+        assert (await client.get("/evals/agent")).status_code == 503
+
+
+def _fake_security_run(defense: str, asr: float) -> SecurityRun:
+    return SecurityRun(
+        created_at="2026-06-17T09-33-42Z",
+        label=f"audit-deepseek-{defense}",
+        chat_model="deepseek/deepseek-v4-pro",
+        prompt_version="baseline-v2",
+        retriever="dense-ctx-v1",
+        defense=defense,
+        aggregates=SecurityAggregates(
+            attacks=40,
+            successes=round(asr * 40),
+            asr=asr,
+            by_category={"extraction": CategoryASR(count=12, successes=round(asr * 12), asr=asr)},
+        ),
+        results=[],
+    )
+
+
+async def test_security_routes_return_baseline_and_defended() -> None:
+    app.dependency_overrides[get_security_baseline] = lambda: _fake_security_run("baseline", 0.175)
+    app.dependency_overrides[get_security_defended] = lambda: _fake_security_run(
+        "defense-stack", 0.0
+    )
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            base = await client.get("/evals/security/baseline")
+            defended = await client.get("/evals/security/defended")
+    finally:
+        app.dependency_overrides.pop(get_security_baseline, None)
+        app.dependency_overrides.pop(get_security_defended, None)
+    assert base.status_code == 200
+    assert base.json()["defense"] == "baseline"
+    assert base.json()["aggregates"]["asr"] == 0.175
+    assert defended.status_code == 200
+    assert defended.json()["defense"] == "defense-stack"
+    assert defended.json()["aggregates"]["asr"] == 0.0
+
+
+async def test_security_routes_503_when_no_run_available() -> None:
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        assert (await client.get("/evals/security/baseline")).status_code == 503
+        assert (await client.get("/evals/security/defended")).status_code == 503
 
 
 async def test_ask_streams_sources_deltas_done(ask_client: httpx.AsyncClient) -> None:

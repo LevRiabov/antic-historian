@@ -38,6 +38,14 @@ class SourceRow(Base):
     category: Mapped[str]
     translator: Mapped[str]
     parser: Mapped[str]
+    # Public-facing provenance, carried from the manifest (Phase 7 /sources page).
+    # Nullable so an in-place column ADD (ensure_source_metadata) on a DB loaded
+    # before these existed is valid until the next `ahx ingest load` backfills them.
+    # `pd_basis` = the EU-PD justification per work; `landing_url` = the canonical
+    # source page (the human "Project Gutenberg / Internet Archive" label is derived
+    # from its host at query time — not stored, to keep one source of truth).
+    pd_basis: Mapped[str | None] = mapped_column(nullable=True)
+    landing_url: Mapped[str | None] = mapped_column(nullable=True)
 
 
 class ChunkRow(Base):
@@ -124,6 +132,20 @@ def ensure_fts(engine: Engine) -> None:
         connection.execute(
             text("CREATE INDEX IF NOT EXISTS ix_chunks_text_tsv_gin ON chunks USING gin (text_tsv)")
         )
+
+
+def ensure_source_metadata(engine: Engine) -> None:
+    """Add the public-facing provenance columns (pd_basis, landing_url) IN PLACE.
+
+    Idempotent (Phase 7 /sources page). `create_all` (fresh DB) already produces
+    these from the model; this path upgrades a DB whose `sources` table predates
+    them. Same names both ways. Re-run `ahx ingest load` afterwards to backfill the
+    values from the manifest — the loader's source `merge` updates them on every
+    pass without re-embedding.
+    """
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE sources ADD COLUMN IF NOT EXISTS pd_basis text"))
+        connection.execute(text("ALTER TABLE sources ADD COLUMN IF NOT EXISTS landing_url text"))
 
 
 def reset_chunks(engine: Engine) -> None:

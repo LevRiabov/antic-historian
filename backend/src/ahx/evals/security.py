@@ -33,6 +33,7 @@ from pydantic import BaseModel
 
 from ahx.config import Settings
 from ahx.db import create_async_db_engine
+from ahx.evals.runs import BASELINE_TAG, DEFENDED_TAG, tagged_stem
 from ahx.generation.citations import MarkerAudit
 from ahx.generation.pipeline import DoneEvent, ask, collect
 from ahx.generation.prompt import PROMPT_VERSION
@@ -304,10 +305,16 @@ async def run_security_eval(
     )
 
 
+def security_tag(defense: str) -> str:
+    """Terminal filename tag for a security run: the unprotected floor is `baseline`,
+    any defense arm (the shipped stack or a single lever) is `defended`."""
+    return BASELINE_TAG if defense == "baseline" else DEFENDED_TAG
+
+
 def save_security_run(run: SecurityRun, runs_dir: Path) -> Path:
     runs_dir.mkdir(parents=True, exist_ok=True)
-    stamp = run.created_at.replace(":", "-")
-    path = runs_dir / f"{stamp}-{run.label}.json"
+    stamp = run.created_at.replace(":", "-").replace("+00-00", "Z")
+    path = runs_dir / f"{tagged_stem(f'{stamp}-{run.label}', security_tag(run.defense))}.json"
     path.write_text(run.model_dump_json(indent=2), encoding="utf-8")
     return path
 

@@ -159,6 +159,18 @@ class Settings(BaseSettings):
         return self.corpus_dir / "ai_historian_corpus_eu_pd.txt"
 
     @property
+    def eval_runs_dir(self) -> Path:
+        # Saved eval run records (backend/evals/runs). The API publishes the latest
+        # -rag / -agent run from here (api/evals.py); the eval CLI writes them.
+        return _BACKEND_DIR / "evals" / "runs"
+
+    @property
+    def security_runs_dir(self) -> Path:
+        # Saved security-audit records (backend/evals/security_runs). The API publishes
+        # the latest -baseline / -defended run from here for the security page.
+        return _BACKEND_DIR / "evals" / "security_runs"
+
+    @property
     def corpus_raw_dir(self) -> Path:
         return self.corpus_dir / "raw"
 

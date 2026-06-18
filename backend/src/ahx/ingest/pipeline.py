@@ -178,6 +178,8 @@ def load_one(
                 category=entry.category,
                 translator=entry.translator,
                 parser=work.parser,
+                pd_basis=entry.pd_basis,
+                landing_url=entry.landing_url,
             )
         )
         existing = session.scalar(
