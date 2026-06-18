@@ -9,6 +9,24 @@
 
 export type AskMode = "fast" | "deep";
 
+export type SourceCategory = "primary" | "scholarship";
+
+/** One corpus work as GET /sources returns it. Mirrors ahx/api/sources.py:SourceOut.
+ *  Note: the API is 1:1 with the DB, so a multi-volume set appears as its separate
+ *  volumes (one row each), not a single grouped row — `chunks` is the auditable
+ *  passage count per work. */
+export interface SourceOut {
+  pg_id: number;
+  author: string;
+  title: string;
+  translator: string;
+  category: SourceCategory;
+  pd_basis: string; // EU public-domain justification
+  source: string; // derived publisher label, e.g. "Project Gutenberg"
+  landing_url: string; // canonical source page for the "↗" link
+  chunks: number; // retrievable passages in the DB
+}
+
 export interface Citation {
   marker: number; // the [n] the answer text refers to
   chunk_id: number;
