@@ -4,6 +4,7 @@ export interface TabItem<T extends string> {
   value: T;
   label: string;
   count?: number;
+  color?: string; // optional leading dot (e.g. per-category hue on the evals page)
 }
 
 export function FilterTabs<T extends string>({
@@ -38,6 +39,13 @@ export function FilterTabs<T extends string>({
                 : "text-accent-ink/80 hover:bg-accent/10"
             }`}
           >
+            {item.color && (
+              <span
+                className="h-2 w-2 flex-none rounded-full"
+                style={{ background: item.color }}
+                aria-hidden
+              />
+            )}
             {item.label}
             {item.count !== undefined && (
               <span

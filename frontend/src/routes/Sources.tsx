@@ -6,6 +6,7 @@ import { SourcesTable } from "@/components/sources/SourcesTable";
 import { SummaryBar } from "@/components/sources/SummaryBar";
 import { FilterTabs, type TabItem } from "@/components/ui/FilterTabs";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { ErrorPanel, TableSkeleton } from "@/components/ui/StatePanels";
 import { getSources } from "@/lib/api";
 import {
   categoryCounts,
@@ -63,7 +64,11 @@ export function Sources() {
       </header>
 
       {isError ? (
-        <ErrorPanel message={error instanceof Error ? error.message : "Request failed"} onRetry={() => void refetch()} />
+        <ErrorPanel
+          title="Couldn’t load the corpus."
+          message={error instanceof Error ? error.message : "Request failed"}
+          onRetry={() => void refetch()}
+        />
       ) : isLoading ? (
         <TableSkeleton />
       ) : (
@@ -139,32 +144,5 @@ function MobileSortButton({
         {!active ? "⇅" : sortDir === "asc" ? "▲" : "▼"}
       </span>
     </button>
-  );
-}
-
-function TableSkeleton() {
-  return (
-    <div className="mt-4 animate-pulse rounded-2xl border border-line bg-surface p-4 shadow-card">
-      <div className="h-9 rounded bg-line/60" />
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="mt-3 h-6 rounded bg-line/40" />
-      ))}
-    </div>
-  );
-}
-
-function ErrorPanel({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="mt-4 rounded-2xl border border-line bg-surface p-8 text-center shadow-card">
-      <p className="text-sm text-refuse">Couldn’t load the corpus.</p>
-      <p className="mt-1 font-mono text-xs text-ink-faint">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-4 rounded-full bg-accent-soft px-4 py-1.5 text-sm font-semibold text-accent-ink hover:bg-accent/10"
-      >
-        Retry
-      </button>
-    </div>
   );
 }

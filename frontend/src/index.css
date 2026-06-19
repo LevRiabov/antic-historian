@@ -29,6 +29,8 @@
   --color-amber-soft: #faf0dd;
   --color-refuse: #b5621f;
   --color-refuse-soft: #fbf1e8;
+  --color-danger: #b3322a; /* security breaches — a step past refuse */
+  --color-danger-soft: #fbeceb;
 
   /* muted data-viz hues for the agent trace */
   --color-viz-teal: #2f9e8f;

@@ -59,7 +59,10 @@ export async function* askStream(params: AskParams): AsyncGenerator<AskEvent> {
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-      buffer += value;
+      // Normalize CRLF -> LF: sse_starlette delimits frames with "\r\n\r\n", so a
+      // bare "\n\n" search would never match. Re-normalizing the whole remaining
+      // buffer each read also stitches a CRLF that straddled two chunks.
+      buffer = (buffer + value).replace(/\r\n/g, "\n");
 
       // SSE frames are separated by a blank line. Process every complete frame
       // in the buffer; keep the trailing partial for the next chunk.
@@ -71,6 +74,9 @@ export async function* askStream(params: AskParams): AsyncGenerator<AskEvent> {
         if (parsed) yield parsed;
       }
     }
+    // Flush a final frame that wasn't terminated by a blank line.
+    const tail = parseFrame(buffer);
+    if (tail) yield tail;
   } finally {
     reader.cancel().catch(() => undefined);
   }
