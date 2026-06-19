@@ -1,0 +1,103 @@
+{
+  "created_at": "2026-06-18T10:41:16+00:00",
+  "label": "spot-oos-v3.4",
+  "chat_model": "deepseek/deepseek-v4-pro",
+  "embed_model": "qwen/qwen3-embedding-8b",
+  "chunking_version": "structural-v1",
+  "prompt_version": "agent-v6",
+  "top_k": 5,
+  "engine": "agent",
+  "agent_max_steps": 8,
+  "retriever": "dense-ctx-v1",
+  "rerank_model": null,
+  "rerank_pool_n": null,
+  "judge_model": "moonshotai/kimi-k2.6",
+  "attribution_judge_model": "qwen/qwen3.7-max",
+  "judge_rubric": "judge-v3.4",
+  "aggregates": {
+    "questions": 2,
+    "refusal_accuracy_oos": 1.0,
+    "false_refusal_rate": 0.0,
+    "citation_span_recall": null,
+    "citation_precision": null,
+    "faithfulness": null,
+    "completeness": null,
+    "attribution": null,
+    "mean_latency_ms": 77452,
+    "mean_completion_tokens": 1926.0,
+    "by_category": {
+      "out-of-scope": {
+        "count": 2,
+        "refused": 2,
+        "refusal_correct": 1.0,
+        "citation_span_recall": null,
+        "citation_precision": null,
+        "faithfulness": null,
+        "completeness": null,
+        "attribution": null,
+        "mean_latency_ms": 77452
+      }
+    }
+  },
+  "results": [
+    {
+      "question_id": "oos-010",
+      "category": "out-of-scope",
+      "question": "What do the Fayum mummy portraits reveal about the people of Roman Egypt?",
+      "ideal_answer": "",
+      "answer": "The provided sources do not contain enough information to answer this question.",
+      "refused": true,
+      "refused_semantic": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [],
+      "cited_chunk_ids": [],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "attribution": null,
+      "judge_notes": "refusal: exact contract sentence (mechanical match)",
+      "latency_ms": 128928,
+      "prompt_tokens": 80989,
+      "completion_tokens": 2890,
+      "trace_id": "c4486c29a74988383953f3e8cccff063"
+    },
+    {
+      "question_id": "oos-023",
+      "category": "out-of-scope",
+      "question": "What does Sappho's poetry express about love and longing?",
+      "ideal_answer": "",
+      "answer": "The corpus does not contain any of Sappho's poetry. She is mentioned in several secondary works—for example, in Grote's History of Greece [1] and in Strabo's Geography [2]—but none of these provide her actual text. I therefore cannot report what her poetry expresses about love and longing from the sources here.",
+      "refused": false,
+      "refused_semantic": true,
+      "refusal_expected": true,
+      "refusal_correct": true,
+      "markers_used": [
+        1,
+        2
+      ],
+      "markers_dangling": [],
+      "retrieved_chunk_ids": [
+        34850,
+        12535
+      ],
+      "cited_chunk_ids": [
+        34850,
+        12535
+      ],
+      "citation_span_recall": null,
+      "citation_precision": null,
+      "faithfulness": null,
+      "completeness": null,
+      "attribution": null,
+      "judge_notes": "refusal=True: It explicitly states the corpus lacks Sappho's poetry, notes that secondary sources do not provide her actual text, and declines to report the work's own content.",
+      "latency_ms": 25977,
+      "prompt_tokens": 15366,
+      "completion_tokens": 962,
+      "trace_id": "c867463d74a6fb4c38fb6f302333abe8"
+    }
+  ]
+}

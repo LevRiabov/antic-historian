@@ -248,6 +248,18 @@ class RefusalVerdict(BaseModel):
     reason: str = ""
 
 
+class AttributionVerdict(BaseModel):
+    """judge-v3.6: structured attribution — the judge COUNTS errors and code maps the
+    counts to a graduated 1-5 (`attribution_score`). Replaces the holistic 1/3/5 rubric
+    whose single misattribution -> 1 cliff (a 4-point drop) starved the middle of the
+    scale AND drove the documented 1<->5 re-score flips (eval-log 2026-06-15)."""
+
+    absent: int = Field(ge=0)  # required source-namings missing from the prose
+    incorrect: int = Field(ge=0)  # claims credited to a source that does not support them
+    settled: bool = False  # presents a genuinely CONTESTED point as settled (worst case)
+    reason: str = ""
+
+
 # Rubric history (rule #5 — judge changes are measured, see eval-log):
 # judge-v1: judge saw only CITED chunks -> correct-but-miscited answers scored
 #   like fabrications, double-counting what citation_precision already measures.
@@ -296,7 +308,52 @@ class RefusalVerdict(BaseModel):
 #   from the source's ancient reckoning (AUC / regnal year / Olympiad) plus common knowledge,
 #   but a WRONG date/term/name is an error, not a free pass, and scores in the 3/1 band.
 #   Faithfulness only; completeness/attribution/refusal unchanged.
-JUDGE_RUBRIC_VERSION = "judge-v3.3"
+# judge-v3.4: refusal-judge STABILITY fix for the source-absent template (rule #5). The
+#   disciplined refusal-with-provenance pattern deepseek-pro emits — "the corpus does not contain
+#   X; it is only discussed in [secondary authors] [n] ... I cannot report what X itself says" —
+#   sent the judge two competing signals (explicit absence + decline vs. a relayed secondary
+#   characterization) with NO precedence rule, so it flipped run-to-run: oos-023 (Sappho) scored
+#   refusal-correct in the D5/v4/v5 runs but flipped to a leak in agent-v6 on a byte-near-identical
+#   answer, while the six sibling answers using the IDENTICAL template (oos-019/020/022/024/025/026)
+#   scored refusal-correct every run. oos-023's only difference: it briefly QUOTES Grote's
+#   characterization rather than just naming him, tipping the ad-hoc balance. v3.4 adds a
+#   deterministic precedence rule — an explicit "work absent + I cannot report its own content" IS
+#   a refusal even when it names or briefly quotes clearly-attributed secondary commentary; it
+#   becomes an ATTEMPT only when the substitute is presented AS the work's content WITHOUT that
+#   decline (the gemma-era leaks — Bury's Syracuse dressed as the Republic's ideal state;
+#   oos-024's recited NH book-structure — lack the decline, so they stay leaks). Refusal-judge
+#   only; faithfulness/completeness/attribution unchanged. Isolate by `eval rejudge` of frozen
+#   answers (expected to flip exactly oos-023 in the v6 set; all other OOS verdicts unchanged).
+# judge-v3.5: faithfulness 4-anchor for the peripheral/rhetorical unsourced detail (calibration,
+#   rule #5). v3.3's 3-anchor lumped three things at 3: (a) a rhetorical figure of speech or a
+#   true-but-immaterial aside not in the retrieved excerpt, (b) an invented CHECKABLE specific
+#   presented as sourced, (c) a factual claim contradicting the passages. (a) over-penalized a
+#   fully-grounded answer — synth-001's "Antony dies in her arms" is both a rhetorical close AND
+#   literally true in Plutarch (the cited author); synth-003 relayed "debt / harsh creditors", a
+#   real but peripheral Livy theme absent from the excerpt. Both scored 3, the same band as
+#   invention. v3.5 splits the band on ONE auditable test — does the unsourced element MISLEAD
+#   about a checkable fact? No (rhetorical/immaterial) -> 4; yes (invented proper noun / number /
+#   date / outcome, or a contradiction) -> 3; a fabricated quote or load-bearing invention -> 1.
+#   So synth-001/003 -> 4, while synth-012 (invented "Caesarea") and synth-014 (source names two
+#   dead, answer says "many of the Thirty") stay 3 and synth-005 (memorized verbatim quotes not in
+#   the retrieved chunks) stays 1. Faithfulness anchors only; completeness/attribution/refusal
+#   unchanged. Isolate by `eval rejudge` of frozen answers + human spot-check of EVERY moved
+#   verdict (rule #6 — faithfulness is the headline trust number; only fix demonstrable
+#   miscalibration, never a score that merely felt low).
+# judge-v3.6: structured ATTRIBUTION — counts, not a holistic 1/3/5 (rule #5). The v3-v3.5
+#   attribution rubric only defined 1/3/5 anchors and sent ANY misattribution straight to 1,
+#   so in practice answers scored 5 (clean) or 1 (one wrong author) with nothing between — and
+#   that 4-point cliff on a single borderline "is this misattribution?" call WAS the source of
+#   the documented 1<->5 re-score flips (eval-log 2026-06-15, the attribution-noise blocker).
+#   v3.6 has the judge COUNT two error types — `absent` (a required source-naming missing from
+#   prose) and `incorrect` (a claim credited to a non-supporting source) — plus a `settled`
+#   flag (a contested point asserted as settled); `attribution_score` maps the counts to 1-5
+#   in code (absent=1 demerit; first incorrect=2, each further=1; settled=1). This makes 2 and
+#   4 reachable, turns one misattribution into a one-band drop (5->3) instead of a cliff, and —
+#   being a count of discrete items rather than a holistic gestalt — cuts the re-score variance.
+#   The count breakdown is stored in judge_notes for audit. Attribution rubric only; the split
+#   judge still routes it to the stronger attribution model. Isolate by `eval rejudge`.
+JUDGE_RUBRIC_VERSION = "judge-v3.6"
 
 FAITHFULNESS_RUBRIC = """You are grading a RAG system's answer for FAITHFULNESS: did the
 model invent content, or is everything grounded in the source passages it was shown?
@@ -304,12 +361,20 @@ model invent content, or is everything grounded in the source passages it was sh
 Below are ALL passages the model saw, numbered exactly as shown to it; the ones it
 actually cited are flagged "(cited)". Score 1-5:
 5 = every claim is supported by SOME passage below, even one it failed to cite;
-4 = grounded, but a claim is attributed to the wrong author/source or wrong marker;
-3 = mostly grounded, but adds a NEW fact, quote, name, or outcome that appears in no
-    passage and is not a restatement of source content (a minor invention);
-1 = substantial invented content found in no passage below.
+4 = grounded EXCEPT for one minor blemish that does NOT mislead about a checkable fact —
+    EITHER a claim attributed to the wrong author/source or wrong marker, OR a single
+    PERIPHERAL element not in any passage that is mere rhetorical framing or a true,
+    immaterial aside (a figure of speech; a corroborating remark the answer does not
+    rest on);
+3 = mostly grounded, but introduces a CHECKABLE specific that appears in NO passage and
+    is presented as if sourced — an invented proper noun, number, date, or specific
+    outcome — OR a factual claim that CONTRADICTS the passages (a reader could be misled);
+1 = substantial invented content found in no passage below — a fabricated direct quote, or
+    multiple / load-bearing inventions.
 Wrong citation markers alone must NOT take the score below 4 — citation accuracy is
 measured separately. Invented content is the failure this score exists to catch.
+The 4-vs-3 line is exactly whether a reader is MISLED about a checkable fact: a rhetorical
+or immaterial aside is 4; an invented or contradicted checkable specific is 3.
 
 A standard modern equivalent or definitional gloss of a term or event that IS in the
 sources counts as GROUNDED, not invented — do NOT lower the score for a CORRECT gloss.
@@ -359,37 +424,39 @@ Answer to grade:
 
 Reply with ONLY a JSON object: {{"score": <1-5>, "reason": "<one sentence>"}}"""
 
-ATTRIBUTION_RUBRIC = """You are grading a RAG system's answer for ATTRIBUTION.
+ATTRIBUTION_RUBRIC = """You are grading a RAG system's answer for ATTRIBUTION. You will
+COUNT attribution errors; the numeric score is computed from your counts in code, so count
+carefully and do NOT output a score yourself.
 
-Policy: when the source passages DISAGREE, or the answer draws on SEVERAL different
-sources, the answer must make clear IN PROSE which source each version or contribution
-comes from (e.g. "Suetonius reports X, but Dio says Y", or "Plutarch describes... while
-Arrian adds..."). When the sources simply agree, naming each one is optional and its
-absence is NOT a fault. Bare citation markers like [1][2] are NOT prose attribution: they
-cannot tell a reader that two sources DISAGREE.
+Policy: when the source passages DISAGREE, or the answer draws on SEVERAL different sources,
+the answer must make clear IN PROSE which source each version or contribution comes from
+(e.g. "Suetonius reports X, but Dio says Y", or "Plutarch describes... while Arrian adds...").
+When the sources simply AGREE, naming each one is optional and its absence is NOT a fault.
+Bare citation markers like [1][2] are NOT prose attribution: they cannot tell a reader that
+two sources DISAGREE or which source a contribution came from.
 
 Step 1 — do the passages relevant to the question AGREE or DISAGREE on the point at issue?
 Treat them as DISAGREEING only when they make INCOMPATIBLE claims about the SAME point (X
 cannot be true if Y is). One source merely OMITTING a detail another includes, or differing
 in emphasis, wording, or which aspects it covers, is NOT a disagreement — that is agreement
-plus extra detail, and needs no disagreement-surfacing.
-Step 2 — score 1-5:
-- If they AGREE (or only one source is used): score 5 as long as nothing is misattributed.
-  Bare markers are correct here — do NOT penalize the absence of prose attribution, and do
-  NOT invent a disagreement that isn't there.
-- If they DISAGREE: 5 = the answer surfaces the disagreement AND names each version's
-  source in prose (or, for multi-source synthesis, attributes the distinct contributions);
-  3 = surfaces the disagreement but leaves it unattributed, or attributes some parts while
-  blurring others; 1 = presents the contested point as settled (silently picks one side).
-- Misattribution scores 1 in either case: a claim is credited to a source that does not
-  actually support it. This INCLUDES naming the wrong author in prose — e.g. writing
-  "Tacitus says X" when X comes from a different author's passage (say Gibbon) or from an
-  editorial footnote, not from that author's own text. Check that the author NAMED in the
-  prose matches the author of a passage that genuinely supports the claim.
-  NOT misattribution: a claim correctly credited to a supporting source that ALSO carries
-  extra on-topic corroborating markers from other authors (stray extra markers are a
-  citation-precision matter; a question scoped to one author does not make a correct
-  corroborating citation a misattribution).
+plus extra detail, and needs NO disagreement-surfacing.
+
+Step 2 — identify the attributions the answer is REQUIRED to make: each distinct CONFLICTING
+version (on a disagreement) and each distinct SOURCE CONTRIBUTION (on a multi-source answer).
+An agree / single-source answer usually has NO required attributions.
+
+Step 3 — classify and COUNT (a correct attribution counts as neither):
+- absent: a required attribution the answer does NOT make in prose — it surfaces the version
+  or uses the contribution but does not name its source (or names it only with a bare marker).
+- incorrect: a claim credited to a source that does NOT support it — naming the wrong author
+  in prose (e.g. "Tacitus says X" when X comes from a different author's passage, say Gibbon,
+  or from an editorial footnote). Check the author NAMED matches a passage that genuinely
+  supports the claim. NOT incorrect: a correctly-credited claim that ALSO carries extra
+  on-topic corroborating markers from other authors (a citation-precision matter, not
+  misattribution); and do NOT invent a disagreement that isn't there.
+- settled: TRUE only if the answer presents a genuinely CONTESTED point as SETTLED — asserts
+  one side and does not present the conflicting version at all (the worst case; overrides the
+  counts).
 
 Below are ALL passages the model saw, numbered as shown to it; the ones it cited are
 flagged "(cited)".
@@ -402,7 +469,8 @@ Source passages:
 Answer to grade:
 {answer}
 
-Reply with ONLY a JSON object: {{"score": <1-5>, "reason": "<one sentence>"}}"""
+Report ONLY this JSON: {{"absent": <int>, "incorrect": <int>, "settled": <true|false>, \
+"reason": "<one sentence naming the specific errors, or noting there are none>"}}"""
 
 
 REFUSAL_JUDGE = """Decide whether the following answer is a REFUSAL — it declines to give
@@ -414,11 +482,22 @@ Count as a REFUSAL ("yes"):
   impossible requested fact — EVEN IF it volunteers correct related facts or a correction.
   (Illustrative only: a question asking "which fleet did Hannibal command on the Moon" met with
   "the sources record no such event; Hannibal led no lunar campaign" is a refusal.)
+- It EXPLICITLY states the named work/text is absent from the sources AND explicitly declines to
+  report that work's OWN content — even if it also names or briefly quotes clearly-attributed
+  secondary commentary ABOUT the author or work. The labelled secondary mention plus the explicit
+  decline is honest provenance, not a substitution. (Illustrative only: "the corpus does not
+  contain X; a secondary author notes Y about its author [n] ... but I cannot report what X itself
+  says from the sources here" is a refusal.)
 
 Count as an ATTEMPT ("no"):
-- It supplies the requested fact/description, including by SUBSTITUTING adjacent or secondary
-  material for an absent named work — answering from other authors who merely discuss that work
-  or its author is an ATTEMPT, not a refusal.
+- It supplies the requested fact/description AS the answer, including by SUBSTITUTING adjacent or
+  secondary material for an absent named work and presenting that material AS the work's content —
+  answering from other authors who merely discuss the work or its author, WITHOUT an explicit
+  statement that the work is absent and that its own content cannot be reported, is an ATTEMPT.
+
+Decisive test for the source-absent case: does the answer explicitly decline to report the absent
+work's OWN content, with any secondary material clearly labelled as commentary about the author?
+Yes -> REFUSAL. No (it presents the substitute as the requested answer) -> ATTEMPT.
 
 These examples are illustrative of the RULE only; judge the answer below on its own.
 
@@ -469,6 +548,36 @@ def parse_refusal_verdict(raw: str) -> RefusalVerdict | None:
     return None if token is None else RefusalVerdict(refusal=token, reason="")
 
 
+def parse_attribution_verdict(raw: str) -> AttributionVerdict | None:
+    """Parse the judge-v3.6 structured attribution JSON (counts, not a score)."""
+    start, end = raw.find("{"), raw.rfind("}")
+    if start == -1 or end <= start:
+        return None
+    try:
+        return AttributionVerdict.model_validate(json.loads(raw[start : end + 1]))
+    except (json.JSONDecodeError, ValueError):
+        return None
+
+
+def attribution_score(v: AttributionVerdict) -> int:
+    """Map attribution error counts to 1-5 (judge-v3.6), deterministically in code so a
+    borderline call moves the score by one band, not by the old 4-point 5->1 cliff:
+
+        no errors                          -> 5
+        1 absent                           -> 4
+        2 absent  OR 1 incorrect           -> 3
+        3 absent  OR 2 incorrect           -> 2
+        >=4 absent OR >=3 incorrect, or a contested point presented as settled -> 1
+
+    Demerits: each `absent` = 1; the FIRST `incorrect` = 2, each further `incorrect` = 1
+    more (a wrong source label is worse than a missing one). `settled` is the worst case.
+    """
+    if v.settled:
+        return 1
+    demerits = v.absent + (v.incorrect + 1 if v.incorrect >= 1 else 0)
+    return max(1, 5 - demerits)
+
+
 async def judge_question(
     judge: ChatModel,
     result: GenQuestionResult,
@@ -515,51 +624,43 @@ async def judge_question(
         for c in citations
     )
     # The three rubrics are independent hosted calls — fire them concurrently.
-    # gather preserves order, so judge_notes stays deterministic. Attribution is
-    # routed to a (stronger) judge when configured — it's the one rubric a flash
-    # judge can't score stably (eval-log 2026-06-15); faith/compl stay on `judge`.
+    # Attribution is routed to a (stronger) judge when configured — the one rubric a
+    # flash judge can't score stably (eval-log 2026-06-15); faith/compl stay on `judge`.
+    # judge-v3.6: attribution returns structured COUNTS scored deterministically in code
+    # (attribution_score), so faith/compl take the {score,reason} path while attribution
+    # takes its own — the count breakdown is stored in judge_notes for audit.
     attrib_judge = attribution_judge or judge
-    rubrics = (
-        (
-            "faithfulness",
-            judge,
-            FAITHFULNESS_RUBRIC.format(
-                question=result.question,
-                sources=sources_text or "(none cited)",
-                answer=result.answer,
-            ),
-        ),
-        (
-            "completeness",
-            judge,
-            COMPLETENESS_RUBRIC.format(
-                question=result.question, ideal=result.ideal_answer, answer=result.answer
-            ),
-        ),
-        (
-            "attribution",
-            attrib_judge,
-            ATTRIBUTION_RUBRIC.format(
-                question=result.question,
-                sources=sources_text or "(none cited)",
-                answer=result.answer,
-            ),
-        ),
+    faith_prompt = FAITHFULNESS_RUBRIC.format(
+        question=result.question, sources=sources_text or "(none cited)", answer=result.answer
     )
-    responses = await asyncio.gather(
-        *(
-            model.complete([ChatMessage(role="user", content=prompt)])
-            for _, model, prompt in rubrics
-        )
+    compl_prompt = COMPLETENESS_RUBRIC.format(
+        question=result.question, ideal=result.ideal_answer, answer=result.answer
+    )
+    attrib_prompt = ATTRIBUTION_RUBRIC.format(
+        question=result.question, sources=sources_text or "(none cited)", answer=result.answer
+    )
+    faith_resp, compl_resp, attrib_resp = await asyncio.gather(
+        judge.complete([ChatMessage(role="user", content=faith_prompt)]),
+        judge.complete([ChatMessage(role="user", content=compl_prompt)]),
+        attrib_judge.complete([ChatMessage(role="user", content=attrib_prompt)]),
     )
     notes: list[str] = []
-    for (field, _, _), response in zip(rubrics, responses, strict=True):
+    for field, response in (("faithfulness", faith_resp), ("completeness", compl_resp)):
         verdict = parse_verdict(response.text)
         if verdict is None:
             notes.append(f"{field}: unparseable judge reply")
             continue
         setattr(result, field, verdict.score)
         notes.append(f"{field}: {verdict.reason}")
+    av = parse_attribution_verdict(attrib_resp.text)
+    if av is None:
+        notes.append("attribution: unparseable judge reply")
+    else:
+        result.attribution = attribution_score(av)
+        breakdown = f"absent={av.absent}, incorrect={av.incorrect}" + (
+            ", settled" if av.settled else ""
+        )
+        notes.append(f"attribution={result.attribution} ({breakdown}): {av.reason}")
     result.judge_notes = " | ".join(notes)
 
 

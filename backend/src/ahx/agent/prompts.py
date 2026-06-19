@@ -39,7 +39,30 @@ from ahx.retrieval.dense import RetrievedChunk
 # twenty->twelve) and (b) parametric supply of a true-but-unsourced fact (cb-028 stated
 # Lucullus produced the meal — an outcome present in NO retrieved passage, only the model's
 # memory of the famous anecdote). Clean ablation vs agent-v5.1: finalize-writing text only.
-AGENT_PROMPT_VERSION = "agent-v6"
+# agent-v7: REVERT the v6 quote-pinned finalize bullet — restores the v5.1 finalize text exactly
+# (the only finalize-text diff between v5.1 and v6 was that one bullet; git-confirmed vs 0cae597).
+# The v6 audit (eval-log 2026-06-17) found the quote-pinning was a wash-to-negative on
+# faithfulness AND INDUCED quote fabrication (faith≤3-with-fabricated-quote went v5 3 -> v6 10);
+# synth-005 collapsed 5->5->1 by dumping the famous memorized Thucydides Corcyra passage verbatim
+# despite cit_recall=1.0. The eval-log pre-registered "a revert to the v5.1 finalize text is a $0
+# option if the fabrication ever bites" — this is that revert. Anti-embellishment now rests on the
+# system prompt's opening "never outside knowledge, even if you know the answer" (as in v5.1). All
+# v5.1/v6 RUNTIME fixes (re-roll on malformed grammar, visible step budget, forced synthesis) live
+# in graph.py and are unchanged. Clean ablation vs agent-v6: finalize-writing text only.
+# agent-v8: named-vs-described query rule (search rule 1). The mh-007 trace showed the agent
+# mis-decomposing an INDIRECTION question — "the land battle fought the same day as the SEA
+# battle at Mycale" (=Plataea -> Pausanias) — by collapsing it to "Mycale's land forces",
+# guessing "Leotychidas" at step 0, and BAKING that guess into the search query
+# ("Mycale Spartan commander Leotychidas") so retrieval could only confirm the wrong guess
+# (cit_recall 0.0, never searched for Plataea). The new clause makes the agent first classify
+# the target as NAMED vs DESCRIBED-by-relationship; for a described target it must RESOLVE the
+# description into a name with a NEUTRAL search (no guessed answer in the query) before
+# searching the target fact — a described target is two hops. Scoped to indirection only, so
+# direct lookups (literal/synonym) are untouched. Targets mh-007/mh-010-shaped questions;
+# n=1-2, so measured on the FULL run with literal/synonym/cross-book watched for regression
+# (rule #5 — cherry-picked traces don't predict the population). Clean ablation vs agent-v7:
+# search rule 1 text only.
+AGENT_PROMPT_VERSION = "agent-v8"
 
 AGENT_SYSTEM_PROMPT = f"""You are a careful research assistant answering questions about \
 Greco-Roman antiquity. You may ONLY use information you retrieve from the corpus with the \
@@ -70,7 +93,14 @@ the ANSWER passage: KEEP the proper nouns (Alcibiades, Thucydides), ADD the word
 the passage to contain (ambition, tyranny, statesman), and DROP question words (how, what, \
 sources, judge, did). One idea per query. Example: for "How do the sources judge Alcibiades?" \
 search `Alcibiades character ambition tyranny statesman`, not the question itself. Do not \
-write a fake answer paragraph — a short focused phrase retrieves best.
+write a fake answer paragraph — a short focused phrase retrieves best. \
+First decide whether the question NAMES the person/place/thing you need or DESCRIBES it by a \
+relationship ("the land battle fought the same day as Mycale", "the emperor who was the last \
+of his dynasty", "the regent who led at Plataea"). If it NAMES the target, search for it \
+directly. If it DESCRIBES the target, your FIRST search must RESOLVE that description into a \
+name — search neutrally for the relationship itself and do NOT put a guessed answer into the \
+query (that only retrieves confirmation of the guess) — THEN search for the fact about the \
+name you found. A described target is TWO hops, not one.
 2. Translations are Victorian English: if a modern word finds nothing, retry with period \
 phrasing (e.g. "disgrace" -> "reproach"/"infamy").
 
@@ -109,13 +139,6 @@ results above — never invent or guess an id.
 - When sources DISAGREE, never silently pick one: state each version and name its source \
 (e.g. "Suetonius reports it as rumour [c41], while Cassius Dio states it as near-certain [c88]").
 - When you combine several sources, attribute the distinct contributions in prose.
-- Anchor every load-bearing specific — a number, a name, a place, the DIRECTION of a \
-relationship (who did what to whom), or a specific outcome — in the passage's exact words: \
-quote the key phrase verbatim in quotation marks with its chunk id, rather than restating it \
-from memory (e.g. the German foot guarded the cavalry, not the reverse — "to these the horse \
-retired" [c10205]). Quote only the few words that carry the fact; keep the rest plain modern \
-English. If NO retrieved passage states the specific in words, you have no source for it — \
-leave it out (do not supply a date, name, or outcome you merely happen to know).
 - Translations are Victorian English; answer in plain modern English.
 - Refusing — when the retrieved passages do not let you answer, refuse (set refused=true) \
 rather than padding with loosely-related material:

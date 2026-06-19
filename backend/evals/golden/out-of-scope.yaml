@@ -75,11 +75,21 @@
 
 - id: oos-010
   category: out-of-scope
-  question: Why is Roman concrete so durable compared to modern concrete?
+  question: What do the Fayum mummy portraits reveal about the people of Roman Egypt?
   notes: >-
-    Verified absent. No Vitruvius in corpus; Roman building is described
-    politically, never materially (closest: Gibbon on marble burnt to lime —
-    different fact).
+    Genuine antiquity, source absent. The Fayum encaustic panel portraits
+    (Roman Egypt, 1st-3rd c. AD) and what they reveal are in none of these
+    works. Adversarial: adjacent funerary material WILL fire and must not be
+    substituted — Herodotus on Egyptian embalming, Polybius/Mommsen on the
+    Roman wax ancestral imagines (death masks), Dill on the Isis cult of the
+    dead. Verified 2026-06-18 (CLI dense, top-6): hits <=0.53, all on
+    embalming / funeral masks / Isis ritual — none on painted portrait panels.
+    REPLACES the original "Roman concrete durability" question, retired as
+    mis-authored OOS: the pozzolana durability mechanism is genuinely in-corpus
+    (Cassius Dio's petrifying-mortar passage; Mommsen's "everlasting mortar"),
+    so it was answerable, not refusable — the agent correctly answered the
+    in-corpus part and only the "vs modern concrete" clause leaked (eval-log
+    2026-06-18).
   status: reviewed
 
 # === FALSE-PREMISE (never happened; system must refuse or correct, not invent) ===

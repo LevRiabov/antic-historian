@@ -7,8 +7,11 @@ All pure / in-process — the runner's DB/LLM legs are exercised by
 from collections.abc import AsyncIterator, Sequence
 
 from ahx.evals.generation import (
+    AttributionVerdict,
+    attribution_score,
     compute_gen_aggregates,
     judge_question,
+    parse_attribution_verdict,
     parse_verdict,
     score_generation,
 )
@@ -161,9 +164,15 @@ def test_parse_verdict_tolerates_fences_and_rejects_garbage() -> None:
 class FakeJudge:
     model_name = "fake-judge"
 
-    def __init__(self, reply: str, refusal_reply: str = "no") -> None:
+    def __init__(
+        self,
+        reply: str,
+        refusal_reply: str = "no",
+        attribution_reply: str = '{"absent": 0, "incorrect": 0, "settled": false, "reason": ""}',
+    ) -> None:
         self._reply = reply
         self._refusal_reply = refusal_reply  # answer for the refusal prompt (yes/no or JSON)
+        self._attribution_reply = attribution_reply  # judge-v3.6 counts JSON
         self.calls = 0
         self.prompts: list[str] = []
 
@@ -179,9 +188,36 @@ class FakeJudge:
         self.calls += 1
         content = messages[-1].content
         self.prompts.append(content)
-        is_refusal_prompt = '"refusal"' in content  # judge-v3.2 refusal JSON template
-        reply = self._refusal_reply if is_refusal_prompt else self._reply
+        if '"refusal"' in content:  # judge-v3.2 refusal JSON template
+            reply = self._refusal_reply
+        elif '"absent"' in content:  # judge-v3.6 attribution counts template
+            reply = self._attribution_reply
+        else:
+            reply = self._reply
         return ChatResult(text=reply, usage=None)
+
+
+def test_attribution_score_mapping() -> None:
+    # judge-v3.6: the user-specified graduated scale, deterministic in code.
+    def v(absent: int = 0, incorrect: int = 0, settled: bool = False) -> AttributionVerdict:
+        return AttributionVerdict(absent=absent, incorrect=incorrect, settled=settled)
+
+    assert attribution_score(v()) == 5  # perfect
+    assert attribution_score(v(absent=1)) == 4  # one absent
+    assert attribution_score(v(absent=2)) == 3  # two absent ...
+    assert attribution_score(v(incorrect=1)) == 3  # ... or one incorrect
+    assert attribution_score(v(absent=3)) == 2  # three absent ...
+    assert attribution_score(v(incorrect=2)) == 2  # ... or two incorrect
+    assert attribution_score(v(absent=4)) == 1  # floor
+    assert attribution_score(v(incorrect=3)) == 1
+    assert attribution_score(v(absent=1, incorrect=1)) == 2  # mixed: 1 + 2 demerits
+    assert attribution_score(v(settled=True)) == 1  # contested-as-settled overrides counts
+
+
+def test_parse_attribution_verdict_tolerates_prose() -> None:
+    v = parse_attribution_verdict('here you go: {"absent": 1, "incorrect": 0, "reason": "x"}')
+    assert v is not None and v.absent == 1 and v.incorrect == 0 and v.settled is False
+    assert parse_attribution_verdict("no json here") is None
 
 
 async def test_judge_scores_answered_in_scope_question() -> None:
@@ -195,7 +231,7 @@ async def test_judge_scores_answered_in_scope_question() -> None:
     assert result.refusal_correct is True  # in-scope, answered
     assert result.faithfulness == 4
     assert result.completeness == 4
-    assert result.attribution == 4
+    assert result.attribution == 5  # judge-v3.6: 0 absent + 0 incorrect -> 5
     assert "well supported" in result.judge_notes
 
 
@@ -216,6 +252,7 @@ async def test_judge_sees_all_retrieved_sources_with_cited_flags() -> None:
 async def test_attribution_rubric_is_third_and_sees_sources() -> None:
     # judge-v3: attribution scored as a distinct dimension, with the same
     # all-sources view as faithfulness (cited flags included).
+    # judge-v3.6: attribution returns COUNTS; 2 absent -> score 3 (mapped in code).
     result = score_generation(
         question("contradiction"),
         [span()],
@@ -223,10 +260,15 @@ async def test_attribution_rubric_is_third_and_sees_sources() -> None:
         done(used=[1]),
         latency_ms=1,
     )
-    judge = FakeJudge('{"score": 3, "reason": "disagreement not attributed"}')
+    judge = FakeJudge(
+        '{"score": 4, "reason": "faith/compl"}',
+        attribution_reply='{"absent": 2, "incorrect": 0, "settled": false, '
+        '"reason": "disagreement not attributed"}',
+    )
     await judge_question(judge, result, [citation(1), citation(2)])
     assert judge.calls == 4  # refusal + faithfulness + completeness + attribution
-    assert result.attribution == 3
+    assert result.attribution == 3  # 2 absent -> 3
+    assert "absent=2, incorrect=0" in result.judge_notes  # breakdown stored for audit
     attribution_prompt = judge.prompts[3]  # prompts[0] refusal, [1] faith, [2] compl
     assert "ATTRIBUTION" in attribution_prompt
     assert "[1] (cited)" in attribution_prompt
