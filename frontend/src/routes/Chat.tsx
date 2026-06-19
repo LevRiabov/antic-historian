@@ -5,7 +5,7 @@ import { Composer } from "@/components/chat/Composer";
 import { InstrumentBar } from "@/components/chat/InstrumentBar";
 import { Landing } from "@/components/chat/Landing";
 import { SourceDrawer } from "@/components/SourceDrawer";
-import { newTurn, sessionTotals, type Turn } from "@/lib/chat";
+import { newTurn, newTurnId, sessionTotals, type Turn } from "@/lib/chat";
 import { AskError, askStream } from "@/lib/sse";
 import type { AskMode, Citation, SessionStatus } from "@/lib/types";
 
@@ -36,7 +36,7 @@ export function Chat() {
     const question = raw.trim();
     if (!question || busy) return;
 
-    const id = crypto.randomUUID();
+    const id = newTurnId();
     const mode: AskMode = deep ? "deep" : "fast";
     setTurns((prev) => [...prev, newTurn(id, question, mode)]);
     setInput("");

@@ -1,4 +1,6 @@
 # esbuild ships a platform binary via a postinstall script that Vite needs, so
-# it's allowed to run build scripts. Everything else stays sandboxed.
+# it's allowed to run build scripts. Everything else stays sandboxed. (pnpm v11
+# renamed this from `onlyBuiltDependencies` to `allowBuilds`; with strictDepBuilds
+# on by default, an un-listed ignored build script is a hard install error.)
 allowBuilds:
   esbuild: true

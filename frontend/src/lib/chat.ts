@@ -22,6 +22,13 @@ export interface Turn {
   elapsedMs: number | null; // client-measured send→done latency
 }
 
+/** A unique id for a turn. crypto.randomUUID is only defined in a secure context
+ *  (HTTPS / localhost); over plain HTTP it's undefined, so fall back to a
+ *  good-enough random id — a turn id is a client-only React key, not a secret. */
+export function newTurnId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `t-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function newTurn(id: string, question: string, mode: AskMode): Turn {
   return {
     id,

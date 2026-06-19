@@ -8,10 +8,23 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Security headers for the app shell + API responses. The SPA only ever talks
+    # to its own origin (scripts/styles/fonts are all self-hosted; fonts are system
+    # fonts; no CDN), so a tight CSP holds. 'unsafe-inline' is needed only for inline
+    # *style attributes* (e.g. the composer's auto-grow height) — scripts stay strict.
+    # NB: nginx does NOT inherit add_header into a location that sets its own, so the
+    # /assets/ block below repeats the one header that matters for static JS/CSS.
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" always;
+
     # Hashed Vite assets are immutable — cache them hard.
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
         try_files $uri =404;
     }
 
@@ -23,7 +36,12 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # OVERWRITE (not append via $proxy_add_x_forwarded_for): nginx is the single
+        # edge here, so the real client is $remote_addr. The backend trusts the first
+        # XFF hop for per-IP rate limiting (AHX_TRUST_FORWARDED_FOR=1); appending would
+        # let a client prepend a spoofed IP and dodge the limit. If you ever put another
+        # proxy/CDN in FRONT of this nginx, revisit (you'd trust that hop instead).
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
 
         # SSE: /ask streams tokens. Buffering would batch them and break the

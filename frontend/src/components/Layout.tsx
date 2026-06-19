@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { Suspense, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HealthBadge } from "@/components/HealthBadge";
 
 const NAV = [
@@ -13,6 +14,7 @@ const NAV = [
 
 export function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
 
   return (
     <div className="flex min-h-full flex-col">
@@ -69,8 +71,24 @@ export function Layout() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-        <Outlet />
+        {/* Keyed by path so a crash on one page recovers when the user navigates;
+            Suspense covers the lazily-loaded route chunks while they download. */}
+        <ErrorBoundary key={pathname}>
+          <Suspense fallback={<RouteFallback />}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
+    </div>
+  );
+}
+
+/** Brief placeholder shown while a lazily-loaded route chunk downloads. */
+function RouteFallback() {
+  return (
+    <div className="flex items-center gap-2 py-16 text-sm text-ink-faint" role="status">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-ink-faint" aria-hidden />
+      Loading…
     </div>
   );
 }

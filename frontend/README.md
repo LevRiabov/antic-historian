@@ -25,6 +25,7 @@ pnpm install
 pnpm dev          # http://localhost:5173  (proxies /api -> http://127.0.0.1:8000)
 pnpm typecheck    # tsc strict
 pnpm lint
+pnpm test         # vitest — the pure lib/ transforms + the SSE parser
 pnpm build        # -> dist/
 ```
 

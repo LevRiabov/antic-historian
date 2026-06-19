@@ -97,7 +97,14 @@ function parseFrame(frame: string): AskEvent | null {
   }
 
   if (!KNOWN_EVENTS.has(eventName) || dataLines.length === 0) return null;
-  const data: unknown = JSON.parse(dataLines.join("\n"));
+  // A malformed data payload skips this one frame rather than aborting the whole
+  // answer — a single bad frame shouldn't lose the stream that follows it.
+  let data: unknown;
+  try {
+    data = JSON.parse(dataLines.join("\n"));
+  } catch {
+    return null;
+  }
   // The event name is the discriminant; the matching data shape is guaranteed by
   // the backend contract (lib/types.ts mirrors the pydantic models).
   return { event: eventName, data } as AskEvent;

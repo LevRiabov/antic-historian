@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /*
  * The citation drawer — slides in from the right with the verbatim passage behind
@@ -33,6 +33,9 @@ export function SourceDrawer({
   loading: boolean;
   error: boolean;
 }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
+
   // Close on Escape while open (matches the chat mock's keyboard behaviour).
   useEffect(() => {
     if (!open) return;
@@ -42,6 +45,15 @@ export function SourceDrawer({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  // Move focus into the dialog on open and restore it to the trigger on close,
+  // so keyboard users aren't dropped back at the top of the document.
+  useEffect(() => {
+    if (!open) return;
+    restoreRef.current = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    return () => restoreRef.current?.focus();
+  }, [open]);
 
   return (
     <>
@@ -68,6 +80,7 @@ export function SourceDrawer({
             <div className="text-xs text-ink-faint">Verified public-domain passage</div>
           </div>
           <button
+            ref={closeRef}
             type="button"
             onClick={onClose}
             aria-label="Close"

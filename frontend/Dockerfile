@@ -7,8 +7,10 @@ WORKDIR /app
 # lockfile resolves identically to local dev.
 RUN corepack enable
 
-# Install deps first (cached unless the manifests change).
-COPY package.json pnpm-lock.yaml* ./
+# Install deps first (cached unless the manifests change). pnpm-workspace.yaml
+# carries the build-script allowlist (allowBuilds: esbuild), so it must be present
+# at install time or pnpm 11 aborts on esbuild's ignored postinstall.
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Build. VITE_API_BASE is baked at build time; default "/api" matches nginx.conf.
