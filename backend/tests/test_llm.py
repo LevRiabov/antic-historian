@@ -178,3 +178,24 @@ async def test_stream_raises_after_exhausting_retries() -> None:
     )
     with pytest.raises(httpx.HTTPStatusError):
         _ = [event async for event in model.stream(MESSAGES)]
+
+
+async def test_shared_client_reused_across_calls() -> None:
+    # One keep-alive client serves every call (not a fresh one per request / per retry
+    # attempt). A new event loop rebinds it, but within a loop the instance is stable.
+    server = FakeServer(COMPLETION_BODY)
+    model = make_model(server)
+    await model.complete(MESSAGES)
+    first = model._http.get()  # pyright: ignore[reportPrivateUsage]
+    await model.complete(MESSAGES)
+    assert model._http.get() is first  # pyright: ignore[reportPrivateUsage]
+
+
+async def test_aclose_releases_and_rebuilds() -> None:
+    server = FakeServer(COMPLETION_BODY)
+    model = make_model(server)
+    await model.complete(MESSAGES)
+    await model.aclose()
+    await model.aclose()  # idempotent
+    result = await model.complete(MESSAGES)  # rebuilds the pooled client on next use
+    assert result.text == "Stabbed 23 times."

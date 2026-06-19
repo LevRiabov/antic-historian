@@ -25,7 +25,7 @@ from langfuse import Langfuse
 
 from ahx.config import Settings
 from ahx.generation.pipeline import Retriever
-from ahx.llm import ChatMessage, ChatModel, StreamEnd, StreamEvent, Usage
+from ahx.llm import ChatMessage, ChatModel, StreamEnd, StreamEvent, Usage, aclose_chat_model
 from ahx.pricing import Cost
 from ahx.retrieval.dense import RetrievedChunk
 
@@ -100,6 +100,10 @@ class TracedChatModel:
             result = await self._inner.complete(messages, response_format)
             gen.update(output=result.text, usage_details=_usage_details(result.usage))
             return result
+
+    async def aclose(self) -> None:
+        """Pass the lifespan-shutdown close through to the wrapped model."""
+        await aclose_chat_model(self._inner)
 
 
 def traced_chat(chat: ChatModel, langfuse: Langfuse) -> ChatModel:

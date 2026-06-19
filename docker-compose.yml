@@ -7,12 +7,17 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ahx
-      POSTGRES_PASSWORD: ahx
+      # Override in prod via a real secret (root .env / shell): POSTGRES_PASSWORD=...
+      # The committed default is a LOCAL-DEV convenience, never a production credential.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ahx}
       POSTGRES_DB: ahx
     ports:
-      # Host 5433: rag-historian's ParadeDB already owns 5432 on this machine.
-      # The other services reach it at db:5432 over the compose network.
-      - "5433:5432"
+      # Bind to LOOPBACK only: the backend reaches the db at db:5432 over the compose
+      # network, so the host publish is purely a local-dev convenience (psql from the
+      # host). A bare "5433:5432" binds 0.0.0.0 and exposes Postgres on the box's public
+      # interface — with these creds, a writable-DB integrity/availability risk. Host
+      # 5433: rag-historian's ParadeDB already owns 5432 on the dev machine.
+      - "127.0.0.1:5433:5432"
     volumes:
       - ahx-pgdata:/var/lib/postgresql
     healthcheck:
@@ -32,8 +37,9 @@ services:
       - backend/.env
     environment:
       AHX_ENV: prod
-      # Reach the db service over the compose network (not localhost:5433).
-      AHX_DATABASE_URL: postgresql+psycopg://ahx:ahx@db:5432/ahx
+      # Reach the db service over the compose network (not localhost:5433). Password
+      # tracks the db service's POSTGRES_PASSWORD (same default, same prod override).
+      AHX_DATABASE_URL: postgresql+psycopg://ahx:${POSTGRES_PASSWORD:-ahx}@db:5432/ahx
       # Behind the nginx edge (frontend service): trust the proxy's X-Forwarded-For
       # so the per-IP limiter sees real client IPs, not one shared bucket. SAFE only
       # because nginx OVERWRITES that header (frontend/nginx.conf.template) — a client
@@ -73,7 +79,9 @@ services:
         condition: service_healthy
     ports:
       # The only port exposed to the host: the SPA + its /api proxy on one origin.
-      - "8080:80"
+      # Container side is 8080 — the unprivileged nginx image listens there (runs as
+      # non-root, can't bind :80). See frontend/Dockerfile + nginx.conf.template.
+      - "8080:8080"
 
 volumes:
   ahx-pgdata:

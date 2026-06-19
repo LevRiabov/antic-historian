@@ -9,6 +9,7 @@ import httpx
 import pytest
 
 from ahx.config import Settings
+from ahx.retrieval import embedding
 from ahx.retrieval.embedding import (
     QWEN3_QUERY_PREFIX,
     EmbeddingClient,
@@ -71,6 +72,57 @@ async def test_async_query_gets_instruction_prefix() -> None:
     await client.embed_query("Why did the expedition fail?")
     expected = [QWEN3_QUERY_PREFIX + "Why did the expedition fail?"]
     assert sent_payloads(recorded)[0]["input"] == expected
+
+
+@pytest.fixture
+def no_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Instant retry sleeps so the retry tests don't burn wall clock."""
+
+    async def instant(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(embedding.asyncio, "sleep", instant)
+
+
+async def test_embed_query_retries_transient_5xx(no_backoff: None) -> None:
+    # The async query path runs on every /ask; a transient 429/5xx must self-heal
+    # rather than fail the request (H2), matching the LLM layer's retry.
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(503)  # transient hiccup
+        return httpx.Response(200, json={"data": [{"index": 0, "embedding": [1.0, 1.0, 1.0, 1.0]}]})
+
+    settings = Settings(_env_file=None, embed_dim=4)  # pyright: ignore[reportCallIssue]
+    client = EmbeddingClient(settings, transport=httpx.MockTransport(handler))
+    vector = await client.embed_query("How did Caesar die?")
+
+    assert attempts == 2  # retried once, then served
+    assert vector == [1.0, 1.0, 1.0, 1.0]
+
+
+async def test_embed_query_raises_after_exhausting_retries(no_backoff: None) -> None:
+    settings = Settings(_env_file=None, embed_dim=4)  # pyright: ignore[reportCallIssue]
+    client = EmbeddingClient(
+        settings, transport=httpx.MockTransport(lambda _r: httpx.Response(503))
+    )
+    with pytest.raises(httpx.HTTPStatusError):
+        await client.embed_query("persistently down")
+
+
+async def test_aclose_is_idempotent_and_client_rebuilds() -> None:
+    # aclose() (lifespan shutdown) is safe to call repeatedly, and the client lazily
+    # rebuilds on the next use — so a closed client never wedges a later request.
+    recorded: list[dict[str, Any]] = []
+    client = make_client(recorded)
+    await client.embed_query("first")
+    await client.aclose()
+    await client.aclose()  # no error on a second close
+    await client.embed_query("second")  # rebuilds the pooled client
+    assert len(recorded) == 2
 
 
 def test_vectors_reordered_by_index() -> None:

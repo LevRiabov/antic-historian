@@ -78,3 +78,22 @@ async def test_both_limits_off_never_rejects() -> None:
         assert await limiter.consume(ip="1.1.1.1", session_id="s") == SessionStatus(
             limit=0, remaining=0
         )
+
+
+async def test_session_store_is_lru_bounded() -> None:
+    # An attacker rotating X-Session-Id can't grow the store without limit: past
+    # max_tracked, the least-recently-seen entry is evicted (memory-exhaustion guard).
+    limiter = RateLimiter(per_window=0, window_seconds=60, session_cap=5, max_tracked=3)
+    for i in range(10):
+        await limiter.consume(ip="1.1.1.1", session_id=f"s{i}")
+    assert len(limiter._session_used) == 3  # pyright: ignore[reportPrivateUsage]
+    # Only the 3 most recent session ids survive.
+    assert set(limiter._session_used) == {"s7", "s8", "s9"}  # pyright: ignore[reportPrivateUsage]
+
+
+async def test_ip_store_is_lru_bounded() -> None:
+    limiter = RateLimiter(per_window=2, window_seconds=60, session_cap=0, max_tracked=3)
+    for i in range(10):
+        await limiter.consume(ip=f"10.0.0.{i}", session_id="s")
+    assert len(limiter._hits) == 3  # pyright: ignore[reportPrivateUsage]
+    assert set(limiter._hits) == {"10.0.0.7", "10.0.0.8", "10.0.0.9"}  # pyright: ignore[reportPrivateUsage]

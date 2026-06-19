@@ -197,7 +197,11 @@ def make_agent_streamer(
     embedder = EmbeddingClient(settings)
     retriever = build_async_retriever(settings, engine, embedder, retriever_name)
     toolbox = Toolbox(settings=settings, engine=engine, embedder=embedder, retriever=retriever)
-    graph = build_agent_graph(chat, toolbox, max_steps)
+    # Live deep path: bound each step's model call so one stalled call fails fast
+    # instead of eating the whole request budget. 0 disables it. The eval seams below
+    # (make_agent_engine / run_agent) intentionally stay untimed.
+    step_timeout = settings.agent_step_timeout_seconds or None
+    graph = build_agent_graph(chat, toolbox, max_steps, step_timeout)
 
     def run_one(question: str) -> AsyncIterator[AskEvent | StepEvent]:
         return stream_agent_events(graph, question, chat.model_name, max_steps)

@@ -45,9 +45,16 @@ from ahx.db import create_async_db_engine
 from ahx.evals.generation import GenerationRun
 from ahx.evals.retrieval import RetrievalRun
 from ahx.evals.security import SecurityRun
-from ahx.generation.pipeline import DeltaEvent, DoneEvent, Retriever, SourcesEvent, StepEvent
+from ahx.generation.pipeline import (
+    DeltaEvent,
+    DoneEvent,
+    ReasoningEvent,
+    Retriever,
+    SourcesEvent,
+    StepEvent,
+)
 from ahx.guard import DefenseConfig, guard_config_from_settings, guard_stream, guarded_events
-from ahx.llm import ChatModel, chat_model_from_settings
+from ahx.llm import ChatModel, aclose_chat_model, chat_model_from_settings
 from ahx.obs import init_langfuse, trace_request, traced_chat, traced_retriever
 from ahx.retrieval.dense import dense_retrieve_async
 from ahx.retrieval.embedding import EmbeddingClient
@@ -90,7 +97,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     for warning in validate_serving_config(settings):
         logger.warning("serving config: %s", warning)
     engine = create_async_db_engine(settings.database_url)
-    retriever: Retriever = partial(dense_retrieve_async, engine, EmbeddingClient(settings))
+    embedder = EmbeddingClient(settings)  # closed on shutdown to drain its keep-alive pool
+    retriever: Retriever = partial(dense_retrieve_async, engine, embedder)
     chat = chat_model_from_settings(settings)
 
     # Tracing seam (6.1): wrap chat + retriever only when Langfuse is configured;
@@ -127,6 +135,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     yield
     if langfuse is not None:
         langfuse.flush()  # drain the export buffer before the process exits
+    # Close the keep-alive HTTP pools (chat + query-embed) before the loop shuts down,
+    # then the DB pool. aclose_chat_model handles the traced/composite wrapping; the
+    # agent streamer's own embedder is process-lifetime and released at exit.
+    await aclose_chat_model(chat)
+    await embedder.aclose()
     await engine.dispose()
 
 
@@ -295,7 +308,13 @@ class AskRequest(BaseModel):
     mode: Literal["fast", "deep"] = "fast"
 
 
-_EVENT_NAMES = {SourcesEvent: "sources", DeltaEvent: "delta", DoneEvent: "done", StepEvent: "step"}
+_EVENT_NAMES = {
+    SourcesEvent: "sources",
+    DeltaEvent: "delta",
+    ReasoningEvent: "reasoning",
+    DoneEvent: "done",
+    StepEvent: "step",
+}
 
 
 @app.post("/ask")

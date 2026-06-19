@@ -124,6 +124,14 @@ class Settings(BaseSettings):
     # timeout x N agent steps; this bounds it and emits a terminal error frame.
     # Generous enough for a full deep-mode loop; tighten for a stricter demo.
     request_timeout_seconds: int = 180
+    # Per-step bound on ONE deep-mode model call (a think/synthesis turn). The overall
+    # request_timeout_seconds caps the whole run, but a single hung call could eat all
+    # 180s before failing — too long for one step. This kills a stalled call far sooner
+    # (it propagates as the terminal error frame). Set above the slowest LEGIT call: a
+    # think reply is small, the synthesis answer is the long one, so leave headroom.
+    # Applies to the LIVE deep path only — the eval harness runs untimed so a measured
+    # run is never corrupted by a cut. 0 disables the per-step bound.
+    agent_step_timeout_seconds: int = 90
     # Behind a reverse proxy (prod), the real client IP is in X-Forwarded-For, not
     # request.client. OFF by default (locally the header is spoofable). MUST be ON in
     # the nginx-proxied prod deploy (ADR-004) — otherwise every request shares the

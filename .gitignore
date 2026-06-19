@@ -20,6 +20,9 @@ venv/
 .ruff_cache/
 .mypy_cache/
 .pyright/
+# Transient export written by the pip-audit CI step (and local audit runs).
+requirements-audit.txt
+.coverage
 
 # --- Node / Next.js (frontend) ---
 node_modules/

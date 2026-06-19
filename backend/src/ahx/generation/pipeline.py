@@ -21,7 +21,7 @@ from ahx.generation.citations import (
     extract_markers,
 )
 from ahx.generation.prompt import PROMPT_VERSION, REFUSAL_TEXT, build_messages
-from ahx.llm import ChatModel, TextDelta, Usage
+from ahx.llm import ChatModel, ReasoningDelta, TextDelta, Usage
 from ahx.pricing import Cost, cost_for, load_price_table
 from ahx.retrieval.dense import RetrievedChunk
 
@@ -36,6 +36,14 @@ class SourcesEvent(BaseModel):
 
 
 class DeltaEvent(BaseModel):
+    text: str
+
+
+class ReasoningEvent(BaseModel):
+    """A chunk of the model's live reasoning (display-only). Emitted before the answer
+    deltas on a reasoning model; the client renders it as a 'thinking' trace. Not part
+    of the served answer and never produced by the eval path (which uses complete())."""
+
     text: str
 
 
@@ -71,7 +79,7 @@ class DoneEvent(BaseModel):
     blocked: bool = False
 
 
-AskEvent = SourcesEvent | DeltaEvent | DoneEvent
+AskEvent = SourcesEvent | DeltaEvent | ReasoningEvent | DoneEvent
 
 
 async def ask(
@@ -91,6 +99,10 @@ async def ask(
         if isinstance(event, TextDelta):
             pieces.append(event.text)
             yield DeltaEvent(text=event.text)
+        elif isinstance(event, ReasoningDelta):
+            # Live chain-of-thought: surface it (display-only) but NEVER append to
+            # `pieces` — the served answer is content tokens alone.
+            yield ReasoningEvent(text=event.text)
         else:
             usage = event.usage
             served_by = event.served_by

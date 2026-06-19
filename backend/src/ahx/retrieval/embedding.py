@@ -16,13 +16,22 @@ Provisional model (Gate D2 pending): qwen3-embedding-0.6b on local llama-swap.
 The D2 ablation swaps models by swapping this module's config, nowhere else.
 """
 
+import asyncio
+import json
 import math
 from collections.abc import Iterator
 from typing import Any, cast
 
 import httpx
 
+from ahx._http import AsyncClientCache
 from ahx.config import Settings
+
+# Transient statuses worth retrying on the async query path (mirrors llm.py): with the
+# embedding endpoint hosted on OpenRouter a concurrent run WILL hit 429s, and an
+# unretried embed fails the whole /ask where the adjacent LLM call would have recovered.
+_RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+_MAX_ATTEMPTS = 5
 
 QWEN3_QUERY_PREFIX = (
     "Instruct: Given a search query, retrieve relevant passages "
@@ -82,6 +91,9 @@ class EmbeddingClient:
         self._provider = settings.embed_provider
         self._query_prefix = query_prefix_for(settings.embed_model)
         self._transport = transport  # tests inject a fake server here
+        # ONE keep-alive client for the async query path, reused across requests
+        # (the sync ingest/eval paths open their own short-lived clients below).
+        self._http = AsyncClientCache(httpx.Timeout(120.0), transport)
 
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._api_key}"} if self._api_key else {}
@@ -150,12 +162,34 @@ class EmbeddingClient:
             return self._embed_sync(client, [self._query_prefix + text])[0]
 
     async def embed_query(self, text: str) -> list[float]:
-        """Query-side, async (API routes — rule #7): model's query prefix applied."""
-        async with httpx.AsyncClient(timeout=120, transport=self._transport) as client:
-            response = await client.post(
-                f"{self._base_url}/embeddings",
-                json=self._body([self._query_prefix + text]),
-                headers=self._headers(),
-            )
-            response.raise_for_status()
-            return self._parse_response(response.json(), expected=1)[0]
+        """Query-side, async (API routes — rule #7): model's query prefix applied.
+
+        Retries transient 429/5xx with backoff (mirrors llm.py): every /ask and every
+        agent search embeds a query, and an unretried 429 under concurrency becomes a
+        false failure where the adjacent LLM call self-heals (eval-log 2026-06-15
+        cohere incident). Uses ONE keep-alive client rather than a fresh handshake."""
+        client = self._http.get()
+        body = self._body([self._query_prefix + text])
+        headers = self._headers()
+        for attempt in range(_MAX_ATTEMPTS):
+            try:
+                response = await client.post(
+                    f"{self._base_url}/embeddings", json=body, headers=headers
+                )
+                response.raise_for_status()
+                return self._parse_response(response.json(), expected=1)[0]
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code not in _RETRY_STATUSES or attempt == _MAX_ATTEMPTS - 1:
+                    raise
+            except (httpx.TransportError, json.JSONDecodeError):
+                # connection reset / read timeout or a malformed body — transient.
+                # (A dim/count ValueError is a real problem and is NOT retried.)
+                if attempt == _MAX_ATTEMPTS - 1:
+                    raise
+            await asyncio.sleep(0.5 * 2**attempt)
+        raise RuntimeError("unreachable: embed retry loop exhausted without return or raise")
+
+    async def aclose(self) -> None:
+        """Release the pooled async client (API lifespan shutdown). The sync ingest/
+        eval paths open and close their own per-call clients, so nothing else leaks."""
+        await self._http.aclose()

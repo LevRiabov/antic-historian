@@ -20,14 +20,26 @@ window is the backstop for gross abuse, the session cap just protects the honest
 import asyncio
 import math
 import time
-from collections import deque
+from collections import OrderedDict, deque
 from collections.abc import Callable
-from typing import NoReturn
+from typing import NoReturn, TypeVar
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
 
 from ahx.config import Settings, get_settings
+
+_V = TypeVar("_V")
+
+# Cap on distinct IPs / session ids tracked in memory. The store is keyed by client
+# IP and a freely-rotatable X-Session-Id, so without a bound an attacker rotating
+# either grows it without limit (a slow memory-exhaustion DoS). Past the cap the
+# least-recently-seen entry is evicted (LRU): an evicted session simply gets its
+# free-tier count reset — acceptable, since the IP window is the real abuse backstop
+# and the session id was never a security boundary (see module docstring). Generous
+# enough that legitimate traffic is never evicted in practice. Redis with TTLs is the
+# documented scale path that removes the cap entirely.
+_MAX_TRACKED = 100_000
 
 
 class SessionStatus(BaseModel):
@@ -71,21 +83,36 @@ class RateLimiter:
         window_seconds: int,
         session_cap: int,
         clock: Callable[[], float] = time.monotonic,
+        max_tracked: int = _MAX_TRACKED,
     ) -> None:
         self._per_window = per_window
         self._window = window_seconds
         self._cap = session_cap
         self._clock = clock
-        self._hits: dict[str, deque[float]] = {}  # ip -> recent request timestamps
-        self._session_used: dict[str, int] = {}  # session id -> lifetime count
+        self._max_tracked = max_tracked
+        # OrderedDicts (not plain dicts) so we can evict the least-recently-touched
+        # entry once either store exceeds max_tracked — bounding memory under abuse.
+        self._hits: OrderedDict[str, deque[float]] = OrderedDict()  # ip -> recent timestamps
+        self._session_used: OrderedDict[str, int] = OrderedDict()  # session id -> lifetime count
         self._lock = asyncio.Lock()
+
+    def _bound(self, store: OrderedDict[str, _V]) -> None:
+        """Evict least-recently-touched entries until the store fits max_tracked."""
+        while len(store) > self._max_tracked:
+            store.popitem(last=False)
 
     def _ip_retry_after(self, ip: str, now: float) -> int | None:
         """None if the IP is under its window; else whole seconds until a slot frees.
         Prunes timestamps older than the window as a side effect (bounds the deque)."""
         if self._per_window <= 0:
             return None
-        q = self._hits.setdefault(ip, deque())
+        q = self._hits.get(ip)
+        if q is None:
+            q = deque[float]()
+            self._hits[ip] = q
+            self._bound(self._hits)  # a fresh IP may push the store over the cap
+        else:
+            self._hits.move_to_end(ip)  # touched -> most-recently-seen (LRU)
         cutoff = now - self._window
         while q and q[0] <= cutoff:
             q.popleft()
@@ -118,9 +145,11 @@ class RateLimiter:
                 )
 
             if self._per_window > 0:
-                self._hits[ip].append(now)
+                self._hits[ip].append(now)  # entry created + LRU-touched in _ip_retry_after
             if self._cap > 0:
                 self._session_used[session_id] = used + 1
+                self._session_used.move_to_end(session_id)  # most-recently-seen (LRU)
+                self._bound(self._session_used)
                 return SessionStatus(limit=self._cap, remaining=self._cap - used - 1)
             return SessionStatus(limit=0, remaining=0)
 

@@ -22,6 +22,10 @@ dependencies = [
     "sse-starlette>=2.1",
     "langgraph>=1.0",
     "langfuse>=4.9",
+    # Security floor: starlette <1.3.0 carries CVE-2026-54282 / CVE-2026-54283 (pulled
+    # transitively via fastapi). Pin the fixed floor directly so `pip-audit` (CI) stays
+    # green and the deployed image never ships the vulnerable range.
+    "starlette>=1.3.1",
 ]
 
 [dependency-groups]
@@ -71,3 +75,24 @@ venv = ".venv"
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# `integration` tests hit real Postgres / hosted LLMs and SKIP themselves when the
+# required env (AHX_DATABASE_URL etc.) is absent. Excluded from the default run (and
+# CI) so the suite stays hermetic + fast; opt in with `uv run pytest -m integration`.
+addopts = "-m 'not integration'"
+markers = [
+    "integration: requires live Postgres and/or hosted LLM endpoints (skips without env)",
+]
+
+[tool.coverage.run]
+source = ["ahx"]
+omit = [
+    # Live/interactive glue exercised by hand via the CLI, not unit tests:
+    "src/ahx/cli.py",            # Typer wiring over the offline ingest/eval commands
+    "src/ahx/mcp_server.py",     # MCP transport glue (golden-set authoring)
+    "src/ahx/ingest/download.py",  # Gutenberg HTTP download (one-time, networked)
+]
+
+[tool.coverage.report]
+# Ratchet: the unit-testable core must not regress below this. Raise as coverage grows.
+fail_under = 80
+show_missing = true

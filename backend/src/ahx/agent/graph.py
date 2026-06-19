@@ -29,6 +29,7 @@ is the runner's job, deliberately kept out of here.
 # package stays strict.
 # pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false
 
+import asyncio
 from collections.abc import AsyncIterator, Callable, Sequence
 from typing import Any, cast
 
@@ -73,15 +74,24 @@ async def _complete_parsed[Parsed](
     messages: Sequence[ChatMessage],
     response_format: dict[str, Any],
     parse: Callable[[str], Parsed],
+    timeout_s: float | None = None,
 ) -> tuple[Parsed | None, Usage]:
     """Call the model and parse its grammar output, re-rolling up to _PARSE_ATTEMPTS
     times when the reply won't parse. Returns (parsed | None, usage summed across
-    every attempt — we paid for each). None means even the retries stayed malformed."""
+    every attempt — we paid for each). None means even the retries stayed malformed.
+
+    `timeout_s` bounds each individual model call (not the retry loop): a stalled call
+    raises TimeoutError, which surfaces as the terminal error frame instead of hanging
+    until the overall request budget. None = untimed (the eval path)."""
     prompt_tokens = 0
     completion_tokens = 0
     parsed: Parsed | None = None
     for _ in range(_PARSE_ATTEMPTS):
-        result = await chat.complete(messages, response_format=response_format)
+        if timeout_s is None:
+            result = await chat.complete(messages, response_format=response_format)
+        else:
+            async with asyncio.timeout(timeout_s):
+                result = await chat.complete(messages, response_format=response_format)
         if result.usage is not None:
             prompt_tokens += result.usage.prompt_tokens
             completion_tokens += result.usage.completion_tokens
@@ -121,10 +131,14 @@ def _forced_refusal() -> AgentResult:
 
 
 def build_agent_graph(
-    chat: ChatModel, toolbox: Toolbox, max_steps: int = DEFAULT_MAX_STEPS
+    chat: ChatModel,
+    toolbox: Toolbox,
+    max_steps: int = DEFAULT_MAX_STEPS,
+    step_timeout_seconds: float | None = None,
 ) -> CompiledStateGraph[AgentState, None, AgentState, AgentState]:
     """Compile the agent graph. `chat`/`toolbox` are captured by the nodes
-    (explicit injection, no globals — ADR-001)."""
+    (explicit injection, no globals — ADR-001). `step_timeout_seconds` bounds each
+    model call (live deep path); None leaves calls untimed (the eval path)."""
     response_format = action_response_format()
 
     async def synthesize(state: AgentState, step: int) -> dict[str, Any]:
@@ -136,7 +150,7 @@ def build_agent_graph(
             state["question"], state["history"], state["collected"], state["kept"]
         )
         action, usage = await _complete_parsed(
-            chat, messages, finalize_response_format(), parse_finalize
+            chat, messages, finalize_response_format(), parse_finalize, step_timeout_seconds
         )
         update: dict[str, Any] = {
             "step": step + 1,
@@ -164,7 +178,9 @@ def build_agent_graph(
         messages = build_think_messages(
             state["question"], state["history"], state["collected"], state["kept"], step, max_steps
         )
-        decision, usage = await _complete_parsed(chat, messages, response_format, parse_decision)
+        decision, usage = await _complete_parsed(
+            chat, messages, response_format, parse_decision, step_timeout_seconds
+        )
         if decision is None:
             # Malformed/truncated grammar on every retry (a runaway generation that
             # hit the context limit, or a hosted provider ignoring the schema). Only

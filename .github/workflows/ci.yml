@@ -20,7 +20,12 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run ruff check .
       - run: uv run pyright
-      - run: uv run pytest
+      - run: uv run pytest --cov=ahx
+      # Dependency vulnerability audit of the LOCKED runtime deps (what the image ships):
+      # a CVE in a transitive dep otherwise ships silently in a public FastAPI + Postgres
+      # service. Audit the exported lock (not the ambient env) so it matches the deploy.
+      - run: uv export --frozen --no-dev --no-emit-project --no-hashes --format requirements-txt -o requirements-audit.txt
+      - run: uvx pip-audit -r requirements-audit.txt
 
   frontend:
     runs-on: ubuntu-latest
@@ -40,6 +45,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      # Fail on a high/critical advisory in shipped (prod) deps. Scoped to --prod so a
+      # dev-only toolchain advisory doesn't block a release; raise/lower --audit-level
+      # to tune the gate.
+      - run: pnpm audit --prod --audit-level high
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test

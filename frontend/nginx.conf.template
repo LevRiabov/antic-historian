@@ -3,7 +3,10 @@
 # browser only ever talks to one origin (no CORS) — same contract as the Vite
 # dev proxy in vite.config.ts.
 server {
-    listen 80;
+    # 8080, not 80: the unprivileged nginx image (Dockerfile) runs as a non-root
+    # user that can't bind a privileged port. The container still publishes to the
+    # host as :8080 (docker-compose.yml).
+    listen 8080;
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
@@ -31,6 +34,13 @@ server {
     # API proxy. Strip the /api prefix so the backend keeps its bare routes
     # (/ask, /health), matching the dev proxy's rewrite.
     location /api/ {
+        # Cap the request body at the edge: the only POST is /ask, whose body is a
+        # short question (validated to <=2000 chars). Reject oversized bodies here,
+        # BEFORE they reach the app — Starlette would otherwise buffer the whole body
+        # into memory before pydantic rejects it, and the rate limiter runs only after
+        # the body is read (a cheap memory-pressure vector on a small box).
+        client_max_body_size 32k;
+
         proxy_pass http://${API_UPSTREAM}/;
 
         proxy_http_version 1.1;

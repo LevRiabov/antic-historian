@@ -11,6 +11,7 @@ The grammar itself (llama.cpp enforcing the Decision schema) is validated live,
 not here — these tests assume a valid Decision and check the wiring around it.
 """
 
+import asyncio
 from collections.abc import AsyncIterator, Sequence
 from typing import cast
 
@@ -282,6 +283,36 @@ async def test_graph_rerolls_a_malformed_reply_instead_of_refusing() -> None:
     assert final.refused is False
     assert final.answer == "Ans [c101]."
     assert state["prompt_tokens"] == 20  # 10 per attempt, both paid for
+
+
+class SlowChat:
+    """A chat whose complete() blocks past the per-step bound — used to prove the
+    timeout fires instead of the call hanging to the overall request budget."""
+
+    model_name = "slow-model"
+
+    async def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]:
+        yield StreamEnd(usage=None)
+
+    async def complete(
+        self, messages: Sequence[ChatMessage], response_format: dict[str, object] | None = None
+    ) -> ChatResult:
+        await asyncio.sleep(1.0)
+        return ChatResult(text="{}", usage=None)
+
+
+async def test_graph_step_timeout_aborts_a_stalled_call() -> None:
+    # A single hung model call must raise (-> the terminal error frame), not eat the
+    # whole request budget. With the per-step bound tiny and complete() sleeping past
+    # it, the run raises TimeoutError. The eval path leaves step_timeout None (untimed).
+    graph = build_agent_graph(
+        SlowChat(),
+        fake_toolbox(make_retriever([chunk(101)])),
+        max_steps=8,
+        step_timeout_seconds=0.01,
+    )
+    with pytest.raises(TimeoutError):
+        await invoke_agent(graph, "q", max_steps=8)
 
 
 async def test_graph_forced_synthesis_answers_from_evidence() -> None:

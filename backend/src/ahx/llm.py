@@ -20,6 +20,7 @@ from typing import Any, Literal, Protocol, cast
 import httpx
 from pydantic import BaseModel, SecretStr
 
+from ahx._http import AsyncClientCache
 from ahx.config import Settings
 
 
@@ -52,6 +53,15 @@ class TextDelta(BaseModel):
     text: str
 
 
+class ReasoningDelta(BaseModel):
+    """A chunk of the model's reasoning / chain-of-thought (OpenRouter surfaces it in a
+    `reasoning` delta field, separate from `content`). Reasoning models emit these for
+    many seconds BEFORE the first answer token — streaming them lets the UI show live
+    "thinking" instead of a void. Display-only: never folded into the served answer."""
+
+    text: str
+
+
 class StreamEnd(BaseModel):
     usage: Usage | None
     # The model that actually produced this stream — set by the concrete model to
@@ -61,7 +71,7 @@ class StreamEnd(BaseModel):
     served_by: str | None = None
 
 
-StreamEvent = TextDelta | StreamEnd
+StreamEvent = TextDelta | ReasoningDelta | StreamEnd
 
 
 class ChatResult(BaseModel):
@@ -106,9 +116,11 @@ class OpenAICompatChat:
         self._api_key = api_key
         self._temperature = temperature
         self._max_tokens = max_tokens
-        self._transport = transport  # tests inject a fake server here
         # Generous read timeout: llama-swap may cold-load a model on first call.
         self._timeout = httpx.Timeout(600.0, connect=10.0)
+        # ONE keep-alive client reused across requests AND across retry attempts
+        # (the loop below used to open a fresh client — and TLS handshake — per attempt).
+        self._http = AsyncClientCache(self._timeout, transport)  # tests inject a fake server
 
     @property
     def model_name(self) -> str:
@@ -156,18 +168,15 @@ class OpenAICompatChat:
         response_format: dict[str, Any] | None = None,
     ) -> ChatResult:
         payload = self._payload(messages, stream=False, response_format=response_format)
+        client = self._http.get()
+        headers = self._headers()
         for attempt in range(_MAX_ATTEMPTS):
             try:
-                async with httpx.AsyncClient(
-                    timeout=self._timeout, transport=self._transport
-                ) as client:
-                    response = await client.post(
-                        f"{self._base_url}/chat/completions",
-                        json=payload,
-                        headers=self._headers(),
-                    )
-                    response.raise_for_status()
-                    data = cast(dict[str, Any], response.json())
+                response = await client.post(
+                    f"{self._base_url}/chat/completions", json=payload, headers=headers
+                )
+                response.raise_for_status()
+                data = cast(dict[str, Any], response.json())
                 text = data["choices"][0]["message"]["content"] or ""
                 return ChatResult(
                     text=text,
@@ -189,6 +198,8 @@ class OpenAICompatChat:
 
     async def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]:
         payload = self._payload(messages, stream=True)
+        client = self._http.get()
+        headers = self._headers()
         # Retry mirrors complete(), but is only safe BEFORE the first token ships:
         # once a delta is out we can't un-send it, so a mid-stream failure must
         # propagate. `started` is the commit point (same line CompositeChatModel
@@ -197,15 +208,12 @@ class OpenAICompatChat:
             usage: Usage | None = None
             started = False
             try:
-                async with (
-                    httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client,
-                    client.stream(
-                        "POST",
-                        f"{self._base_url}/chat/completions",
-                        json=payload,
-                        headers=self._headers(),
-                    ) as response,
-                ):
+                async with client.stream(
+                    "POST",
+                    f"{self._base_url}/chat/completions",
+                    json=payload,
+                    headers=headers,
+                ) as response:
                     response.raise_for_status()
                     async for line in response.aiter_lines():
                         if not line.startswith("data: "):
@@ -219,6 +227,15 @@ class OpenAICompatChat:
                         choices = cast(list[dict[str, Any]], chunk.get("choices") or [])
                         if choices:
                             delta = cast(dict[str, Any], choices[0].get("delta") or {})
+                            # Reasoning ships before content on a reasoning model. Marking
+                            # `started` here too keeps the "output already sent, can't retry
+                            # this stream" invariant (no duplicated reasoning on inner retry);
+                            # cross-provider fallover still works — it hinges on raise_for_status
+                            # at stream open, above, not on what shipped.
+                            reasoning = delta.get("reasoning") or delta.get("reasoning_content")
+                            if reasoning:
+                                started = True
+                                yield ReasoningDelta(text=str(reasoning))
                             content = delta.get("content")
                             if content:
                                 started = True
@@ -235,6 +252,20 @@ class OpenAICompatChat:
                 if started or attempt == _MAX_ATTEMPTS - 1:
                     raise
             await asyncio.sleep(0.5 * 2**attempt)
+
+    async def aclose(self) -> None:
+        """Release the pooled keep-alive client (API lifespan shutdown)."""
+        await self._http.aclose()
+
+
+async def aclose_chat_model(chat: ChatModel) -> None:
+    """Best-effort release of any pooled HTTP client a chat model holds. The concrete
+    OpenAICompat/Composite/Traced models keep one keep-alive client per loop; test
+    fakes don't, so this is a no-op for them — letting the API lifespan close whatever
+    ChatModel was wired without knowing its concrete type (the thin-waist rule)."""
+    aclose = getattr(chat, "aclose", None)
+    if aclose is not None:
+        await aclose()
 
 
 class CompositeChatModel:
@@ -297,6 +328,11 @@ class CompositeChatModel:
                 last_exc = exc
         assert last_exc is not None
         raise last_exc
+
+    async def aclose(self) -> None:
+        """Release every member's pooled client (API lifespan shutdown)."""
+        for model in self._models:
+            await aclose_chat_model(model)
 
 
 def chat_model_from_settings(settings: Settings) -> ChatModel:
