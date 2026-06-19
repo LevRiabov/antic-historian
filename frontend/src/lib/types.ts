@@ -89,6 +89,13 @@ export interface DeltaEvent {
   text: string;
 }
 
+/** A chunk of the model's live reasoning / chain-of-thought (reasoning models emit
+ *  these for many seconds before the first answer token). Display-only — never part
+ *  of the served answer. Mirrors ahx/generation/pipeline.py:ReasoningEvent. */
+export interface ReasoningEvent {
+  text: string;
+}
+
 /** One live ReAct step — emitted only in deep mode. */
 export interface StepEvent {
   index: number; // 1-based step number
@@ -110,13 +117,23 @@ export interface DoneEvent {
   blocked: boolean;
 }
 
+/** Terminal frame the backend emits when the stream fails/times out AFTER the 200 +
+ *  SSE headers already shipped (ahx/api/app.py). It replaces the `done` event, so the
+ *  client must treat it as a failure — not a clean close — or a truncated answer would
+ *  be shown as a success. */
+export interface StreamErrorEvent {
+  detail: string;
+}
+
 /** Discriminated union of the named SSE events the client handles. */
 export type AskEvent =
   | { event: "meta"; data: SessionStatus }
   | { event: "sources"; data: SourcesEvent }
   | { event: "step"; data: StepEvent }
   | { event: "delta"; data: DeltaEvent }
-  | { event: "done"; data: DoneEvent };
+  | { event: "reasoning"; data: ReasoningEvent }
+  | { event: "done"; data: DoneEvent }
+  | { event: "error"; data: StreamErrorEvent };
 
 /* -----------------------------------------------------------------------------
  * Eval-run records — the TS mirror of the published golden-set runs. Keep these

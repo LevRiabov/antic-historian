@@ -146,6 +146,22 @@ describe("askStream — frame parsing", () => {
     ]);
   });
 
+  it("yields the backend's terminal `error` frame instead of dropping it", async () => {
+    // Regression: "error" must be a known event, else a failed/timed-out stream
+    // looks like a clean close and a truncated answer is shown as success.
+    mockFetch(
+      streamResponse([
+        'event: delta\ndata: {"text":"half"}\n\n' +
+          'event: error\ndata: {"detail":"the answer stream failed"}\n\n',
+      ]),
+    );
+    const events = await collect(askStream({ question: "q" }));
+    expect(events).toEqual([
+      { event: "delta", data: { text: "half" } },
+      { event: "error", data: { detail: "the answer stream failed" } },
+    ]);
+  });
+
   it("strips a single leading space after the field colon", async () => {
     // "data: x" -> "x" (one space stripped), but interior spacing is preserved.
     mockFetch(streamResponse(['event: delta\ndata: {"text":"a b"}\n\n']));

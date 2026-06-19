@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { useElapsedSeconds } from "@/components/chat/useElapsedSeconds";
 import { formatCost, formatLatency, type Turn } from "@/lib/chat";
 import type { StepEvent } from "@/lib/types";
 
@@ -122,13 +123,17 @@ function CompactStep({ step }: { step: StepEvent }) {
   );
 }
 
+/* A live "still working" line for the deep panel. The seconds counter (past 3s) is
+ * what stops a long step — each search runs ~15s — from looking hung. */
 function WorkingLine({ label = "working…" }: { label?: string }) {
+  const seconds = useElapsedSeconds(true);
   return (
     <li className="flex items-center gap-2 text-[12.5px] text-ink-faint">
       <span className="flex gap-1" aria-hidden>
         <Dot /> <Dot /> <Dot />
       </span>
       {label}
+      {seconds >= 3 && <span className="font-mono text-[11.5px]">{seconds}s</span>}
     </li>
   );
 }

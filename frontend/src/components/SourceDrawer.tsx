@@ -25,6 +25,10 @@ export function SourceDrawer({
   passage,
   loading,
   error,
+  index,
+  count,
+  onPrev,
+  onNext,
 }: {
   open: boolean;
   onClose: () => void;
@@ -32,19 +36,30 @@ export function SourceDrawer({
   passage: DrawerPassage | null;
   loading: boolean;
   error: boolean;
+  // Optional pager: when count > 1, the header shows ‹ n/m › and ←/→ page through the
+  // turn's passages. Omitted by the evals page (single passage) — no pager rendered.
+  index?: number;
+  count?: number;
+  onPrev?: () => void;
+  onNext?: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
+  const paged = count !== undefined && count > 1 && index !== undefined;
+  const canPrev = paged && index > 0;
+  const canNext = paged && index < count - 1;
 
-  // Close on Escape while open (matches the chat mock's keyboard behaviour).
+  // Close on Escape; page with ←/→ when the drawer is a pager.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft" && canPrev) onPrev?.();
+      else if (e.key === "ArrowRight" && canNext) onNext?.();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, canPrev, canNext, onPrev, onNext]);
 
   // Move focus into the dialog on open and restore it to the trigger on close,
   // so keyboard users aren't dropped back at the top of the document.
@@ -79,6 +94,15 @@ export function SourceDrawer({
             </div>
             <div className="text-xs text-ink-faint">Verified public-domain passage</div>
           </div>
+          {paged && (
+            <div className="flex items-center gap-1" aria-label="Browse passages">
+              <PagerButton dir="prev" disabled={!canPrev} onClick={() => onPrev?.()} />
+              <span className="min-w-[44px] text-center font-mono text-xs text-ink-soft tabular-nums">
+                {index + 1} / {count}
+              </span>
+              <PagerButton dir="next" disabled={!canNext} onClick={() => onNext?.()} />
+            </div>
+          )}
           <button
             ref={closeRef}
             type="button"
@@ -112,6 +136,30 @@ export function SourceDrawer({
         </footer>
       </aside>
     </>
+  );
+}
+
+function PagerButton({
+  dir,
+  disabled,
+  onClick,
+}: {
+  dir: "prev" | "next";
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={dir === "prev" ? "Previous passage" : "Next passage"}
+      className="grid h-7 w-7 place-items-center rounded-lg border border-line-strong bg-surface text-ink-soft transition-colors hover:bg-accent-soft hover:text-accent-ink disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {dir === "prev" ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
+      </svg>
+    </button>
   );
 }
 

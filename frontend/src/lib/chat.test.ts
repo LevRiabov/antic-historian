@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  applyAskEvent,
   citationByMarker,
   citedRetrieved,
   formatCost,
@@ -9,9 +10,10 @@ import {
   newTurn,
   newTurnId,
   sessionTotals,
+  STREAM_ERROR_MESSAGE,
   type Turn,
 } from "@/lib/chat";
-import type { Citation, Cost, DoneEvent } from "@/lib/types";
+import type { AskEvent, Citation, Cost, DoneEvent, StepEvent } from "@/lib/types";
 
 function cost(usd: number | null): Cost {
   return { usd, input_tokens: 0, output_tokens: 0, model: "m", priced: usd !== null };
@@ -126,6 +128,92 @@ describe("citedRetrieved", () => {
   });
   it("is zero/zero before done with no sources", () => {
     expect(citedRetrieved(newTurn("a", "q", "fast"))).toEqual({ cited: 0, retrieved: 0 });
+  });
+});
+
+function step(over: Partial<StepEvent> = {}): StepEvent {
+  return {
+    index: 1,
+    thought: "look it up",
+    tool: "search",
+    args: {},
+    observation: "found it",
+    chunk_ids: [10],
+    searches_left: 4,
+    ...over,
+  };
+}
+
+describe("applyAskEvent (stream reducer)", () => {
+  const base = newTurn("id", "q", "fast");
+
+  it("meta sets the session budget", () => {
+    const t = applyAskEvent(base, { event: "meta", data: { limit: 20, remaining: 19 } }, 5);
+    expect(t.session).toEqual({ limit: 20, remaining: 19 });
+    expect(t.status).toBe("streaming");
+  });
+
+  it("sources replaces the citation list", () => {
+    const t = applyAskEvent(
+      base,
+      { event: "sources", data: { citations: [citation(1)], prompt_version: "v8" } },
+      5,
+    );
+    expect(t.sources).toHaveLength(1);
+    expect(t.sources[0]?.marker).toBe(1);
+  });
+
+  it("step appends in arrival order", () => {
+    const one = applyAskEvent(base, { event: "step", data: step({ index: 1 }) }, 5);
+    const two = applyAskEvent(one, { event: "step", data: step({ index: 2 }) }, 5);
+    expect(two.steps.map((s) => s.index)).toEqual([1, 2]);
+  });
+
+  it("delta accumulates answer text", () => {
+    const a = applyAskEvent(base, { event: "delta", data: { text: "Cae" } }, 5);
+    const b = applyAskEvent(a, { event: "delta", data: { text: "sar" } }, 5);
+    expect(b.answer).toBe("Caesar");
+    expect(b.status).toBe("streaming");
+  });
+
+  it("reasoning accumulates separately from the answer", () => {
+    const a = applyAskEvent(base, { event: "reasoning", data: { text: "Let me " } }, 5);
+    const b = applyAskEvent(a, { event: "reasoning", data: { text: "check the sources." } }, 5);
+    expect(b.reasoning).toBe("Let me check the sources.");
+    expect(b.answer).toBe(""); // reasoning never leaks into the served answer
+    expect(b.status).toBe("streaming");
+  });
+
+  it("done settles the turn with payload + latency", () => {
+    const t = applyAskEvent(base, { event: "done", data: done({ answer: "x" }) }, 1234);
+    expect(t.status).toBe("done");
+    expect(t.done?.answer).toBe("x");
+    expect(t.elapsedMs).toBe(1234);
+  });
+
+  it("error marks the turn failed — never a clean done — and keeps the partial answer", () => {
+    const partial = applyAskEvent(base, { event: "delta", data: { text: "half an ans" } }, 5);
+    const t = applyAskEvent(partial, { event: "error", data: { detail: "boom" } }, 800);
+    expect(t.status).toBe("error");
+    expect(t.error).toBe(STREAM_ERROR_MESSAGE);
+    expect(t.done).toBeNull(); // crucially not "done"
+    expect(t.answer).toBe("half an ans"); // partial retained, not shown as success
+    expect(t.elapsedMs).toBe(800);
+  });
+
+  it("folds a full fast-mode stream meta→sources→delta*→done", () => {
+    const stream: AskEvent[] = [
+      { event: "meta", data: { limit: 20, remaining: 19 } },
+      { event: "sources", data: { citations: [citation(1), citation(2)], prompt_version: "v8" } },
+      { event: "delta", data: { text: "He crossed " } },
+      { event: "delta", data: { text: "the Rubicon [1]." } },
+      { event: "done", data: done({ answer: "He crossed the Rubicon [1].", markers: { used: [1], dangling: [] } }) },
+    ];
+    const final = stream.reduce((t, ev) => applyAskEvent(t, ev, 2000), base);
+    expect(final.status).toBe("done");
+    expect(final.answer).toBe("He crossed the Rubicon [1].");
+    expect(final.sources).toHaveLength(2);
+    expect(final.done?.markers.used).toEqual([1]);
   });
 });
 

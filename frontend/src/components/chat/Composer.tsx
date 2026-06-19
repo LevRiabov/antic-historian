@@ -11,6 +11,7 @@ export function Composer({
   value,
   onChange,
   onSend,
+  onStop,
   deep,
   onToggleDeep,
   busy,
@@ -19,6 +20,7 @@ export function Composer({
   value: string;
   onChange: (v: string) => void;
   onSend: () => void;
+  onStop: () => void;
   deep: boolean;
   onToggleDeep: () => void;
   busy: boolean;
@@ -59,15 +61,29 @@ export function Composer({
             placeholder="Ask about the ancient Greco-Roman world…"
             className="max-h-40 flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-ink outline-none placeholder:text-ink-faint disabled:opacity-60"
           />
-          <button
-            type="button"
-            onClick={onSend}
-            disabled={busy || !value.trim()}
-            aria-label="Send"
-            className="grid h-9.5 w-9.5 flex-none place-items-center rounded-xl bg-accent p-2 text-white shadow-[0_2px_8px_rgba(138,90,43,0.35)] transition-colors hover:bg-accent-ink disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <SendIcon />
-          </button>
+          {/* Mid-stream the send button becomes a Stop button: on a slow provider a
+              user must be able to bail out of a long answer, not just wait it out. */}
+          {busy ? (
+            <button
+              type="button"
+              onClick={onStop}
+              aria-label="Stop generating"
+              title="Stop generating"
+              className="grid h-9.5 w-9.5 flex-none place-items-center rounded-xl bg-ink p-2 text-white shadow-[0_2px_8px_rgba(31,35,40,0.25)] transition-colors hover:bg-ink-soft"
+            >
+              <StopIcon />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onSend}
+              disabled={!value.trim()}
+              aria-label="Send"
+              className="grid h-9.5 w-9.5 flex-none place-items-center rounded-xl bg-accent p-2 text-white shadow-[0_2px_8px_rgba(138,90,43,0.35)] transition-colors hover:bg-accent-ink disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <SendIcon />
+            </button>
+          )}
         </div>
 
         <div className="mt-1 flex items-center gap-3 border-t border-line pt-2">
@@ -131,6 +147,14 @@ function SendIcon() {
       aria-hidden
     >
       <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <rect x="6" y="6" width="12" height="12" rx="2" />
     </svg>
   );
 }

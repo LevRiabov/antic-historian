@@ -30,7 +30,9 @@ export class AskError extends Error {
   }
 }
 
-const KNOWN_EVENTS = new Set(["meta", "sources", "step", "delta", "done"]);
+// "error" is the backend's terminal failure frame (app.py) — it must be parsed and
+// surfaced, not dropped, or a truncated stream reads as a clean finish.
+const KNOWN_EVENTS = new Set(["meta", "sources", "step", "delta", "reasoning", "done", "error"]);
 
 export async function* askStream(params: AskParams): AsyncGenerator<AskEvent> {
   const { question, mode = "fast", topK = 5, signal } = params;

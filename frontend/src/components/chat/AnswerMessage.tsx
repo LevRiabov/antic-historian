@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 
 import { DeepPanel } from "@/components/chat/DeepPanel";
+import { FoundChunks } from "@/components/chat/FoundChunks";
+import { ReasoningPanel } from "@/components/chat/ReasoningPanel";
+import { useElapsedSeconds } from "@/components/chat/useElapsedSeconds";
 import {
   citationByMarker,
   citedRetrieved,
@@ -22,7 +25,9 @@ export function AnswerMessage({
   onOpenCitation,
 }: {
   turn: Turn;
-  onOpenCitation: (citation: Citation) => void;
+  // Opens the drawer on the turn's full passage list, positioned at `index` — so the
+  // drawer can page through every retrieved passage, not just the one clicked.
+  onOpenCitation: (sources: readonly Citation[], index: number) => void;
 }) {
   // While streaming, show the accumulating deltas; once done, show the authoritative
   // SERVED answer (done.answer) — which may differ from the deltas when the output
@@ -43,6 +48,10 @@ export function AnswerMessage({
             deep turn so the live progress is visible from the first moment. */}
         {turn.mode === "deep" && turn.status !== "error" && <DeepPanel turn={turn} />}
 
+        {/* Live chain-of-thought (fast path / reasoning models). Self-hides when the
+            model emits none, so it's safe to render unconditionally. */}
+        {turn.status !== "error" && <ReasoningPanel turn={turn} />}
+
         {turn.status === "error" ? (
           <div className="rounded-2xl border border-refuse/30 bg-refuse-soft px-4 py-3 text-[14.5px] text-refuse">
             {turn.error}
@@ -58,7 +67,15 @@ export function AnswerMessage({
           // The deep panel above already shows live progress — no duplicate spinner.
           null
         ) : (
-          <Thinking mode={turn.mode} />
+          // Fast path, still composing: the status line + the retrieved passages as
+          // cards, so the (often long, reasoning-model) wait is reading time, not a void.
+          <>
+            <Thinking sources={turn.sources.length} />
+            <FoundChunks
+              sources={turn.sources}
+              onOpen={(index) => onOpenCitation(turn.sources, index)}
+            />
+          </>
         )}
 
         {turn.done && turn.status !== "error" && (
@@ -73,7 +90,9 @@ export function AnswerMessage({
             {retrieved > 0 && (
               <button
                 type="button"
-                onClick={() => firstSource && onOpenCitation(firstSource)}
+                onClick={() =>
+                  firstSource && onOpenCitation(turn.sources, turn.sources.indexOf(firstSource))
+                }
                 className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-ink-soft transition-colors hover:border-accent hover:text-accent-ink"
               >
                 <SourcesIcon />
@@ -102,7 +121,7 @@ function AnswerBody({
 }: {
   text: string;
   sources: readonly Citation[];
-  onOpenCitation: (citation: Citation) => void;
+  onOpenCitation: (sources: readonly Citation[], index: number) => void;
 }) {
   const parts = text.split(/(\[\d+\])/g);
   return (
@@ -125,7 +144,7 @@ function AnswerBody({
           <sup key={i}>
             <button
               type="button"
-              onClick={() => onOpenCitation(citation)}
+              onClick={() => onOpenCitation(sources, sources.indexOf(citation))}
               className={`${base} cursor-pointer transition-colors hover:bg-[#e9d9c6]`}
               title={`${citation.author}, ${citation.work_title}`}
             >
@@ -152,13 +171,23 @@ function Refusal({ text }: { text: string }) {
   );
 }
 
-function Thinking({ mode }: { mode: "fast" | "deep" }) {
+/* The fast-path pre-answer indicator. Two things keep a slow time-to-first-token from
+ * looking frozen: the status advances the moment retrieval lands (sources arrived →
+ * "Read N passages · composing the answer…"), and a live seconds counter proves the
+ * stream is alive. The counter only appears past 3s so a quick answer doesn't flash it. */
+function Thinking({ sources }: { sources: number }) {
+  const seconds = useElapsedSeconds(true);
+  const label =
+    sources > 0
+      ? `Read ${sources} passage${sources === 1 ? "" : "s"} · composing the answer…`
+      : "Searching the corpus…";
   return (
     <div className="flex items-center gap-2 text-[14px] text-ink-faint">
       <span className="flex gap-1" aria-hidden>
         <Dot /> <Dot /> <Dot />
       </span>
-      {mode === "deep" ? "Searching the corpus…" : "Consulting the sources…"}
+      {label}
+      {seconds >= 3 && <span className="font-mono text-[12px] text-ink-faint">{seconds}s</span>}
     </div>
   );
 }

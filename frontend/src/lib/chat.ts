@@ -4,7 +4,15 @@
  * done) mutates a turn in place as it arrives. Framework-free; the React page
  * owns the state, this module just shapes + formats it.
  */
-import type { AskMode, Citation, Cost, DoneEvent, SessionStatus, StepEvent } from "./types";
+import type {
+  AskEvent,
+  AskMode,
+  Citation,
+  Cost,
+  DoneEvent,
+  SessionStatus,
+  StepEvent,
+} from "./types";
 
 export type TurnStatus = "streaming" | "done" | "error";
 
@@ -14,6 +22,7 @@ export interface Turn {
   mode: AskMode;
   status: TurnStatus;
   answer: string; // accumulated delta text
+  reasoning: string; // accumulated live chain-of-thought (display-only; reasoning models)
   sources: Citation[]; // from the `sources` event (full citation data — no fetch needed)
   steps: StepEvent[]; // live ReAct steps (deep mode only)
   done: DoneEvent | null; // terminal event
@@ -36,6 +45,7 @@ export function newTurn(id: string, question: string, mode: AskMode): Turn {
     mode,
     status: "streaming",
     answer: "",
+    reasoning: "",
     sources: [],
     steps: [],
     done: null,
@@ -43,6 +53,38 @@ export function newTurn(id: string, question: string, mode: AskMode): Turn {
     error: null,
     elapsedMs: null,
   };
+}
+
+/** Shown when the stream fails mid-answer (the backend's terminal `error` frame, or
+ *  any other case the reducer marks failed). Friendly, not the raw backend detail. */
+export const STREAM_ERROR_MESSAGE =
+  "The answer stream failed before it finished. Please try again.";
+
+/* The wire order is meta → sources → (step* in deep mode) → delta* → (done | error).
+ * `applyAskEvent` folds one event into the turn; the React page just stores the
+ * result. Keeping it a pure function (not inline in the component) is what lets the
+ * full stream-reducer contract — including the terminal `error` frame — be unit
+ * tested. `elapsedMs` is the caller's client-measured send→event latency; it's only
+ * recorded on the terminal events (done/error) and ignored otherwise. */
+export function applyAskEvent(turn: Turn, ev: AskEvent, elapsedMs: number): Turn {
+  switch (ev.event) {
+    case "meta":
+      return { ...turn, session: ev.data };
+    case "sources":
+      return { ...turn, sources: ev.data.citations };
+    case "step":
+      return { ...turn, steps: [...turn.steps, ev.data] };
+    case "delta":
+      return { ...turn, answer: turn.answer + ev.data.text };
+    case "reasoning":
+      return { ...turn, reasoning: turn.reasoning + ev.data.text };
+    case "done":
+      return { ...turn, done: ev.data, status: "done", elapsedMs };
+    case "error":
+      // Terminal failure: keep any partial answer for context but mark the turn
+      // failed so the UI shows an error, never a truncated answer as success.
+      return { ...turn, status: "error", error: STREAM_ERROR_MESSAGE, elapsedMs };
+  }
 }
 
 /** Whether this turn is an honest refusal (no source in corpus). Known only once
@@ -113,9 +155,29 @@ export interface Suggestion {
   refusal?: boolean;
 }
 
+// Curated from the golden set so the demo's first impression is reliable: each of
+// the first three is a top-scoring in-scope question (faithfulness/completeness/
+// attribution all 5/5 in the published gen-agent-v8 run that /evals/agent serves),
+// spanning the difficulty range — a single fact, a multi-hop chain, and a
+// cross-source synthesis. The fourth is a golden out-of-scope question the eval
+// confirms is correctly refused (refused + refusal_correct), so the "honest refusal"
+// demo lands every time. If the published run changes, re-pick from the new top scorers.
 export const SUGGESTIONS: readonly Suggestion[] = [
-  { kind: "Try this", text: "Did Caesar cross the Rubicon, and what did he say?" },
-  { kind: "Try this", text: "How did the Battle of Cannae unfold?" },
-  { kind: "Try this", text: "Why did the Roman Republic fall?" },
-  { kind: "See a refusal", text: "What did Caesar think of the printing press?", refusal: true },
+  {
+    kind: "Simple fact",
+    text: "How many wounds did Julius Caesar receive when he was assassinated?",
+  },
+  {
+    kind: "Multi-hop",
+    text: "What city did Alexander found in memory of the horse he had tamed as a boy?",
+  },
+  {
+    kind: "Cross-source synthesis",
+    text: "How do the sources describe the final destruction of Carthage?",
+  },
+  {
+    kind: "See a refusal",
+    text: "What was the Antikythera mechanism used for?",
+    refusal: true,
+  },
 ];

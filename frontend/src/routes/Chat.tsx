@@ -5,7 +5,7 @@ import { Composer } from "@/components/chat/Composer";
 import { InstrumentBar } from "@/components/chat/InstrumentBar";
 import { Landing } from "@/components/chat/Landing";
 import { SourceDrawer } from "@/components/SourceDrawer";
-import { newTurn, newTurnId, sessionTotals, type Turn } from "@/lib/chat";
+import { applyAskEvent, newTurn, newTurnId, sessionTotals, type Turn } from "@/lib/chat";
 import { AskError, askStream } from "@/lib/sse";
 import type { AskMode, Citation, SessionStatus } from "@/lib/types";
 
@@ -15,7 +15,9 @@ export function Chat() {
   const [deep, setDeep] = useState(false);
   const [busy, setBusy] = useState(false);
   const [session, setSession] = useState<SessionStatus | null>(null);
-  const [active, setActive] = useState<Citation | null>(null);
+  // The citation drawer pages through one turn's passages: the full list + the
+  // currently-shown index. Opened from an inline [n], the cited chip, or a found-card.
+  const [active, setActive] = useState<{ sources: readonly Citation[]; index: number } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -48,23 +50,11 @@ export function Chat() {
 
     try {
       for await (const ev of askStream({ question, mode, signal: controller.signal })) {
-        if (ev.event === "meta") {
-          setSession(ev.data);
-          patchTurn(id, (t) => ({ ...t, session: ev.data }));
-        } else if (ev.event === "sources") {
-          patchTurn(id, (t) => ({ ...t, sources: ev.data.citations }));
-        } else if (ev.event === "step") {
-          patchTurn(id, (t) => ({ ...t, steps: [...t.steps, ev.data] }));
-        } else if (ev.event === "delta") {
-          patchTurn(id, (t) => ({ ...t, answer: t.answer + ev.data.text }));
-        } else if (ev.event === "done") {
-          patchTurn(id, (t) => ({
-            ...t,
-            done: ev.data,
-            status: "done",
-            elapsedMs: Math.round(performance.now() - started),
-          }));
-        }
+        // The `meta` budget also drives the page-level composer/instrument bar, so
+        // mirror it into top-level state; the rest is folded into the turn by the
+        // (unit-tested) reducer — including the terminal `error` frame.
+        if (ev.event === "meta") setSession(ev.data);
+        patchTurn(id, (t) => applyAskEvent(t, ev, Math.round(performance.now() - started)));
       }
       // Stream closed without a done event (e.g. aborted): settle the turn.
       patchTurn(id, (t) =>
@@ -82,6 +72,12 @@ export function Chat() {
       setBusy(false);
       abortRef.current = null;
     }
+  }
+
+  // Cancel the in-flight stream but keep the conversation. The aborted path in send()
+  // settles the current turn (status "done", partial answer retained).
+  function stop() {
+    abortRef.current?.abort();
   }
 
   function reset() {
@@ -112,7 +108,10 @@ export function Chat() {
                   </div>
                 </div>
                 <div className="mt-6">
-                  <AnswerMessage turn={turn} onOpenCitation={setActive} />
+                  <AnswerMessage
+                    turn={turn}
+                    onOpenCitation={(sources, index) => setActive({ sources, index })}
+                  />
                 </div>
               </div>
             ))}
@@ -135,6 +134,7 @@ export function Chat() {
         value={input}
         onChange={setInput}
         onSend={() => send(input)}
+        onStop={stop}
         deep={deep}
         onToggleDeep={() => setDeep((v) => !v)}
         busy={busy}
@@ -144,10 +144,20 @@ export function Chat() {
       <SourceDrawer
         open={active !== null}
         onClose={() => setActive(null)}
-        marker={active?.marker}
-        passage={active}
+        marker={active ? (active.sources[active.index]?.marker ?? undefined) : undefined}
+        passage={active ? (active.sources[active.index] ?? null) : null}
         loading={false}
         error={false}
+        index={active?.index}
+        count={active?.sources.length}
+        onPrev={() =>
+          setActive((a) => (a && a.index > 0 ? { ...a, index: a.index - 1 } : a))
+        }
+        onNext={() =>
+          setActive((a) =>
+            a && a.index < a.sources.length - 1 ? { ...a, index: a.index + 1 } : a,
+          )
+        }
       />
     </div>
   );
