@@ -9,7 +9,9 @@ import json
 from typing import Any
 
 import httpx
+import pytest
 
+import ahx.llm
 from ahx.llm import (
     ChatMessage,
     ChatModel,
@@ -18,6 +20,17 @@ from ahx.llm import (
     TextDelta,
     Usage,
 )
+
+
+@pytest.fixture(autouse=True)
+def no_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the retry backoff sleeps instant so retry tests don't burn wall clock."""
+
+    async def instant(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(ahx.llm.asyncio, "sleep", instant)
+
 
 MESSAGES = [
     ChatMessage(role="system", content="Answer only from the sources."),
@@ -132,3 +145,36 @@ async def test_complete_omits_response_format_by_default() -> None:
     server = FakeServer(COMPLETION_BODY)
     await make_model(server).complete(MESSAGES)
     assert "response_format" not in server.sent_payload
+
+
+async def test_stream_retries_transient_5xx_before_first_token() -> None:
+    # The shipped default serves a BARE primary (no fallbacks), so the streamed path
+    # must self-heal a transient 503 rather than fail the user's request (H2).
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(503)  # transient hiccup on the first connect
+        return httpx.Response(200, text=SSE_BODY, headers={"content-type": "text/event-stream"})
+
+    model = OpenAICompatChat(
+        base_url="http://test/v1", model="m", transport=httpx.MockTransport(handler)
+    )
+    events = [event async for event in model.stream(MESSAGES)]
+
+    assert attempts == 2  # retried once, then served
+    assert [e.text for e in events if isinstance(e, TextDelta)] == ["Et tu, ", "Brute?"]
+
+
+async def test_stream_raises_after_exhausting_retries() -> None:
+    # A persistently-down endpoint still surfaces the error (so a CompositeChatModel
+    # above can fall over) rather than retrying forever.
+    model = OpenAICompatChat(
+        base_url="http://test/v1",
+        model="m",
+        transport=httpx.MockTransport(lambda _req: httpx.Response(503)),
+    )
+    with pytest.raises(httpx.HTTPStatusError):
+        _ = [event async for event in model.stream(MESSAGES)]

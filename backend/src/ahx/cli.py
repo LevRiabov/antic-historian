@@ -39,14 +39,18 @@ def db_reset_chunks(
 ) -> None:
     """Drop + recreate the chunks table (D2 ablation: re-embed with a new
     model/dim). Follow with `ahx ingest load` and `ahx ingest parity --update`."""
+    from sqlalchemy.engine import make_url
+
     from ahx.config import get_settings
     from ahx.db import create_sync_engine, reset_chunks
 
     settings = get_settings()
     if not yes:
+        # hide_password: the DSN carries the DB password; don't echo it to the terminal.
+        target = make_url(settings.database_url).render_as_string(hide_password=True)
         console.print(
             "[red]This drops ALL embedded chunks (reload costs GPU/API time).[/red]\n"
-            f"Target: {settings.database_url}\n"
+            f"Target: {target}\n"
             f"New embed config: {settings.embed_model} @ {settings.embed_dim}d\n"
             "Re-run with --yes to proceed."
         )
@@ -301,7 +305,7 @@ def enrich(
     chat = OpenAICompatChat(
         base_url=settings.enrich_base_url,
         model=model or settings.enrich_model,
-        api_key=settings.enrich_api_key,
+        api_key=settings.enrich_api_key.get_secret_value() if settings.enrich_api_key else None,
         temperature=0.0,
         max_tokens=settings.enrich_max_tokens,
     )
@@ -380,7 +384,7 @@ app.add_typer(agent_app, name="agent")
 def agent_ask(
     question: str,
     retriever: str = typer.Option(
-        "rerank-cohere-pro-v1", help="Retriever label the agent's whole-corpus search uses."
+        "dense-ctx-v1", help="Retriever label the agent's whole-corpus search uses."
     ),
     max_steps: int = typer.Option(8, help="Hard loop bound — forced-finalize (refuse) after."),
     trace: bool = typer.Option(
@@ -809,7 +813,8 @@ def pricing_refresh(
     wanted = set(LINEUP_MODELS) | configured | extra
     console.print(f"Fetching {len(wanted)} model prices from {settings.embed_base_url}/models ...")
 
-    found = fetch_prices(settings.embed_base_url, settings.embed_api_key, wanted)
+    embed_key = settings.embed_api_key.get_secret_value() if settings.embed_api_key else None
+    found = fetch_prices(settings.embed_base_url, embed_key, wanted)
     missing = wanted - found.keys()
     table = PriceTable(
         fetched_at=date.today().isoformat(),

@@ -18,9 +18,15 @@ from collections.abc import AsyncIterator, Sequence
 from typing import Any, Literal, Protocol, cast
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from ahx.config import Settings
+
+
+def _reveal(key: SecretStr | None) -> str | None:
+    """Unwrap a SecretStr at the wire boundary (the only place the raw key is read)."""
+    return key.get_secret_value() if key is not None else None
+
 
 # Transient statuses worth retrying: 429 (rate limit) + the 5xx family. With every
 # stage hosted (agent/embed/judge all on OpenRouter), a concurrent run WILL hit
@@ -182,33 +188,53 @@ class OpenAICompatChat:
         raise RuntimeError("unreachable: retry loop exhausted without return or raise")
 
     async def stream(self, messages: Sequence[ChatMessage]) -> AsyncIterator[StreamEvent]:
-        usage: Usage | None = None
-        async with (
-            httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client,
-            client.stream(
-                "POST",
-                f"{self._base_url}/chat/completions",
-                json=self._payload(messages, stream=True),
-                headers=self._headers(),
-            ) as response,
-        ):
-            response.raise_for_status()
-            async for line in response.aiter_lines():
-                if not line.startswith("data: "):
-                    continue  # SSE comments / blank keep-alives
-                data = line.removeprefix("data: ")
-                if data == "[DONE]":
-                    break
-                chunk = cast(dict[str, Any], json.loads(data))
-                if chunk.get("usage"):
-                    usage = self._parse_usage(chunk["usage"])
-                choices = cast(list[dict[str, Any]], chunk.get("choices") or [])
-                if choices:
-                    delta = cast(dict[str, Any], choices[0].get("delta") or {})
-                    content = delta.get("content")
-                    if content:
-                        yield TextDelta(text=str(content))
-        yield StreamEnd(usage=usage, served_by=self._model)
+        payload = self._payload(messages, stream=True)
+        # Retry mirrors complete(), but is only safe BEFORE the first token ships:
+        # once a delta is out we can't un-send it, so a mid-stream failure must
+        # propagate. `started` is the commit point (same line CompositeChatModel
+        # draws for cross-provider fallover).
+        for attempt in range(_MAX_ATTEMPTS):
+            usage: Usage | None = None
+            started = False
+            try:
+                async with (
+                    httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client,
+                    client.stream(
+                        "POST",
+                        f"{self._base_url}/chat/completions",
+                        json=payload,
+                        headers=self._headers(),
+                    ) as response,
+                ):
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        if not line.startswith("data: "):
+                            continue  # SSE comments / blank keep-alives
+                        data = line.removeprefix("data: ")
+                        if data == "[DONE]":
+                            break
+                        chunk = cast(dict[str, Any], json.loads(data))
+                        if chunk.get("usage"):
+                            usage = self._parse_usage(chunk["usage"])
+                        choices = cast(list[dict[str, Any]], chunk.get("choices") or [])
+                        if choices:
+                            delta = cast(dict[str, Any], choices[0].get("delta") or {})
+                            content = delta.get("content")
+                            if content:
+                                started = True
+                                yield TextDelta(text=str(content))
+                yield StreamEnd(usage=usage, served_by=self._model)
+                return
+            except httpx.HTTPStatusError as exc:
+                retryable = exc.response.status_code in _RETRY_STATUSES
+                if started or not retryable or attempt == _MAX_ATTEMPTS - 1:
+                    raise
+            except (httpx.TransportError, json.JSONDecodeError):
+                # connect/read failure or a malformed SSE frame before any token
+                # shipped — transient, retry the whole stream from scratch.
+                if started or attempt == _MAX_ATTEMPTS - 1:
+                    raise
+            await asyncio.sleep(0.5 * 2**attempt)
 
 
 class CompositeChatModel:
@@ -280,8 +306,9 @@ def chat_model_from_settings(settings: Settings) -> ChatModel:
     primary = OpenAICompatChat(
         base_url=settings.chat_base_url,
         model=settings.chat_model,
-        api_key=settings.chat_api_key,
+        api_key=_reveal(settings.chat_api_key),
         temperature=settings.chat_temperature,
+        max_tokens=settings.chat_max_tokens,
     )
     if not settings.chat_fallbacks:
         return primary
@@ -289,8 +316,9 @@ def chat_model_from_settings(settings: Settings) -> ChatModel:
         OpenAICompatChat(
             base_url=ep.base_url,
             model=ep.model,
-            api_key=ep.api_key,
+            api_key=_reveal(ep.api_key),
             temperature=settings.chat_temperature,
+            max_tokens=settings.chat_max_tokens,
         )
         for ep in settings.chat_fallbacks
     ]
@@ -304,7 +332,7 @@ def judge_model_from_settings(settings: Settings) -> ChatModel | None:
     return OpenAICompatChat(
         base_url=settings.judge_base_url,
         model=settings.judge_model,
-        api_key=settings.judge_api_key,
+        api_key=_reveal(settings.judge_api_key),
     )
 
 
@@ -317,5 +345,5 @@ def attribution_judge_from_settings(settings: Settings) -> ChatModel | None:
     return OpenAICompatChat(
         base_url=settings.attrib_judge_base_url,
         model=settings.attrib_judge_model,
-        api_key=settings.attrib_judge_api_key,
+        api_key=_reveal(settings.attrib_judge_api_key),
     )

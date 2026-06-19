@@ -91,8 +91,21 @@ class ChunkRow(Base):
     )
 
 
+# Serverless Postgres (Neon, the prod target) drops idle connections aggressively,
+# so a pooled connection can be dead by the time we reuse it. pool_pre_ping issues a
+# cheap liveness check on checkout (transparently reconnecting on a stale conn), and
+# pool_recycle caps connection age below Neon's idle cutoff. Without these the first
+# query after any idle period raises "server closed the connection unexpectedly".
+_POOL_PRE_PING = True
+_POOL_RECYCLE_SECONDS = 300
+
+
 def create_sync_engine(database_url: str) -> Engine:
-    return create_engine(database_url)
+    return create_engine(
+        database_url,
+        pool_pre_ping=_POOL_PRE_PING,
+        pool_recycle=_POOL_RECYCLE_SECONDS,
+    )
 
 
 def create_async_db_engine(database_url: str) -> AsyncEngine:
@@ -104,7 +117,11 @@ def create_async_db_engine(database_url: str) -> AsyncEngine:
     `asyncio.run(main(), loop_factory=asyncio.SelectorEventLoop)` — see
     cli.serve for the uvicorn wiring.
     """
-    return create_async_engine(database_url)
+    return create_async_engine(
+        database_url,
+        pool_pre_ping=_POOL_PRE_PING,
+        pool_recycle=_POOL_RECYCLE_SECONDS,
+    )
 
 
 def init_db(engine: Engine) -> None:

@@ -11,6 +11,8 @@ from collections.abc import AsyncIterator, Generator, Sequence
 from contextlib import contextmanager
 from typing import Any
 
+from pydantic import SecretStr
+
 from ahx.config import Settings
 from ahx.llm import ChatMessage, ChatResult, StreamEnd, StreamEvent, TextDelta, Usage
 from ahx.obs import init_langfuse, trace_request, traced_chat, traced_retriever
@@ -83,7 +85,7 @@ async def test_init_langfuse_opt_in() -> None:
     full = Settings(
         langfuse_host="http://localhost:3000",
         langfuse_public_key="pk-lf-x",
-        langfuse_secret_key="sk-lf-x",
+        langfuse_secret_key=SecretStr("sk-lf-x"),
     )
     assert init_langfuse(full) is not None
 

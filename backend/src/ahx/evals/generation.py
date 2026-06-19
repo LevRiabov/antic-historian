@@ -55,6 +55,9 @@ class GenQuestionResult(BaseModel):
     # paraphrased abstention as a refusal; None until/unless the judge layer runs
     refusal_expected: bool  # True only for out-of-scope questions
     refusal_correct: bool  # uses refused_semantic when judged, else refused
+    errored: bool = False  # run-time failure (provider outage etc.), not a model
+    # decision — excluded from refusal aggregates so an outage can't move the safety
+    # number (rule #5). Default False keeps older run records loadable.
     markers_used: list[int]
     markers_dangling: list[int]
     retrieved_chunk_ids: list[int]
@@ -186,10 +189,17 @@ def _eff_refused(r: GenQuestionResult) -> bool:
 
 def compute_gen_aggregates(results: list[GenQuestionResult]) -> GenAggregates:
     def block(subset: list[GenQuestionResult]) -> GenCategoryAggregate:
+        # Refusal stats are computed over questions that actually produced a
+        # model decision; errored runs (provider outage) have no valid verdict
+        # and would otherwise skew the rate (rule #5). Quality means below already
+        # drop None scores, so errored rows fall out of those naturally.
+        scored = [r for r in subset if not r.errored]
         return GenCategoryAggregate(
             count=len(subset),
-            refused=sum(1 for r in subset if _eff_refused(r)),
-            refusal_correct=sum(1 for r in subset if r.refusal_correct) / len(subset),
+            refused=sum(1 for r in scored if _eff_refused(r)),
+            refusal_correct=(
+                sum(1 for r in scored if r.refusal_correct) / len(scored) if scored else 0.0
+            ),
             citation_span_recall=_mean(
                 [r.citation_span_recall for r in subset if r.citation_span_recall is not None]
             ),
@@ -208,8 +218,8 @@ def compute_gen_aggregates(results: list[GenQuestionResult]) -> GenAggregates:
         if (subset := [r for r in results if r.category == category])
     }
 
-    oos = [r for r in results if r.refusal_expected]
-    in_scope = [r for r in results if not r.refusal_expected]
+    oos = [r for r in results if r.refusal_expected and not r.errored]
+    in_scope = [r for r in results if not r.refusal_expected and not r.errored]
     overall = block(results)
     return GenAggregates(
         questions=len(results),
@@ -676,9 +686,12 @@ GenEngine = Callable[[str], Awaitable[tuple[SourcesEvent, DoneEvent]]]
 def _error_result(
     question: GoldenQuestion, spans: list[ResolvedSpan], exc: Exception, latency_ms: int
 ) -> GenQuestionResult:
-    """A question that errored mid-run, recorded as a failed refusal (empty answer,
-    zero recall) so the run completes and the failure is visible in judge_notes
-    rather than aborting everything. Used by the per-question resilience guard."""
+    """A question that errored mid-run, recorded as a failed measurement (empty
+    answer, zero recall) so the run completes and the failure is visible in
+    judge_notes rather than aborting everything. Flagged `errored` so it is
+    EXCLUDED from the refusal aggregates: an outage is not a model decision, and
+    counting an errored out-of-scope question as a "refusal" would silently inflate
+    refusal_accuracy_oos (rule #5). Used by the per-question resilience guard."""
     expected = question.category == "out-of-scope"
     return GenQuestionResult(
         question_id=question.id,
@@ -688,7 +701,8 @@ def _error_result(
         answer="",
         refused=True,
         refusal_expected=expected,
-        refusal_correct=expected,  # an error on an in-scope question counts as a false refusal
+        refusal_correct=False,  # no valid refuse/answer decision was made
+        errored=True,
         markers_used=[],
         markers_dangling=[],
         retrieved_chunk_ids=[],

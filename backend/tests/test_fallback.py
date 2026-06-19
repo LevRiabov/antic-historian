@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 import pytest
 
+import ahx.llm
 from ahx.config import ChatEndpoint, Settings
 from ahx.llm import (
     ChatMessage,
@@ -25,6 +26,17 @@ from ahx.llm import (
 )
 
 MESSAGES = [ChatMessage(role="user", content="How did Caesar die?")]
+
+
+@pytest.fixture(autouse=True)
+def no_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
+    """OpenAICompatChat retries transient errors with exponential backoff; make those
+    sleeps instant so the real-transport fallover test doesn't burn ~7.5s of wall clock."""
+
+    async def instant(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(ahx.llm.asyncio, "sleep", instant)
 
 
 class ScriptedModel:
@@ -135,8 +147,9 @@ _SSE_BODY = (
 
 
 async def test_real_transport_stream_fallover_reports_alternate() -> None:
-    # stream() does NOT retry (only complete() does), so a 503 raises immediately on the
-    # first __anext__ — exactly the before-first-delta point the composite switches at.
+    # stream() retries transient 5xx before the first delta (backoff stubbed by the
+    # autouse fixture), then — retries exhausted — raises on the first __anext__, which
+    # is still the before-first-delta point where the composite falls over to the alt.
     down = OpenAICompatChat(
         base_url="http://primary/v1",
         model="primary-model",

@@ -9,6 +9,9 @@ once per process); routes receive them through Depends so tests can swap in
 fakes with app.dependency_overrides — no server, DB, or LLM needed.
 """
 
+import asyncio
+import json
+import logging
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 from functools import partial
@@ -19,7 +22,11 @@ if TYPE_CHECKING:
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
 from sse_starlette.sse import EventSourceResponse
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 import ahx
 from ahx.agent.prompts import AGENT_PROMPT_VERSION
@@ -33,7 +40,7 @@ from ahx.api.evals import (
 )
 from ahx.api.limits import SessionStatus, enforce_limits, limiter_from_settings
 from ahx.api.sources import SourceOut, SourcesProvider, list_sources_async
-from ahx.config import get_settings
+from ahx.config import get_settings, validate_serving_config
 from ahx.db import create_async_db_engine
 from ahx.evals.generation import GenerationRun
 from ahx.evals.retrieval import RetrievalRun
@@ -45,10 +52,43 @@ from ahx.obs import init_langfuse, trace_request, traced_chat, traced_retriever
 from ahx.retrieval.dense import dense_retrieve_async
 from ahx.retrieval.embedding import EmbeddingClient
 
+logger = logging.getLogger("ahx.api")
+
+
+class SecurityHeadersMiddleware:
+    """Add baseline hardening headers to every response.
+
+    Pure-ASGI on purpose: Starlette's BaseHTTPMiddleware buffers the response body,
+    which would break the /ask SSE stream. This only rewrites the response-start
+    headers and leaves the (streamed) body untouched. nginx may set these too in
+    prod (ADR-004); duplicating them here keeps the API safe if hit directly."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                headers["X-Content-Type-Options"] = "nosniff"
+                headers["X-Frame-Options"] = "DENY"
+                headers["Referrer-Policy"] = "no-referrer"
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     settings = get_settings()
+    # Fail loud BEFORE serving if a hosted endpoint is missing its key (would 401 on
+    # the first real query while booting green); log soft deployment warnings.
+    for warning in validate_serving_config(settings):
+        logger.warning("serving config: %s", warning)
     engine = create_async_db_engine(settings.database_url)
     retriever: Retriever = partial(dense_retrieve_async, engine, EmbeddingClient(settings))
     chat = chat_model_from_settings(settings)
@@ -60,6 +100,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         chat = traced_chat(chat, langfuse)
         retriever = traced_retriever(retriever, langfuse)
 
+    app.state.engine = engine  # exposed for the /ready DB liveness probe
     app.state.retriever = retriever
     app.state.sources = partial(list_sources_async, engine)  # /sources corpus listing (Phase 7)
     # /chunks passage lookup (Phase 7): turns a cited chunk id back into a readable
@@ -90,10 +131,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
 
 app = FastAPI(title="Antic Historian API", version=ahx.__version__, lifespan=lifespan)
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 def get_retriever(request: Request) -> Retriever:
     return request.app.state.retriever
+
+
+def get_engine(request: Request) -> AsyncEngine | None:
+    # None when lifespan hasn't run (ASGITransport tests) — /ready then reports 503.
+    return getattr(request.app.state, "engine", None)
 
 
 def get_sources(request: Request) -> SourcesProvider | None:
@@ -151,7 +198,25 @@ def get_agent_streamer(request: Request) -> AgentStreamer | None:
 
 @app.get("/health")
 async def health() -> dict[str, str]:
+    """Liveness: the process is up. Cheap, no dependencies — keep it that way so a
+    dead DB doesn't also fail liveness and trigger a pointless restart loop."""
     return {"status": "ok", "version": ahx.__version__}
+
+
+@app.get("/ready")
+async def ready(engine: Annotated[AsyncEngine | None, Depends(get_engine)]) -> dict[str, str]:
+    """Readiness: the instance can actually serve a query (DB reachable). An
+    orchestrator routes traffic on this, not /health — otherwise an instance with a
+    dead pool stays 'healthy' while every /ask 500s."""
+    if engine is None:
+        raise HTTPException(status_code=503, detail="not ready: no database engine")
+    try:
+        async with engine.connect() as connection:
+            await connection.execute(text("SELECT 1"))
+    except Exception as exc:  # pool exhausted / DB down / network — not ready to serve
+        logger.warning("readiness check failed: %s", exc)
+        raise HTTPException(status_code=503, detail="not ready: database unreachable") from exc
+    return {"status": "ready", "version": ahx.__version__}
 
 
 @app.get("/sources")
@@ -260,6 +325,8 @@ async def ask_route(
     else:
         source = guarded_events(body.question, retriever, chat, guard, canary, top_k=body.top_k)
 
+    timeout_s = get_settings().request_timeout_seconds
+
     async def events() -> AsyncIterator[dict[str, str]]:
         # `meta` first: the client renders "N of M left" before the answer streams (6.4).
         yield {"event": "meta", "data": session.model_dump_json()}
@@ -267,16 +334,32 @@ async def ask_route(
         # trace is finished with the answer on the terminal DoneEvent. A blocked request
         # still yields a well-formed envelope without touching retrieval or the model (6.3).
         async with trace_request(langfuse, question=body.question, top_k=body.top_k) as trace:
-            async for event in source:
-                if isinstance(event, DoneEvent):
-                    trace.finish(
-                        answer=event.answer,
-                        refused=event.refused,
-                        usage=event.usage,
-                        cost=event.cost,
-                        blocked=event.blocked,
-                        served_by=event.served_by,
-                    )
-                yield {"event": _EVENT_NAMES[type(event)], "data": event.model_dump_json()}
+            try:
+                # Overall wall-clock cap: a stalled upstream otherwise pins this
+                # connection (and its pool slot) for the LLM read timeout x N steps.
+                async with asyncio.timeout(timeout_s):
+                    async for event in source:
+                        if isinstance(event, DoneEvent):
+                            trace.finish(
+                                answer=event.answer,
+                                refused=event.refused,
+                                usage=event.usage,
+                                cost=event.cost,
+                                blocked=event.blocked,
+                                served_by=event.served_by,
+                            )
+                        name = _EVENT_NAMES.get(type(event))
+                        if name is None:  # unknown event type: skip, never crash mid-stream
+                            logger.warning("ask: skipping unknown event %s", type(event).__name__)
+                            continue
+                        yield {"event": name, "data": event.model_dump_json()}
+            except (
+                Exception
+            ):  # NOT CancelledError (BaseException) — client disconnect still cancels
+                # The 200 + SSE headers already shipped, so this can't become an HTTP
+                # error. Emit a terminal `error` frame (timeout lands here too) so the
+                # client stops waiting on a truncated stream instead of hanging.
+                logger.exception("ask: stream failed (mode=%s)", body.mode)
+                yield {"event": "error", "data": json.dumps({"detail": "the answer stream failed"})}
 
     return EventSourceResponse(events())

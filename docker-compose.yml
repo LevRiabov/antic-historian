@@ -11,6 +11,7 @@ services:
       POSTGRES_DB: ahx
     ports:
       # Host 5433: rag-historian's ParadeDB already owns 5432 on this machine.
+      # The other services reach it at db:5432 over the compose network.
       - "5433:5432"
     volumes:
       - ahx-pgdata:/var/lib/postgresql
@@ -19,6 +20,60 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build: ./backend
+    container_name: ahx-backend
+    restart: unless-stopped
+    # Secrets + provider config (embed/chat/judge keys) come from backend/.env.
+    # The overrides below win over that file (compose precedence) and pin the
+    # things that MUST differ inside the compose network.
+    env_file:
+      - backend/.env
+    environment:
+      AHX_ENV: prod
+      # Reach the db service over the compose network (not localhost:5433).
+      AHX_DATABASE_URL: postgresql+psycopg://ahx:ahx@db:5432/ahx
+      # Behind the nginx edge (frontend service): trust the proxy's X-Forwarded-For
+      # so the per-IP limiter sees real client IPs, not one shared bucket. SAFE only
+      # because nginx OVERWRITES that header (frontend/nginx.conf.template) — a client
+      # cannot spoof it.
+      AHX_TRUST_FORWARDED_FOR: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Not published to the host: only nginx is public. Reachable in-network as
+    # backend:8000. Uncomment to debug the API directly.
+    # ports:
+    #   - "8000:8000"
+    healthcheck:
+      # /ready does a real SELECT 1 — so "healthy" means it can actually serve a
+      # query, and the frontend below waits for that (not just the process being up).
+      test:
+        - CMD-SHELL
+        - python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready').read()"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      # VITE_API_BASE is baked at build; /api matches the nginx proxy prefix.
+      args:
+        VITE_API_BASE: /api
+    container_name: ahx-frontend
+    restart: unless-stopped
+    environment:
+      # nginx proxies /api/ here (envsubst fills the template at startup).
+      API_UPSTREAM: backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      # The only port exposed to the host: the SPA + its /api proxy on one origin.
+      - "8080:80"
 
 volumes:
   ahx-pgdata:

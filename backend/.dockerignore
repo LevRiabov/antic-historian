@@ -1,0 +1,16 @@
+# Keep the build context lean and keep secrets / local state out of the image.
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.git
+.env
+.env.*
+!.env.example
+# Local-only corpus + scratch; the serving image needs neither (corpus is in the DB).
+corpus
+*.log
+Dockerfile
+.dockerignore

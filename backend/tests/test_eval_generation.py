@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator, Sequence
 
 from ahx.evals.generation import (
     AttributionVerdict,
+    _error_result,  # pyright: ignore[reportPrivateUsage]
     attribution_score,
     compute_gen_aggregates,
     judge_question,
@@ -149,6 +150,22 @@ def test_aggregates_split_oos_from_in_scope() -> None:
     assert aggregates.citation_span_recall == 1.0
     assert aggregates.mean_latency_ms == 150
     assert aggregates.by_category["literal"].count == 1
+
+
+def test_errored_oos_question_excluded_from_refusal_accuracy() -> None:
+    # An OOS question that actually LEAKED (didn't refuse) is a real failure...
+    leaked_oos = score_generation(
+        question("out-of-scope", n_spans=0), [], sources(citation(1)), done(refused=False), 100
+    )
+    # ...and a SEPARATE OOS question that errored mid-run (provider outage) must NOT be
+    # scored as a refusal — otherwise the outage inflates refusal_accuracy_oos from the
+    # true 0.0 up to 0.5 (rule #5: an error must never move the safety number).
+    errored_oos = _error_result(question("out-of-scope", n_spans=0), [], RuntimeError("boom"), 5)
+    assert errored_oos.errored is True
+
+    aggregates = compute_gen_aggregates([leaked_oos, errored_oos])
+    assert aggregates.questions == 2  # the errored question is still counted + visible
+    assert aggregates.refusal_accuracy_oos == 0.0  # 0 of the 1 SCORED oos refused
 
 
 # --- judge layer ---

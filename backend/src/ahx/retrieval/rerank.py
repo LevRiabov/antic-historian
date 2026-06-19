@@ -99,7 +99,9 @@ class RerankClient:
     def __init__(self, settings: Settings, transport: httpx.MockTransport | None = None) -> None:
         self._base_url = settings.rerank_base_url
         self._model = settings.rerank_model
-        self._api_key = settings.rerank_api_key
+        self._api_key = (
+            settings.rerank_api_key.get_secret_value() if settings.rerank_api_key else None
+        )
         self._provider = settings.rerank_provider
         self._query_instruction = rerank_query_instruction_for(settings.rerank_model)
         self._transport = transport  # tests inject a fake server here

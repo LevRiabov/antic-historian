@@ -14,6 +14,7 @@ from ahx.api.app import (
     get_agent_streamer,
     get_chat,
     get_chunks,
+    get_engine,
     get_eval_agent,
     get_eval_rag,
     get_guard,
@@ -100,6 +101,49 @@ async def test_health() -> None:
         response = await client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "version": ahx.__version__}
+
+
+async def test_security_headers_present() -> None:
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/health")
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "no-referrer"
+
+
+async def test_ready_503_when_engine_unavailable() -> None:
+    # ASGITransport does not run lifespan, so app.state.engine is unset -> not ready.
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/ready")
+    assert response.status_code == 503
+
+
+async def test_ready_200_when_db_reachable() -> None:
+    class _FakeConn:
+        async def __aenter__(self) -> "_FakeConn":
+            return self
+
+        async def __aexit__(self, *exc: object) -> bool:
+            return False
+
+        async def execute(self, _stmt: object) -> None:
+            return None
+
+    class _FakeEngine:
+        def connect(self) -> "_FakeConn":
+            return _FakeConn()
+
+    app.dependency_overrides[get_engine] = lambda: _FakeEngine()
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/ready")
+    finally:
+        app.dependency_overrides.pop(get_engine, None)
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
 
 
 def test_source_label_maps_known_hosts_and_falls_back() -> None:

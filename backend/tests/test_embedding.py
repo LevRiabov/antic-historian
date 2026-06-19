@@ -139,3 +139,11 @@ def test_dim_mismatch_without_truncation_flag_raises() -> None:
 def test_cosine_basics() -> None:
     assert cosine([1.0, 0.0], [1.0, 0.0]) == 1.0
     assert abs(cosine([1.0, 0.0], [0.0, 1.0])) < 1e-9
+
+
+def test_cosine_zero_vector_is_zero_not_crash() -> None:
+    # A zero/empty vector has no direction: define similarity as 0 rather than raising
+    # ZeroDivisionError. cosine() backs the parity guard, so it must degrade gracefully.
+    assert cosine([0.0, 0.0], [1.0, 0.0]) == 0.0
+    assert cosine([1.0, 0.0], [0.0, 0.0]) == 0.0
+    assert cosine([], []) == 0.0

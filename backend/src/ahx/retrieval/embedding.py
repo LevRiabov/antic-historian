@@ -58,7 +58,10 @@ def cosine(a: list[float], b: list[float]) -> float:
     dot = sum(x * y for x, y in zip(a, b, strict=True))
     norm_a = math.sqrt(sum(x * x for x in a))
     norm_b = math.sqrt(sum(x * x for x in b))
-    return dot / (norm_a * norm_b)
+    # A zero/empty vector has no direction: define similarity as 0 rather than
+    # dividing by zero. This is the function behind the parity guard (rule #3),
+    # so it must degrade to a meaningful value, not crash on a bad embedding.
+    return dot / (norm_a * norm_b) if norm_a and norm_b else 0.0
 
 
 def _batched(items: list[str], size: int) -> Iterator[list[str]]:
@@ -72,7 +75,9 @@ class EmbeddingClient:
         self._model = settings.embed_model
         self._dim = settings.embed_dim
         self._batch_size = settings.embed_batch_size
-        self._api_key = settings.embed_api_key
+        self._api_key = (
+            settings.embed_api_key.get_secret_value() if settings.embed_api_key else None
+        )
         self._mrl_truncate = settings.embed_mrl_truncate
         self._provider = settings.embed_provider
         self._query_prefix = query_prefix_for(settings.embed_model)

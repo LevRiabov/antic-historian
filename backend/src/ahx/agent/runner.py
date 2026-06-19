@@ -232,7 +232,7 @@ async def run_agent(
     question: str,
     settings: Settings,
     chat: ChatModel | None = None,
-    retriever_name: str = "rerank-cohere-pro-v1",
+    retriever_name: str = "dense-ctx-v1",  # the D5 KEEP (reranker dropped); matches prod
     max_steps: int = DEFAULT_MAX_STEPS,
 ) -> tuple[SourcesEvent, DoneEvent, AgentState]:
     """Run the agent on one question. Builds its own engine and disposes it —
