@@ -13,6 +13,7 @@ from ahx.api.app import (
     app,
     get_agent_streamer,
     get_chat,
+    get_chunks,
     get_eval_agent,
     get_eval_rag,
     get_guard,
@@ -21,6 +22,7 @@ from ahx.api.app import (
     get_security_defended,
     get_sources,
 )
+from ahx.api.chunks import ChunkOut
 from ahx.api.limits import RateLimiter
 from ahx.api.sources import SourceOut, source_label
 from ahx.evals.generation import GenAggregates, GenerationRun
@@ -151,6 +153,57 @@ async def test_sources_route_503_when_unavailable() -> None:
 
 async def _async_value(value: Any) -> Any:
     return value
+
+
+async def test_chunks_route_returns_passages_by_id() -> None:
+    passages = [
+        ChunkOut(
+            chunk_id=101,
+            pg_id=1,
+            author="Suetonius",
+            work_title="Lives of the Twelve Caesars",
+            locator=["1", "82"],
+            heading="The Assassination",
+            text="He was stabbed with three and twenty wounds.",
+            char_start=1000,
+            char_end=1500,
+            pd_basis="Author d. <200 AD; translation pre-1900",
+        )
+    ]
+
+    async def provider(ids: list[int]) -> list[ChunkOut]:
+        return [p for p in passages if p.chunk_id in ids]
+
+    app.dependency_overrides[get_chunks] = lambda: provider
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/chunks", params={"ids": [101, 999]})
+    finally:
+        app.dependency_overrides.pop(get_chunks, None)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["chunk_id"] == 101
+    assert body[0]["work_title"] == "Lives of the Twelve Caesars"
+    assert body[0]["text"].startswith("He was stabbed")
+    assert body[0]["locator"] == ["1", "82"]
+
+
+async def test_chunks_route_requires_at_least_one_id() -> None:
+    # min_length=1 on the query param -> a bare /chunks is a 422, not a silent empty list.
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        assert (await client.get("/chunks")).status_code == 422
+
+
+async def test_chunks_route_503_when_unavailable() -> None:
+    # No provider on app.state (lifespan didn't run) -> 503 rather than a 500 from a DB call.
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/chunks", params={"ids": [1]})
+    assert response.status_code == 503
 
 
 def _fake_rag_run() -> RetrievalRun:

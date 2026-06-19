@@ -17,13 +17,14 @@ from typing import TYPE_CHECKING, Annotated, Literal
 if TYPE_CHECKING:
     from langfuse import Langfuse
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 import ahx
 from ahx.agent.prompts import AGENT_PROMPT_VERSION
 from ahx.agent.runner import AgentStreamer, make_agent_streamer
+from ahx.api.chunks import ChunkOut, ChunksProvider, get_chunks_async
 from ahx.api.evals import (
     load_latest_agent_run,
     load_latest_rag_run,
@@ -61,6 +62,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     app.state.retriever = retriever
     app.state.sources = partial(list_sources_async, engine)  # /sources corpus listing (Phase 7)
+    # /chunks passage lookup (Phase 7): turns a cited chunk id back into a readable
+    # passage for the citation drawer (the eval records carry only ids).
+    app.state.chunks = partial(get_chunks_async, engine)
     # Published eval runs (Phase 7): the latest -rag / -agent records, loaded once
     # (frozen artifacts). None when the runs dir has no such record -> route 503s.
     app.state.eval_rag = load_latest_rag_run(settings.eval_runs_dir)
@@ -96,6 +100,11 @@ def get_sources(request: Request) -> SourcesProvider | None:
     # None when lifespan hasn't run (ASGITransport tests override this) — the route
     # then 503s rather than touching a DB that was never wired up.
     return getattr(request.app.state, "sources", None)
+
+
+def get_chunks(request: Request) -> ChunksProvider | None:
+    # None when lifespan hasn't run (ASGITransport tests override this) — the route 503s.
+    return getattr(request.app.state, "chunks", None)
 
 
 def get_eval_rag(request: Request) -> RetrievalRun | None:
@@ -154,6 +163,18 @@ async def sources_route(
     if sources is None:
         raise HTTPException(status_code=503, detail="sources are not available")
     return await sources()
+
+
+@app.get("/chunks")
+async def chunks_route(
+    chunks: Annotated[ChunksProvider | None, Depends(get_chunks)],
+    ids: Annotated[list[int], Query(min_length=1, max_length=50)],
+) -> list[ChunkOut]:
+    """Fetch corpus passages by chunk id — the readable, verifiable text behind a
+    cited marker (the eval records store only ids). Read-only; no spend (Phase 7)."""
+    if chunks is None:
+        raise HTTPException(status_code=503, detail="chunks are not available")
+    return await chunks(ids)
 
 
 @app.get("/evals/rag")
