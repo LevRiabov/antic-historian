@@ -11,6 +11,17 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Compress text assets (the Vite JS/CSS bundle, JSON API responses). On a small
+    # shared box bandwidth is the scarce resource; gzip trims the bundle ~60-70%.
+    # SSE (/ask) is unaffected — text/event-stream isn't in the type list, and the
+    # /api block disables buffering anyway, so token streaming stays incremental.
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css application/javascript application/json
+               image/svg+xml application/manifest+json;
+
     # Security headers for the app shell + API responses. The SPA only ever talks
     # to its own origin (scripts/styles/fonts are all self-hosted; fonts are system
     # fonts; no CDN), so a tight CSP holds. 'unsafe-inline' is needed only for inline

@@ -3,7 +3,19 @@
  * server (vite.config.ts) and nginx (nginx.conf) both rewrite onto the FastAPI
  * backend — so the app never hardcodes the API origin and CORS never enters the
  * picture. Override with VITE_API_BASE only for an unusual split-origin deploy.
+ *
+ * Every JSON body is run through a zod schema (lib/schemas.ts) before it's handed
+ * back typed: a backend schema drift then throws a clear error at this boundary
+ * (caught by the routes' React Query error states) instead of crashing later on an
+ * undefined field. The SSE /ask stream is validated separately in lib/sse.ts.
  */
+import {
+  parseAgentEval,
+  parseChunks,
+  parseRagEval,
+  parseSecurityRun,
+  parseSources,
+} from "./schemas";
 import type {
   ChunkOut,
   GenerationRun,
@@ -29,7 +41,7 @@ export async function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
 export async function getSources(signal?: AbortSignal): Promise<SourceOut[]> {
   const res = await fetch(`${API_BASE}/sources`, { signal });
   if (!res.ok) throw new Error(`sources request failed: ${res.status}`);
-  return (await res.json()) as SourceOut[];
+  return parseSources(await res.json());
 }
 
 /** The latest published retrieval-tier eval (GET /evals/rag): recall@k + MRR per
@@ -37,7 +49,7 @@ export async function getSources(signal?: AbortSignal): Promise<SourceOut[]> {
 export async function getRagEval(signal?: AbortSignal): Promise<RetrievalRun> {
   const res = await fetch(`${API_BASE}/evals/rag`, { signal });
   if (!res.ok) throw new Error(`retrieval eval request failed: ${res.status}`);
-  return (await res.json()) as RetrievalRun;
+  return parseRagEval(await res.json());
 }
 
 /** The latest published generation-tier eval (GET /evals/agent): answer + judge
@@ -45,7 +57,7 @@ export async function getRagEval(signal?: AbortSignal): Promise<RetrievalRun> {
 export async function getAgentEval(signal?: AbortSignal): Promise<GenerationRun> {
   const res = await fetch(`${API_BASE}/evals/agent`, { signal });
   if (!res.ok) throw new Error(`generation eval request failed: ${res.status}`);
-  return (await res.json()) as GenerationRun;
+  return parseAgentEval(await res.json());
 }
 
 /** Fetch corpus passages by chunk id (GET /chunks?ids=1&ids=2). The readable text
@@ -55,7 +67,7 @@ export async function getChunks(ids: number[], signal?: AbortSignal): Promise<Ch
   for (const id of ids) params.append("ids", String(id));
   const res = await fetch(`${API_BASE}/chunks?${params.toString()}`, { signal });
   if (!res.ok) throw new Error(`chunks request failed: ${res.status}`);
-  return (await res.json()) as ChunkOut[];
+  return parseChunks(await res.json());
 }
 
 /** The latest UNDEFENDED security audit (GET /evals/security/baseline): per-attack
@@ -63,7 +75,7 @@ export async function getChunks(ids: number[], signal?: AbortSignal): Promise<Ch
 export async function getSecurityBaseline(signal?: AbortSignal): Promise<SecurityRun> {
   const res = await fetch(`${API_BASE}/evals/security/baseline`, { signal });
   if (!res.ok) throw new Error(`baseline security request failed: ${res.status}`);
-  return (await res.json()) as SecurityRun;
+  return parseSecurityRun(await res.json());
 }
 
 /** The latest DEFENDED security audit (GET /evals/security/defended): same attacks
@@ -71,7 +83,7 @@ export async function getSecurityBaseline(signal?: AbortSignal): Promise<Securit
 export async function getSecurityDefended(signal?: AbortSignal): Promise<SecurityRun> {
   const res = await fetch(`${API_BASE}/evals/security/defended`, { signal });
   if (!res.ok) throw new Error(`defended security request failed: ${res.status}`);
-  return (await res.json()) as SecurityRun;
+  return parseSecurityRun(await res.json());
 }
 
 export { API_BASE };

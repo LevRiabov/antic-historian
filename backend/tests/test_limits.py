@@ -80,6 +80,46 @@ async def test_both_limits_off_never_rejects() -> None:
         )
 
 
+async def test_daily_cap_is_global_across_ips_and_sessions() -> None:
+    # The daily ceiling is a single global counter, so rotating IP *and* session id
+    # cannot dodge it (unlike the per-IP window / per-session cap).
+    limiter = RateLimiter(per_window=0, window_seconds=60, session_cap=0, daily_cap=3)
+    for i in range(3):
+        await limiter.consume(ip=f"10.0.0.{i}", session_id=f"s{i}")
+    with pytest.raises(RateLimited) as exc:
+        await limiter.consume(ip="10.0.0.99", session_id="s99")
+    assert exc.value.reason == "daily_cap_reached"
+    assert exc.value.retry_after is not None and exc.value.retry_after >= 1
+
+
+async def test_daily_cap_recovers_after_24h() -> None:
+    clock = FakeClock()
+    limiter = RateLimiter(per_window=0, window_seconds=60, session_cap=0, daily_cap=2, clock=clock)
+    await limiter.consume(ip="1.1.1.1", session_id="a")
+    await limiter.consume(ip="1.1.1.1", session_id="b")
+    with pytest.raises(RateLimited):
+        await limiter.consume(ip="1.1.1.1", session_id="c")
+    clock.now = 86_401.0  # both requests fall out of the rolling 24h window
+    assert await limiter.consume(ip="1.1.1.1", session_id="d") == SessionStatus(
+        limit=0, remaining=0
+    )
+
+
+async def test_daily_cap_rejection_does_not_consume_other_budgets() -> None:
+    # A daily-capped request must not burn an IP slot or a session query — the same
+    # "reject without consuming" contract the other limits honour.
+    clock = FakeClock()
+    limiter = RateLimiter(per_window=5, window_seconds=60, session_cap=5, daily_cap=1, clock=clock)
+    first = await limiter.consume(ip="1.1.1.1", session_id="s")
+    assert first.remaining == 4  # one session query consumed
+    with pytest.raises(RateLimited) as exc:
+        await limiter.consume(ip="1.1.1.1", session_id="s")  # blocked by the daily cap
+    assert exc.value.reason == "daily_cap_reached"
+    clock.now = 86_401.0  # daily window clears; the IP/session budgets were untouched
+    third = await limiter.consume(ip="1.1.1.1", session_id="s")
+    assert third.remaining == 3  # 5 - 2 successful consumes (not 5 - 3)
+
+
 async def test_session_store_is_lru_bounded() -> None:
     # An attacker rotating X-Session-Id can't grow the store without limit: past
     # max_tracked, the least-recently-seen entry is evicted (memory-exhaustion guard).

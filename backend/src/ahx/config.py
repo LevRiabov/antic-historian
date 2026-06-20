@@ -119,6 +119,13 @@ class Settings(BaseSettings):
     rate_limit_per_window: int = 20  # max requests per IP per window (0 = off)
     rate_limit_window_seconds: int = 60
     session_query_cap: int = 30  # lifetime queries per session id (0 = off)
+    # GLOBAL daily spend ceiling — a hard kill-switch on total /ask volume, not a
+    # per-client limit. The per-IP window + session cap are both client-rotatable
+    # (X-Session-Id is client-sent; IPs rotate), so neither bounds total cost on a
+    # public demo. This does: a single rolling-24h counter across ALL callers, after
+    # which every /ask 429s until the oldest request ages out. At ~$0.02-0.05/query
+    # this caps daily spend at a few dollars regardless of who is calling. 0 = off.
+    daily_request_cap: int = 100
     # Hard wall-clock ceiling for a single /ask SSE stream. A stalled provider
     # otherwise pins the connection (and its DB/pool slot) for the LLM read
     # timeout x N agent steps; this bounds it and emits a terminal error frame.

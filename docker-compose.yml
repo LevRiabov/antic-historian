@@ -5,6 +5,19 @@ services:
     # Survive Docker Desktop / host restarts (outage observed 2026-06-12:
     # daemon restart left this container down, only one without a policy).
     restart: unless-stopped
+    # Shared-host budget: this whole stack co-tenants an EC2 box with another
+    # project, so cap each service. db is the memory-hungry one (pgvector HNSW +
+    # shared_buffers): 768m + backend 448m + frontend 64m = 1.25 GiB total, under
+    # the 1.3 GB ceiling. Postgres autotunes shared_buffers conservatively, so it
+    # stays well within this for the demo's low traffic; raise if it OOMs under load.
+    mem_limit: 768m
+    # Bound container log growth — a noisy log otherwise fills the shared host's
+    # disk and takes the OTHER project down with it. 3x10m = 30m max per service.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       POSTGRES_USER: ahx
       # Override in prod via a real secret (root .env / shell): POSTGRES_PASSWORD=...
@@ -30,6 +43,12 @@ services:
     build: ./backend
     container_name: ahx-backend
     restart: unless-stopped
+    mem_limit: 448m  # see db.mem_limit — shared-host budget (1.25 GiB total)
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     # Secrets + provider config (embed/chat/judge keys) come from backend/.env.
     # The overrides below win over that file (compose precedence) and pin the
     # things that MUST differ inside the compose network.
@@ -61,7 +80,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 6
-      start_period: 20s
+      # Cold boot on a small shared box validates serving config + opens the DB pool
+      # and may make a first hosted-provider call; 20s was tight and risked a
+      # false-unhealthy that delays the dependent frontend. 45s gives real headroom.
+      start_period: 45s
 
   frontend:
     build:
@@ -71,6 +93,12 @@ services:
         VITE_API_BASE: /api
     container_name: ahx-frontend
     restart: unless-stopped
+    mem_limit: 64m  # nginx serving static assets — see db.mem_limit for the budget
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       # nginx proxies /api/ here (envsubst fills the template at startup).
       API_UPSTREAM: backend:8000
@@ -81,7 +109,9 @@ services:
       # The only port exposed to the host: the SPA + its /api proxy on one origin.
       # Container side is 8080 — the unprivileged nginx image listens there (runs as
       # non-root, can't bind :80). See frontend/Dockerfile + nginx.conf.template.
-      - "8080:8080"
+      # Host side is configurable (AHX_FRONTEND_PORT, default 8080) so this can co-tenant
+      # a box where 8080 is already taken — set it in the project root .env or the shell.
+      - "${AHX_FRONTEND_PORT:-8080}:8080"
 
 volumes:
   ahx-pgdata:

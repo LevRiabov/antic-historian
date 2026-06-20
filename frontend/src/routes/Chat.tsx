@@ -171,6 +171,9 @@ function errorMessage(err: unknown): string {
       if (detail?.error === "session_cap_reached") {
         return "You’ve reached this demo’s per-session query limit. Thanks for trying it!";
       }
+      if (detail?.error === "daily_cap_reached") {
+        return "This demo has hit its daily query budget. Please check back tomorrow!";
+      }
       return "Rate limit reached — please wait a moment, then try again.";
     }
     if (err.status === 503) {

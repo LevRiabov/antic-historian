@@ -41,6 +41,10 @@ _V = TypeVar("_V")
 # documented scale path that removes the cap entirely.
 _MAX_TRACKED = 100_000
 
+# The daily cap's window (a rolling 24h, not a calendar day — simpler and matches the
+# sliding-window machinery used for the per-IP limit).
+_DAY_SECONDS = 86_400
+
 
 class SessionStatus(BaseModel):
     """Surfaced to the client as the `meta` SSE event. `limit == 0` means uncapped
@@ -72,9 +76,10 @@ class RateLimited(Exception):
 
 
 class RateLimiter:
-    """In-memory IP window + per-session cap. One instance per process, shared across
-    requests; an asyncio.Lock serializes the read-modify-write so concurrent /ask calls
-    can't both slip past a limit. Both limits disabled when their setting is 0."""
+    """In-memory IP window + per-session cap + a global daily cap. One instance per
+    process, shared across requests; an asyncio.Lock serializes the read-modify-write so
+    concurrent /ask calls can't both slip past a limit. Each limit is disabled when its
+    setting is 0."""
 
     def __init__(
         self,
@@ -82,24 +87,41 @@ class RateLimiter:
         per_window: int,
         window_seconds: int,
         session_cap: int,
+        daily_cap: int = 0,
         clock: Callable[[], float] = time.monotonic,
         max_tracked: int = _MAX_TRACKED,
     ) -> None:
         self._per_window = per_window
         self._window = window_seconds
         self._cap = session_cap
+        self._daily_cap = daily_cap
         self._clock = clock
         self._max_tracked = max_tracked
         # OrderedDicts (not plain dicts) so we can evict the least-recently-touched
         # entry once either store exceeds max_tracked — bounding memory under abuse.
         self._hits: OrderedDict[str, deque[float]] = OrderedDict()  # ip -> recent timestamps
         self._session_used: OrderedDict[str, int] = OrderedDict()  # session id -> lifetime count
+        # One global rolling-24h window of request timestamps (bounded by daily_cap).
+        self._daily: deque[float] = deque()
         self._lock = asyncio.Lock()
 
     def _bound(self, store: OrderedDict[str, _V]) -> None:
         """Evict least-recently-touched entries until the store fits max_tracked."""
         while len(store) > self._max_tracked:
             store.popitem(last=False)
+
+    def _daily_retry_after(self, now: float) -> int | None:
+        """None if the global daily budget has room; else whole seconds until the oldest
+        request in the rolling 24h window ages out. Prunes stale timestamps as a side
+        effect (the deque never exceeds daily_cap + the in-flight request)."""
+        if self._daily_cap <= 0:
+            return None
+        cutoff = now - _DAY_SECONDS
+        while self._daily and self._daily[0] <= cutoff:
+            self._daily.popleft()
+        if len(self._daily) >= self._daily_cap:
+            return max(1, math.ceil(_DAY_SECONDS - (now - self._daily[0])))
+        return None
 
     def _ip_retry_after(self, ip: str, now: float) -> int | None:
         """None if the IP is under its window; else whole seconds until a slot frees.
@@ -127,6 +149,16 @@ class RateLimiter:
         async with self._lock:
             now = self._clock()
 
+            # Global daily ceiling first: it's the spend kill-switch, so a request over
+            # it must never reach the (per-client, rotatable) checks or burn their slots.
+            daily_retry = self._daily_retry_after(now)
+            if daily_retry is not None:
+                raise RateLimited(
+                    reason="daily_cap_reached",
+                    message=f"The demo's daily query limit ({self._daily_cap}) is reached.",
+                    retry_after=daily_retry,
+                )
+
             retry = self._ip_retry_after(ip, now)
             if retry is not None:
                 raise RateLimited(
@@ -144,6 +176,9 @@ class RateLimiter:
                     remaining=0,
                 )
 
+            # All limits passed — consume each enabled budget (nothing consumed above).
+            if self._daily_cap > 0:
+                self._daily.append(now)
             if self._per_window > 0:
                 self._hits[ip].append(now)  # entry created + LRU-touched in _ip_retry_after
             if self._cap > 0:
@@ -159,6 +194,7 @@ def limiter_from_settings(settings: Settings) -> RateLimiter:
         per_window=settings.rate_limit_per_window,
         window_seconds=settings.rate_limit_window_seconds,
         session_cap=settings.session_query_cap,
+        daily_cap=settings.daily_request_cap,
     )
 
 
