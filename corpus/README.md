@@ -9,4 +9,7 @@ downloaded, never committed.
 - `raw/` — downloaded original files, as fetched (created by `uv run ahx ingest`).
 - `normalized/` — parsed document trees (Layer 1 output, see docs/chunking.md).
 
-Measured 2026-06-10: the 16 manifest texts total **35.7 MB raw** (~8M tokens).
+The corpus grew over Phase 1: **62 normalized works** (~46k embedded chunks) of
+EU-public-domain ancient history (Project Gutenberg), Herodotus to Gibbon. The
+`pd_basis` column documents the public-domain basis per work — preserve that diligence
+for any source added.

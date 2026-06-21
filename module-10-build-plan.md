@@ -19,7 +19,6 @@ Three rules govern every decision below:
 | "It'll cost me a fortune" | Per-request cost shown live (per query, per article) |
 | "It'll fall over in production" | Visible fallback chain + tracing/observability |
 | "Is it production-grade or a toy?" | Rate limiting, monitoring, clean architecture, an "how it works" page |
-| (EU positioning) "GDPR / data residency" | A simple "EU-hosted · GDPR-native" line |
 
 ---
 
@@ -50,7 +49,6 @@ If time-constrained, **Mode 1 is the priority.** Mode 2 is the headline-grabber 
 ### Tier 3 — only if cheap and fast (don't let these block launch)
 - [ ] Suggested next questions (good product instinct, but not a trust signal — keep the logic simple).
 - [ ] Light UI polish: clean typography, dark mode. Not avatars/animations.
-- [ ] "EU-hosted · GDPR-native" footer line (costs nothing, matches positioning).
 
 ---
 
@@ -73,7 +71,7 @@ If time-constrained, **Mode 1 is the priority.** Mode 2 is the headline-grabber 
 - [ ] **B — The visible-rigor layer.** Citation display, out-of-scope refusal + demo prompt, cost counter, evals tab. *(This is where most of the buyer value lives — don't rush past it to build features.)*
 - [ ] **C — Reliability + observability.** Fallback chain with indicator, Langfuse tracing, rate limits/caps.
 - [ ] **D — Article builder mode.** Topic → ~10-page cited article, cost shown.
-- [ ] **E — Polish + deploy.** Landing page with positioning + try-these prompts, "how it works" page, README (architecture diagram, eval results, demo gif), EU/GDPR line.
+- [ ] **E — Polish + deploy.** Landing page with positioning + try-these prompts, "how it works" page, README (architecture diagram, eval results, demo gif).
 - [ ] **F — Capture case-study assets** *(do this as you go, not at the end):* screenshots of a trace, the eval table, a cost readout, a fallback firing, and a clean refusal. These become the case study.
 
 ---
