@@ -1,4 +1,4 @@
-# Case study — Antic Historian
+# Case study — Antique Historian
 
 > A production RAG system over 62 ancient-history primary sources that **answers from its
 > sources or honestly says it can't** — and proves it with published, reproducible evals.
@@ -11,7 +11,7 @@
 ## The one-paragraph version
 
 Most RAG demos look great until you ask the question the corpus can't answer — then they
-invent something. Antic Historian was built to be the opposite: on a 161-question curated
+invent something. Antique Historian was built to be the opposite: on a 161-question curated
 golden set it **answers 100% of in-scope questions** (0% false-refusal), **correctly
 declines 96% of out-of-scope ones**, scores **4.41/5 faithfulness** and **4.91/5
 completeness** under an LLM judge, and survives a 40-prompt prompt-injection suite at **0%

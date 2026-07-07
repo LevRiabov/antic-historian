@@ -13,7 +13,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-app = typer.Typer(help="Antic Historian pipeline commands.", no_args_is_help=True)
+app = typer.Typer(help="Antique Historian pipeline commands.", no_args_is_help=True)
 ingest_app = typer.Typer(help="Corpus ingestion: download -> normalize -> chunk -> load.")
 app.add_typer(ingest_app, name="ingest")
 db_app = typer.Typer(help="Database management.")

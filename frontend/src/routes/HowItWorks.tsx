@@ -15,7 +15,7 @@ export function HowItWorks() {
           How it works
         </h1>
         <p className="mt-2 text-[15.5px] leading-relaxed text-ink-soft">
-          Antic Historian answers questions about Greco-Roman antiquity — the late Roman
+          Antique Historian answers questions about Greco-Roman antiquity — the late Roman
           Republic and the world around Caesar — using only a fixed library of public-domain
           books. Every claim it makes is grounded in a passage you can open and read. It is built
           to be <b className="font-semibold text-ink">trustworthy first</b>: when the sources

@@ -1,4 +1,4 @@
-# Antic Historian — Project Plan
+# Antique Historian — Project Plan
 
 A production-grade RAG system over a large corpus of ancient-history primary sources (Caesar / late Roman Republic era, several dozen books). Two goals, in order:
 

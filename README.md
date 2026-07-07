@@ -1,4 +1,4 @@
-# Antic Historian
+# Antique Historian
 
 A production-grade RAG system over ancient-history primary sources — Herodotus to Gibbon —
 built to demonstrate **reliable, measurable, cost-controlled LLM engineering**: grounded

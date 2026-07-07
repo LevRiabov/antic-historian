@@ -21,7 +21,7 @@ export function Layout() {
       <header className="sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3">
           <span className="font-serif text-[17px] font-bold tracking-[0.2px] text-ink">
-            Antic Historian
+            Antique Historian
           </span>
 
           {/* Desktop nav — inline links, hidden on small screens. */}

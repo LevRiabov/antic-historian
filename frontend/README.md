@@ -1,6 +1,6 @@
 # Frontend
 
-React SPA for Antic Historian — chat with inline citations, sources, evals, and
+React SPA for Antique Historian — chat with inline citations, sources, evals, and
 security pages. Talks to the FastAPI backend over a streaming SSE API.
 
 **Gate D4 decided:** Vite SPA (not Next.js), served as a static bundle by nginx

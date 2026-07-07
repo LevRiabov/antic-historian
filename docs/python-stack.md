@@ -92,13 +92,13 @@ Your TS instincts map almost 1:1 — these are the tools that fill the same slot
 ## 4. Project skeleton (Phase 0 target)
 
 ```
-antic-historian/
+antique-historian/
 ├── backend/
 │   ├── pyproject.toml      # deps, ruff/pyright/pytest config — the package.json
 │   ├── uv.lock
 │   ├── .python-version     # 3.13 — like .nvmrc
 │   ├── src/
-│   │   └── ahx/            # the package ("antic historian", short import name)
+│   │   └── ahx/            # the package ("antique historian", short import name)
 │   │       ├── config.py   # pydantic-settings
 │   │       ├── ingest/     # parsers → normalize → chunk → embed (Layer 1/2 from chunking.md)
 │   │       ├── retrieval/  # dense/hybrid/rerank — each technique one module, ablation-friendly

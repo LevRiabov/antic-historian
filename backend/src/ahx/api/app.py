@@ -143,7 +143,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await engine.dispose()
 
 
-app = FastAPI(title="Antic Historian API", version=ahx.__version__, lifespan=lifespan)
+app = FastAPI(title="Antique Historian API", version=ahx.__version__, lifespan=lifespan)
 app.add_middleware(SecurityHeadersMiddleware)
 
 
