@@ -6,7 +6,11 @@ by tiny fakes, no mocking framework needed (structural typing at work).
 
 from collections.abc import AsyncIterator, Sequence
 
-from ahx.generation.citations import citations_from_chunks, extract_markers
+from ahx.generation.citations import (
+    citations_from_chunks,
+    extract_markers,
+    ungrounded_citations,
+)
 from ahx.generation.pipeline import (
     AskEvent,
     DeltaEvent,
@@ -96,6 +100,19 @@ def test_extract_markers_ignores_non_numeric_brackets() -> None:
     audit = extract_markers("He said [sic] something [1].", valid={1})
     assert audit.used == [1]
     assert audit.dangling == []
+
+
+def test_ungrounded_citations_flags_only_unretrieved_ids() -> None:
+    # 101/102 were retrieved; 777 was cited but never retrieved -> forged.
+    assert ungrounded_citations({101, 102, 777}, retrieved_ids={101, 102}) == [777]
+
+
+def test_ungrounded_citations_empty_when_all_grounded() -> None:
+    assert ungrounded_citations({101, 102}, retrieved_ids={101, 102, 103}) == []
+
+
+def test_ungrounded_citations_sorted_and_distinct() -> None:
+    assert ungrounded_citations([9, 9, 5, 7], retrieved_ids=set[int]()) == [5, 7, 9]
 
 
 # --- prompt ---

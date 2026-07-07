@@ -61,6 +61,9 @@ describe("askStream — request shaping", () => {
     expect(String(url)).toMatch(/\/ask$/);
     expect(init.method).toBe("POST");
     expect(init.headers.Accept).toBe("text/event-stream");
+    // Carries the per-session id so the backend cap keys on the browser, not the
+    // (shared, behind-proxy) client IP.
+    expect(init.headers["X-Session-Id"]).toMatch(/.+/);
     expect(JSON.parse(init.body)).toEqual({ question: "  who?  ", mode: "fast", top_k: 5 });
   });
 

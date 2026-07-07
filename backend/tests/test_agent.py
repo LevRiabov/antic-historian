@@ -168,15 +168,19 @@ def test_adapter_dedups_repeated_chunks() -> None:
     assert [c.chunk_id for c in sources.citations] == [101, 102]
 
 
-def test_adapter_leaves_uncollected_cite_untouched() -> None:
+def test_adapter_leaves_uncollected_cite_untouched_and_flags_it() -> None:
     state = make_state(
         [chunk(101)],
         AgentResult(answer="Known [c101], phantom [c777].", refused=False),
     )
     _, done = build_agent_events(state)
-    assert done.answer == "Known [1], phantom [c777]."  # phantom left as-is
+    assert done.answer == "Known [1], phantom [c777]."  # phantom left in the prose as-is
     assert done.markers.used == [1]
-    assert done.markers.dangling == []  # [c777] doesn't match the [n] marker form
+    # ...but the forged citation is now SURFACED, not silently swallowed: 777 was
+    # cited yet never retrieved -> a dangling (citation-forgery) signal, matching
+    # single-shot. The [c777] token above is invisible to the [n]-marker audit, so
+    # this is read from the raw `cited` set instead.
+    assert done.markers.dangling == [777]
 
 
 def test_adapter_detects_refusal_even_when_model_flag_is_false() -> None:

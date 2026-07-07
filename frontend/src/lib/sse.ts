@@ -8,6 +8,7 @@
  * cancel via an AbortSignal.
  */
 import { API_BASE } from "./api";
+import { getSessionId } from "./session";
 import type { AskEvent, AskMode } from "./types";
 
 export interface AskParams {
@@ -39,7 +40,14 @@ export async function* askStream(params: AskParams): AsyncGenerator<AskEvent> {
 
   const res = await fetch(`${API_BASE}/ask`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+      // Identifies this browser for the per-session query cap. Without it the
+      // backend falls back to the client IP, collapsing every visitor behind the
+      // prod proxy onto one shared budget (see lib/session.ts).
+      "X-Session-Id": getSessionId(),
+    },
     body: JSON.stringify({ question, mode, top_k: topK }),
     signal,
   });

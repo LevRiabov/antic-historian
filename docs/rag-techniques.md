@@ -137,6 +137,6 @@ RAPTOR summary nodes live in the same index, retrievable by both paths.
 | Retrieve | Hybrid + RRF | — | +~10–50ms | $0 |
 | Rerank | Cross-encoder top-50 (CPU/API) | — | +100–500ms | ~$0–0.001 |
 | Generate | Single-shot | — | 1–4s | ~$0.001–0.005 |
-| Generate | Agent loop | — | 20–40s | ~$0.02–0.05 (was $0.026–0.04) |
+| Generate | Agent loop | — | 20–40s | ~$0.02–0.05 (planning est.; measured in prod 2026-06-17: ≈$0.01/query, see eval-log) |
 
 The shape to notice: **everything that made rag-historian good is either free or one-time at ingest** — the per-query bill is dominated by generation, which is exactly what the router + caching (Phase 6) attack.

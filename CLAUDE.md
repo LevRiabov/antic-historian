@@ -18,7 +18,7 @@ idiom, a one-line TS analogy helps (pydantic ≈ zod, uv ≈ pnpm, pytest fixtur
 | [project-plan.md](project-plan.md) | Goals, settled stack, **decision gates D1–D5**, phases with exit criteria |
 | [docs/python-stack.md](docs/python-stack.md) | Tooling choices + TS translation table |
 | [docs/embeddings.md](docs/embeddings.md) | Embedding landscape; D2 shortlist (front-runner: voyage-4-nano) |
-| [docs/vector-stores.md](docs/vector-stores.md) | DB landscape; D3 default: Postgres+pgvector, Neon in prod |
+| [docs/vector-stores.md](docs/vector-stores.md) | DB landscape; D3 default: Postgres+pgvector (prod: self-hosted in-compose) |
 | [docs/chunking.md](docs/chunking.md) | Parse-then-chunk architecture, canonical locators |
 | [docs/rag-techniques.md](docs/rag-techniques.md) | Full technique menu, interactions, Phase 4 build order |
 | [docs/golden-set.md](docs/golden-set.md) | Golden set format + authoring workflow (MCP tools) |
@@ -31,8 +31,9 @@ LangGraph = agent orchestration, thin project-owned interface between frameworks
 (no framework types in eval harness / API / ablation modules; models passed explicitly — never
 LlamaIndex global `Settings`). **D2 decided** ([ADR-002](docs/adr/002-d2-embeddings.md)):
 qwen3-embedding-8b hosted (OpenRouter pinned to Nebius, 1024d MRL); local qwen3-0.6b =
-documented fallback. **D3 decided** (2026-06-14): Postgres + pgvector (Neon in prod) — hybrid
-ablation confirmed the default. **D5 lineup decided** ([ADR-003](docs/adr/003-d5-llm-lineup.md)):
+documented fallback. **D3 decided** (2026-06-14): Postgres + pgvector — hybrid
+ablation confirmed the default (prod: self-hosted in-compose on EC2; Neon superseded at
+deploy, DB > free tier). **D5 lineup decided** ([ADR-003](docs/adr/003-d5-llm-lineup.md)):
 agent = deepseek-v4-pro, judge = split kimi-k2.6 + qwen3.7-max (attribution); retrieval ships
 **rerank-free** (`dense-ctx-v1` — the cohere-pro reranker was dropped). Fast-path/cheap-tier/
 fallback still open → Phase 6. **D4 decided** ([ADR-004](docs/adr/004-d4-frontend.md)): Vite+React

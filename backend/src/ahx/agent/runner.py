@@ -37,7 +37,7 @@ from ahx.agent.state import AgentState, Step
 from ahx.agent.tools import Toolbox
 from ahx.config import Settings
 from ahx.db import create_async_db_engine
-from ahx.generation.citations import Citation, extract_markers
+from ahx.generation.citations import Citation, MarkerAudit, extract_markers, ungrounded_citations
 from ahx.generation.pipeline import (
     AskEvent,
     DeltaEvent,
@@ -117,10 +117,19 @@ def build_agent_events(
         prompt_tokens=state["prompt_tokens"], completion_tokens=state["completion_tokens"]
     )
     # `used` = the prose [c<id>] markers — the comparable, single-shot-style signal.
+    # `dangling` = forged citations: ids the model cited but never retrieved. Auditing
+    # `rewritten` can't see those (_rewrite drops them from mixed groups; an all-phantom
+    # token stays in [c<id>] form, invisible to the [n] audit) — so report them from the
+    # RAW `cited` set against everything collected, giving the agent path the same
+    # citation-forgery signal single-shot has (evals/security.py reads it).
+    markers = MarkerAudit(
+        used=extract_markers(rewritten, set(marker_of.values())).used,
+        dangling=ungrounded_citations(cited, set(by_id)),
+    )
     done = DoneEvent(
         answer=rewritten,
         refused=_is_refusal(rewritten),
-        markers=extract_markers(rewritten, set(marker_of.values())),
+        markers=markers,
         usage=usage,
         # Model name only known at the call site (the graph hides it); None -> no cost.
         cost=cost_for(model_name, usage, load_price_table()) if model_name else None,
